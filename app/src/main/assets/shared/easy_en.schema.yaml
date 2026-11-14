@@ -1,0 +1,25 @@
+# Rime schema
+# vim: set sw=2 sts=2 et:
+# encoding: utf-8
+---
+
+# 隐藏底座方案：只为让部署器编译内嵌英文段所需的 easy_en 词典产物
+# （table/prism/reverse，供 flypy_xhfast 的 table_translator@easy_en 与
+# easy_en.lua 的 Memory 加载）。不进方案列表、不可切换，机制同 flyhe_fast
+# （经 flypy_xhfast 的 dependencies 部署）。speller 沿用独立方案时代的
+# 字母表：英文词典不做代数变换，恒等映射。
+schema:
+  schema_id: easy_en
+  name: Easy English
+  version: 2026.11.15
+  author:
+    - Boomker <gmboomker@gmail.com>
+  description: 内嵌英文段词典的隐藏编译底座
+
+speller:
+  alphabet: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA/_'
+  initials: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA/
+  delimiter: " "
+
+translator:
+  dictionary: easy_en

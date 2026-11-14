@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2015 - 2024 Rime community
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[*.{kt,kts}]
+ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
+ktlint_code_style = intellij_idea
+
+
+# Compose composables follow the PascalCase factory convention (ktlint 1.8's
+# ktlint_function_naming_ignore_when_annotated_with did not take; suppressed
+# per-function instead)

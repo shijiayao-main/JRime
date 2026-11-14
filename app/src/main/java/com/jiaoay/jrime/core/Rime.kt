@@ -1,0 +1,604 @@
+/*
+ * SPDX-FileCopyrightText: 2015 - 2025 Rime community
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+package com.jiaoay.jrime.core
+
+import com.jiaoay.jrime.BuildConfig
+import com.jiaoay.jrime.core.data.DataManager
+import com.jiaoay.jrime.core.data.UserDataManager
+import com.jiaoay.jrime.data.opencc.OpenCCDictManager
+import com.jiaoay.jrime.data.prefs.AppPrefs
+import com.jiaoay.jrime.ime.core.InlinePreeditMode
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import timber.log.Timber
+import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.time.Duration.Companion.minutes
+
+/**
+ * Rime JNI and instance methods
+ *
+ * @see [librime](https://github.com/rime/librime)
+ */
+class Rime :
+    RimeApi,
+    RimeLifecycleOwner {
+    private val lifecycleRegistry = RimeLifecycleRegistry()
+    override val lifecycle get() = lifecycleRegistry
+
+    override val messageFlow = messageFlow_.asSharedFlow()
+
+    override val isReady: Boolean
+        get() = lifecycle.currentState == RimeLifecycle.State.READY
+
+    override var schemaCached = RimeSchema(".default")
+        private set
+
+    override var statusCached = StatusProto()
+        private set
+
+    override var compositionCached = CompositionProto()
+        private set
+
+    override var hasMenu: Boolean = false
+        private set
+
+    override var paging: Boolean = false
+        private set
+
+    private val dispatcher =
+        RimeDispatcher(
+            object : RimeDispatcher.RimeController {
+                override fun nativeStartup() {
+                    startRime()
+                    lifecycleRegistry.emitEvent(RimeLifecycle.Event.ON_READY)
+                }
+
+                override fun nativeFinalize() {
+                    exitRime()
+                }
+            },
+        )
+
+    private val lock = Mutex()
+
+    private val inlinePreeditMode by AppPrefs.defaultInstance().general.inlinePreeditMode
+    private val showAsciiSwitchTips by AppPrefs.defaultInstance().general.asciiSwitchTips
+
+    private var asciiSwitchTipsJob: Job? = null
+    private var isNullInputType = true
+    private var lastAsciiTipsText = ""
+    private var pagingMode = false
+
+    init {
+        if (lifecycle.currentState != RimeLifecycle.State.STOPPED) {
+            throw IllegalStateException("Rime has already been created!")
+        }
+    }
+
+    private suspend inline fun <T> withRimeContext(crossinline block: suspend () -> T): T = withContext(dispatcher) {
+        block()
+    }
+
+    override suspend fun isEmpty(): Boolean = withRimeContext {
+        getCurrentRimeSchema() == ".default" // 無方案
+    }
+
+    /**
+     * The repair path: restores a broken data tree and then runs the full
+     * deployment task list. The dictionary YAML sources no longer ship, so
+     * the prebuilt staging artifacts are re-released from the APK first —
+     * [DataManager.revalidateStagingRelease] drops their release records
+     * when missing or corrupted and the release inside [startRime] brings
+     * them back — and the full maintenance pass then recompiles everything
+     * still stale. Normal startup never runs any of this: the engine comes
+     * up directly from the released staging tree.
+     */
+    override suspend fun deploy() = lock.withLock {
+        val deployFinished = CompletableDeferred<Boolean>()
+        val deployHandler: (RimeMessage<*>) -> Unit = { message ->
+            if (message is RimeMessage.DeployMessage) {
+                when (message.data) {
+                    RimeMessage.DeployMessage.State.Start -> Unit
+
+                    RimeMessage.DeployMessage.State.Success -> {
+                        deployFinished.complete(true)
+                    }
+
+                    RimeMessage.DeployMessage.State.Failure -> {
+                        deployFinished.complete(false)
+                    }
+                }
+            }
+        }
+        registerRimeMessageHandler(deployHandler)
+        try {
+            withRimeContext {
+                DataManager.revalidateStagingRelease()
+                exitRime()
+                startRime()
+                startRimeMaintenance(true)
+            }
+            val success =
+                withContext(Dispatchers.IO) {
+                    withTimeout(5.minutes) {
+                        deployFinished.await()
+                    }
+                }
+            check(success) { "Rime deploy failed" }
+        } finally {
+            unregisterRimeMessageHandler(deployHandler)
+        }
+    }
+
+    /**
+     * Reloads the configuration after user edits: restarts the engine and
+     * runs an incremental maintenance pass that redeploys only what the
+     * on-disk file modifications make stale.
+     */
+    override suspend fun updateConfig() = withRimeContext {
+        exitRime()
+        startRime()
+        startRimeMaintenance(false)
+    }
+
+    override suspend fun processKey(
+        value: Int,
+        modifiers: UInt,
+        isVirtual: Boolean,
+    ): Boolean = withRimeContext {
+        processKeyInner(value, modifiers.toInt(), isVirtual)
+    }
+
+    override suspend fun processKey(
+        value: KeyValue,
+        modifiers: KeyModifiers,
+        isVirtual: Boolean,
+    ): Boolean = withRimeContext {
+        processKeyInner(value.value, modifiers.toInt(), isVirtual)
+    }
+
+    override suspend fun simulateKeySequence(sequence: String): Boolean = withRimeContext {
+        Timber.d("simulateKeySequence: $sequence")
+        if (simulateRimeKeySequence(sequence)) {
+            val commit = getRimeCommit()
+            val input = getRimeRawInput()
+            if (!commit.text.isNullOrEmpty() || input.isNotEmpty()) {
+                emitResponse(commit)
+                true
+            } else {
+                emitResponse(CommitProto(sequence))
+                false
+            }
+        } else {
+            false
+        }.also { Timber.d("simulateKeySequence ${if (it) "success" else "failed"}") }
+    }
+
+    override suspend fun selectCandidate(idx: Int, global: Boolean): Boolean = withRimeContext {
+        selectRimeCandidate(idx, global).also { emitResponse() }
+    }
+
+    override suspend fun deleteCandidate(idx: Int, global: Boolean): Boolean = withRimeContext {
+        deleteRimeCandidate(idx, global).also { emitResponse() }
+    }
+
+    override suspend fun changeCandidatePage(backward: Boolean): Boolean = withRimeContext {
+        changeRimeCandidatePage(backward).also { emitResponse() }
+    }
+
+    override suspend fun moveCursorPos(position: Int) = withRimeContext {
+        setRimeCaretPos(position)
+        emitResponse()
+    }
+
+    override suspend fun availableSchemata(): Array<SchemaItem> = withRimeContext { getAvailableRimeSchemaList() }
+
+    override suspend fun enabledSchemata(): Array<SchemaItem> = withRimeContext { getSelectedRimeSchemaList() }
+
+    override suspend fun setEnabledSchemata(schemaIds: Array<String>) = withRimeContext { selectRimeSchemas(schemaIds) }
+
+    override suspend fun selectedSchemata(): Array<SchemaItem> = withRimeContext { getRimeSchemaList() }
+
+    override suspend fun selectedSchemaId(): String = withRimeContext { getCurrentRimeSchema() }
+
+    override suspend fun selectSchema(schemaId: String) = withRimeContext { selectRimeSchema(schemaId) }
+
+    override suspend fun currentSchema(): RimeSchema = withRimeContext {
+        RimeSchema(getCurrentRimeSchema())
+    }
+
+    override suspend fun commitComposition(): Boolean = withRimeContext { commitRimeComposition().also { if (it) emitResponse() } }
+
+    override suspend fun clearComposition() = withRimeContext {
+        clearRimeComposition()
+        emitResponse()
+    }
+
+    override suspend fun getRawInput(): String = withRimeContext {
+        getRimeRawInput()
+    }
+
+    override suspend fun setRuntimeOption(
+        option: String,
+        value: Boolean,
+    ): Unit = withRimeContext {
+        setRimeOption(option, value)
+    }
+
+    override suspend fun getRuntimeOption(option: String): Boolean = withRimeContext {
+        getRimeOption(option)
+    }
+
+    override suspend fun setNullInputType(value: Boolean) = withRimeContext {
+        isNullInputType = value
+    }
+
+    override suspend fun getCandidates(
+        startIndex: Int,
+        limit: Int,
+    ): Array<CandidateProto> = withRimeContext {
+        getRimeCandidates(startIndex, limit)
+    }
+
+    override suspend fun setCandidatePagingMode(enabled: Boolean) = withRimeContext {
+        pagingMode = enabled
+        emitResponse()
+    }
+
+    /**
+     * Brings the engine up over the released data tree: the checksums diff
+     * releases asset updates into the user dir, then the native engine loads
+     * the prebuilt staging artifacts directly. No deployment runs here —
+     * maintenance is an explicit step of [deploy] and [updateConfig] only.
+     */
+    private fun startRime() {
+        val syncResult = DataManager.sync()
+        UserDataManager.ensureDefaultCustomConfig()
+        if (!syncResult.isComplete) {
+            Timber.e(
+                "Asset release incomplete: ${syncResult.skippedFiles.size} file(s) not released: ${syncResult.skippedFiles}",
+            )
+        }
+        val sharedDataDir = DataManager.sharedDataDir.absolutePath
+        val userDataDir = UserDataManager.userDataDir.absolutePath
+        Timber.d(
+            """
+            Starting rime with:
+            sharedDataDir: $sharedDataDir
+            userDataDir: $userDataDir
+            """.trimIndent(),
+        )
+        startupRime(
+            sharedDataDir,
+            userDataDir,
+            BuildConfig.BUILD_VERSION_NAME,
+        )
+    }
+
+    private fun processKeyInner(value: Int, modifiers: Int, isVirtual: Boolean): Boolean {
+        lastAsciiTipsText = asciiTipsText(getRimeStatus())
+        val handled = processRimeKey(value, modifiers)
+        emitResponse()
+        if (!handled) {
+            handleRimeMessage(
+                10, // RimeMessage.MessageType.Key,
+                arrayOf(value, modifiers, isVirtual),
+            )
+        }
+        return handled
+    }
+
+    private fun asciiTipsText(status: StatusProto): String = when {
+        status.isAsciiMode -> "En"
+
+        status.schemaName.isNotEmpty() && !status.schemaName.startsWith('.') ->
+            status.schemaName.take(2)
+
+        else -> ""
+    }
+
+    private fun emitResponse(commit: CommitProto? = null) {
+        val response = getRimeResponse(pagingMode)
+        handleRimeMessage(4, arrayOf(commit ?: response.commit))
+        handlePreedit(response.composition)
+        if (response.composition.length <= 0 && lastAsciiTipsText != asciiTipsText(response.status)) {
+            showAsciiSwitchTips(response.status)
+        }
+        when (val candidates = response.candidates) {
+            is Candidates.Paged -> handleRimeMessage(7, arrayOf(candidates))
+            is Candidates.Bulk -> handleRimeMessage(9, arrayOf(candidates))
+        }
+        handleRimeMessage(8, arrayOf(response.status))
+    }
+
+    private fun handlePreedit(composition: CompositionProto) {
+        val mode = if (isNullInputType) {
+            InlinePreeditMode.DISABLE
+        } else {
+            inlinePreeditMode
+        }
+        val inlinePreedit = when (mode) {
+            InlinePreeditMode.DISABLE -> ""
+            InlinePreeditMode.COMPOSING_TEXT -> composition.preedit ?: ""
+            InlinePreeditMode.COMMIT_TEXT_PREVIEW -> composition.commitTextPreview ?: ""
+        }
+        val composition = if (mode == InlinePreeditMode.COMPOSING_TEXT) {
+            CompositionProto()
+        } else {
+            composition
+        }
+        handleRimeMessage(5, arrayOf(inlinePreedit))
+        handleRimeMessage(6, arrayOf(composition))
+    }
+
+    private fun handleRimeMessage(it: RimeMessage<*>) {
+        when (it) {
+            is RimeMessage.SchemaMessage -> {
+                statusCached = getRimeStatus()
+                schemaCached = RimeSchema(it.data.id)
+            }
+
+            is RimeMessage.OptionMessage -> {
+                // Option change won't trigger response update
+                val status = getRimeStatus()
+                statusCached = status
+                updateSchemaCached(status)
+                if (it.data.option == "ascii_mode") {
+                    showAsciiSwitchTips(status)
+                }
+            }
+
+            is RimeMessage.DeployMessage -> {
+                if (it.data == RimeMessage.DeployMessage.State.Start) {
+                    OpenCCDictManager.buildOpenCCDict()
+                }
+            }
+
+            is RimeMessage.CompositionMessage -> {
+                val composition = it.data
+                compositionCached = composition
+            }
+
+            is RimeMessage.PagedCandidatesMessage -> {
+                val paged = it.data
+                paging = paged.hasPrevPage
+                hasMenu = paged.candidates.isNotEmpty()
+            }
+
+            is RimeMessage.BulkCandidatesMessage -> {
+                hasMenu = it.data.candidates.isNotEmpty()
+            }
+
+            is RimeMessage.StatusMessage -> {
+                statusCached = it.data
+                updateSchemaCached(it.data)
+            }
+
+            else -> {}
+        }
+    }
+
+    private fun updateSchemaCached(status: StatusProto) {
+        val (schemaId, schemaName) = status
+        // Engine response update won't send SchemaMessage, but usually update RimeStatus
+        if (schemaId != schemaCached.schemaId) {
+            schemaCached = RimeSchema(schemaId)
+            // notify downstream consumers that schema has changed
+            messageFlow_.tryEmit(
+                RimeMessage.SchemaMessage(
+                    SchemaItem(schemaId, schemaName),
+                ),
+            )
+        }
+    }
+
+    private fun showAsciiSwitchTips(status: StatusProto) {
+        if (!showAsciiSwitchTips) return
+        val tipsText = asciiTipsText(status)
+        if (tipsText.isEmpty()) return
+
+        lastAsciiTipsText = tipsText
+
+        val tips = CompositionProto(tipsText)
+        messageFlow_.tryEmit(RimeMessage.CompositionMessage(tips))
+        compositionCached = tips
+        asciiSwitchTipsJob?.cancel()
+        asciiSwitchTipsJob = lifecycleScope.launch {
+            delay(1000L)
+            val ctx = getRimeContext()
+            handleRimeMessage(6, arrayOf(ctx.composition))
+        }
+    }
+
+    /**
+     * Start the native Rime dispatcher when storage is ready and the lifecycle is stopped.
+     *
+     * @return true when startup was accepted; false when storage is unavailable or the
+     * lifecycle was not stopped.
+     */
+    fun startup(): Boolean {
+        if (lifecycle.currentState != RimeLifecycle.State.STOPPED) {
+            Timber.w("Skip starting rime: not at stopped state!")
+            return false
+        }
+        registerRimeMessageHandler(::handleRimeMessage)
+        lifecycleRegistry.emitEvent(RimeLifecycle.Event.ON_START)
+        dispatcher.start()
+        return true
+    }
+
+    fun finalize() {
+        if (lifecycle.currentState != RimeLifecycle.State.READY) {
+            Timber.w("Skip stopping rime: not at ready state!")
+            return
+        }
+        lifecycleRegistry.emitEvent(RimeLifecycle.Event.ON_STOP)
+        Timber.i("Rime finalize()")
+        dispatcher.stop().let {
+            if (it.isNotEmpty()) {
+                Timber.w("${it.size} job(s) didn't get a chance to run!")
+            }
+        }
+        lifecycleRegistry.emitEvent(RimeLifecycle.Event.ON_STOPPED)
+        unregisterRimeMessageHandler(::handleRimeMessage)
+    }
+
+    companion object {
+        private val messageFlow_ =
+            MutableSharedFlow<RimeMessage<*>>(
+                extraBufferCapacity = 15,
+                onBufferOverflow = BufferOverflow.DROP_OLDEST,
+            )
+
+        private val rimeMessageHandlers = CopyOnWriteArrayList<(RimeMessage<*>) -> Unit>()
+
+        init {
+            System.loadLibrary("rime_jni")
+        }
+
+        // init
+        // Brings the engine up without running any deployment task.
+        @JvmStatic
+        external fun startupRime(
+            sharedDir: String,
+            userDir: String,
+            versionName: String,
+        )
+
+        // Explicitly runs librime's maintenance on the started engine.
+        // fullCheck = true recompiles every stale or missing artifact (the
+        // repair path); false redeploys only when modifications are detected.
+        @JvmStatic
+        external fun startRimeMaintenance(fullCheck: Boolean)
+
+        @JvmStatic
+        external fun exitRime()
+
+        @JvmStatic
+        external fun deployRimeSchemaFile(schemaFile: String): Boolean
+
+        @JvmStatic
+        external fun deployRimeConfigFile(
+            fileName: String,
+            versionKey: String,
+        ): Boolean
+
+        @JvmStatic
+        external fun syncRimeUserData(): Boolean
+
+        // input
+        @JvmStatic
+        external fun processRimeKey(
+            keycode: Int,
+            mask: Int,
+        ): Boolean
+
+        @JvmStatic
+        external fun commitRimeComposition(): Boolean
+
+        @JvmStatic
+        external fun clearRimeComposition()
+
+        // output
+        @JvmStatic
+        external fun getRimeCommit(): CommitProto
+
+        @JvmStatic
+        external fun getRimeContext(): ContextProto
+
+        @JvmStatic
+        external fun getRimeStatus(): StatusProto
+
+        // runtime options
+        @JvmStatic
+        external fun setRimeOption(
+            option: String,
+            value: Boolean,
+        )
+
+        @JvmStatic
+        external fun getRimeOption(option: String): Boolean
+
+        @JvmStatic
+        external fun getRimeSchemaList(): Array<SchemaItem>
+
+        @JvmStatic
+        external fun getCurrentRimeSchema(): String
+
+        @JvmStatic
+        external fun selectRimeSchema(schemaId: String): Boolean
+
+        // testing
+        @JvmStatic
+        external fun simulateRimeKeySequence(keySequence: String): Boolean
+
+        @JvmStatic
+        external fun getRimeRawInput(): String
+
+        @JvmStatic
+        external fun getRimeCaretPos(): Int
+
+        @JvmStatic
+        external fun setRimeCaretPos(caretPos: Int)
+
+        @JvmStatic
+        external fun selectRimeCandidate(index: Int, global: Boolean): Boolean
+
+        @JvmStatic
+        external fun deleteRimeCandidate(index: Int, global: Boolean): Boolean
+
+        @JvmStatic
+        external fun changeRimeCandidatePage(backward: Boolean): Boolean
+
+        @JvmStatic
+        external fun getAvailableRimeSchemaList(): Array<SchemaItem>
+
+        @JvmStatic
+        external fun getSelectedRimeSchemaList(): Array<SchemaItem>
+
+        @JvmStatic
+        external fun selectRimeSchemas(schemaIds: Array<String>): Boolean
+
+        @JvmStatic
+        external fun getRimeCandidates(
+            startIndex: Int,
+            limit: Int,
+        ): Array<CandidateProto>
+
+        @JvmStatic
+        external fun getRimeResponse(pagingMode: Boolean): RimeResponse
+
+        @JvmStatic
+        fun handleRimeMessage(
+            type: Int,
+            params: Array<Any>,
+        ) {
+            val message = RimeMessage.nativeCreate(type, params)
+            Timber.d("Handling $message")
+            rimeMessageHandlers.forEach { it.invoke(message) }
+            messageFlow_.tryEmit(message)
+        }
+
+        private fun registerRimeMessageHandler(handler: (RimeMessage<*>) -> Unit) {
+            if (rimeMessageHandlers.contains(handler)) return
+            rimeMessageHandlers.add(handler)
+        }
+
+        private fun unregisterRimeMessageHandler(handler: (RimeMessage<*>) -> Unit) {
+            rimeMessageHandlers.remove(handler)
+        }
+    }
+}

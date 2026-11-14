@@ -1,0 +1,67 @@
+/*
+ * SPDX-FileCopyrightText: 2015 - 2025 Rime community
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+package com.jiaoay.jrime.data.theme
+
+import android.content.SharedPreferences
+import android.os.Build
+import androidx.core.content.edit
+import com.jiaoay.jrime.R
+import com.jiaoay.jrime.data.prefs.PreferenceDelegateEnum
+import com.jiaoay.jrime.data.prefs.PreferenceDelegateOwner
+
+class ThemePrefs(
+    sharedPrefs: SharedPreferences,
+) : PreferenceDelegateOwner(sharedPrefs, R.string.theme) {
+    val normalModeColor =
+        string(
+            R.string.normal_mode_color,
+            NORMAL_MODE_COLOR,
+            "default",
+            R.string.normal_mode_color_summary,
+        )
+
+    enum class NavbarBackground(
+        override val stringRes: Int,
+    ) : PreferenceDelegateEnum {
+        NONE(R.string.navbar_bkg_none),
+        COLOR_ONLY(R.string.navbar_bkg_color_only),
+        FULL(R.string.navbar_bkg_full),
+    }
+
+    val navbarBackground =
+        enum(
+            R.string.navbar_background,
+            NAVBAR_BACKGROUND,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                NavbarBackground.FULL
+            } else {
+                NavbarBackground.COLOR_ONLY
+            },
+            enableUiOn = { Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM },
+        ).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                sharedPreferences.edit {
+                    remove(this@apply.key)
+                }
+            }
+        }
+
+    val followSystemDayNight =
+        switch(
+            R.string.follow_system_day_night_color,
+            FOLLOW_SYSTEM_DAY_NIGHT,
+            // The scheme picker died with the YAML theme engine: with nothing
+            // to pick, following the system's day/night is the only sensible
+            // default (the light chain links to gboard_dark on its own).
+            true,
+        )
+
+    companion object {
+        const val NORMAL_MODE_COLOR = "normal_mode_color"
+        const val FOLLOW_SYSTEM_DAY_NIGHT = "follow_system_day_night"
+        const val NAVBAR_BACKGROUND = "navbar_background"
+    }
+}

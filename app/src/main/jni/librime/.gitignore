@@ -1,0 +1,15 @@
+build/
+build-static/
+debug/
+dist/
+lib/*
+bin/*
+share/*
+plugins/*/
+env.bat
+node_modules/
+*~
+.*.swp
+.cache/
+*.7z
+.DS_Store

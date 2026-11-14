@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+SPDX-FileCopyrightText: 2015 - 2024 Rime community
+
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
+<!-- Single-IME build for personal use: opting out of the system's
+     "switch to next input method" offer also hides the ime-switcher
+     button the gesture-nav system bar pins beside the collapse key. -->
+<input-method xmlns:android="http://schemas.android.com/apk/res/android"
+    android:supportsSwitchingToNextInputMethod="false"
+    android:settingsActivity="com.jiaoay.jrime.ui.main.MainActivity">
+
+    <!-- Add default system subtype so we can properly set the icon and label -->
+    <subtype android:label="@string/trime_app_slogan"
+        android:name="@string/trime_app_name"
+        android:icon="@mipmap/ic_app_icon"
+        android:imeSubtypeMode="keyboard"
+        android:imeSubtypeExtraValue="AsciiCapable" />
+
+</input-method>

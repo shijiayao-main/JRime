@@ -1,0 +1,13 @@
+# Rime dictionary
+# encoding: utf-8
+#
+# en_ext_private - private English vocabulary slot for easy_en.
+#
+# Shipped as an empty skeleton so the import_tables entry in easy_en.dict.yaml
+# resolves on a fresh install. Drop your real vocabulary here via the user data
+# dir or an external sync; a file present there always wins over this preset.
+
+---
+name: en_ext_private
+version: "2026-11-14"
+...
