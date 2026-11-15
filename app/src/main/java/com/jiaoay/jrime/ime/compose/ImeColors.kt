@@ -129,6 +129,12 @@ internal constructor(
             color = colors.candidateComment,
             fontFamily = family,
         )
+    val preeditStyle =
+        TextStyle(
+            fontSize = 16.sp,
+            color = colors.candidateComment,
+            fontFamily = family,
+        )
 }
 
 @Composable

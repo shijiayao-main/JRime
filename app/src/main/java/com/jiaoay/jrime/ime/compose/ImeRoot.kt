@@ -42,6 +42,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jiaoay.jrime.core.CandidateProto
@@ -166,7 +167,7 @@ private fun ActionBar(
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (state.candidates.isEmpty()) {
+        if (!state.composing) {
             // Menu state: the common entrances the keyboard used to carry as
             // corner marks and the two band buttons duplicate (the user's
             // acceptance asks: entrances live here, keys stay clean).
@@ -214,6 +215,22 @@ private fun ActionBar(
             AsciiSwitchButton(state, actions.asciiSwitch, onDispatch)
             ActionBarButton("▼", actions.hide, onDispatch)
         } else {
+            // The composing code echo: some hosts (notably vendor ROMs) do
+            // not render the field's composing underline, so the strip shows
+            // the code itself -- the way the mainstream Chinese IMEs do.
+            // The engine still gets "/" as the aux separator; the face shows
+            // the middle dot, matching the inline copy.
+            val preedit = state.composition.preedit.orEmpty()
+            if (preedit.isNotEmpty()) {
+                BasicText(
+                    text = preedit.replace("/", "·"),
+                    style = gboardStyle().preeditStyle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                )
+                CandidateDivider()
+            }
             LazyRow(
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically,

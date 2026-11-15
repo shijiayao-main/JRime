@@ -201,21 +201,38 @@ private fun ShiftRow(
     isAsciiMode: Boolean = false,
 ) {
     Row(modifier = modifier) {
-        ChromeSlot(
-            board = board,
-            // The slot is dual-purpose: in CJK it switches the language (the
-            // Gboard location), in ASCII it is the plain shift (the data
-            // key's ascii slot). The face says which job it carries now.
-            token = "ascii_switch",
-            label = if (isAsciiMode) "⇧" else "中",
-            labelSize = 20f,
-            keyAppearance = keyAppearance,
-            presetKeys = presetKeys,
-            onDispatch = onDispatch,
-            modifier = Modifier.weight(GboardKeyboard.SHIFT_UNITS),
-            // Lit while ascii_mode is on, matching the action-bar chip.
-            highlight = isAsciiMode,
-        )
+        // The dedicated aux-code key: composing sends the separator, ASCII
+        // keeps the plain shift. The data key has no click slot, so it is
+        // located by its ascii slot instead of the usual token lookup.
+        val auxKey =
+            remember(board) {
+                board.keys.firstOrNull { it.ascii == KeyActionToken.Plain("Shift_L") }
+            }
+        if (auxKey != null) {
+            GboardDataKey(
+                key = auxKey,
+                keyAppearance = keyAppearance,
+                presetKeys = presetKeys,
+                onDispatch = onDispatch,
+                modifier = Modifier.weight(GboardKeyboard.SHIFT_UNITS),
+                labelOverride = if (isAsciiMode) "⇧" else "辅助",
+                labelSize = if (isAsciiMode) 20f else 18f,
+                isFunction = true,
+                highlight = isAsciiMode,
+            )
+        } else {
+            ChromeSlot(
+                board = board,
+                token = "Shift_L",
+                label = "⇧",
+                labelSize = 20f,
+                keyAppearance = keyAppearance,
+                presetKeys = presetKeys,
+                onDispatch = onDispatch,
+                modifier = Modifier.weight(GboardKeyboard.SHIFT_UNITS),
+                highlight = isAsciiMode,
+            )
+        }
         letters.forEach { key ->
             GboardDataKey(
                 key = key,

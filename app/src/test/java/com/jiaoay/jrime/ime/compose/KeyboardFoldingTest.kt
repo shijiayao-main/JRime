@@ -72,15 +72,17 @@ class KeyboardFoldingTest :
             val bottom = rows[2]
             // Shift(14) + z x c v b n m (7x10) + BackSpace(16) = 100
             bottom.sumOf { it.weight.toDouble() } shouldBe 100.0
-            bottom.count { it.key.click != null } shouldBe 9
+            // the aux key in the shift slot has no click slot (it resolves
+            // through composing/ascii), so eight click-bearing keys remain
+            bottom.count { it.key.click != null } shouldBe 8
 
             val functionRow = rows[3]
             functionRow.sumOf { it.weight.toDouble() } shouldBe 100.0
-            // the comma doubles as the aux-code separator while composing
-            // (the standalone aux key is gone; the master's call)
+            // the comma is a plain comma again; the dedicated aux-code key
+            // (in the shift slot) carries the separator while composing
             val comma = functionRow.first { it.key.click == KeyActionToken.Plain(",") }
             comma.weight shouldBe 15f
-            comma.key.composing shouldBe KeyActionToken.Plain("/")
+            comma.key.composing shouldBe null
         }
 
         "no row exceeds the max total weight" {
@@ -104,17 +106,23 @@ class KeyboardFoldingTest :
             displayLabel(ret, theme.presetKeys) shouldBe "回车"
         }
 
-        "the comma key resolves to the aux-code separator while composing" {
+        "the dedicated aux key resolves to the separator while composing" {
             val board = NativeTheme.theme.presetKeyboards.getValue("default")
-            val comma = board.keys.first { it.click == KeyActionToken.Plain(",") }
-            comma.resolveToken(
+            val aux = board.keys.first { it.ascii == KeyActionToken.Plain("Shift_L") }
+            aux.resolveToken(
                 KeyBehavior.CLICK,
                 KeyAppearance(composing = true),
             ) shouldBe KeyActionToken.Plain("/")
-            comma.resolveToken(
+            // ASCII keeps the plain shift through the ascii slot
+            aux.resolveToken(
+                KeyBehavior.CLICK,
+                KeyAppearance(isAsciiMode = true),
+            ) shouldBe KeyActionToken.Plain("Shift_L")
+            // idle CJK: no click slot, so the key stays inert
+            aux.resolveToken(
                 KeyBehavior.CLICK,
                 KeyAppearance(),
-            ) shouldBe KeyActionToken.Plain(",")
+            ) shouldBe null
         }
 
         "the comma key carries no hidden slots (the YAML leftovers are gone)" {
@@ -122,11 +130,12 @@ class KeyboardFoldingTest :
                 val comma = NativeTheme.theme.presetKeyboards.getValue(name)
                     .keys.first { it.click == KeyActionToken.Plain(",") }
                 // the number-board long-press/swipe-up entrances moved to the
-                // action bar's "123" chip; the corner mark now names the key's
-                // composing-state job -- the aux-code separator
+                // action bar's "123" chip; the aux job moved to the dedicated
+                // key in the shift slot, so the comma is a plain comma again
                 comma.longClick shouldBe null
                 comma.swipeUp shouldBe null
-                comma.hint shouldBe "辅助"
+                comma.hint shouldBe ""
+                comma.composing shouldBe null
             }
         }
 
