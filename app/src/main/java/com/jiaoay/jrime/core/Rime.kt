@@ -332,14 +332,15 @@ class Rime :
         }
         val inlinePreedit = when (mode) {
             InlinePreeditMode.DISABLE -> ""
-            InlinePreeditMode.COMPOSING_TEXT -> composition.preedit ?: ""
+            // The aux separator stays "/" in the engine (the cand_selector
+            // contract) and in the composition broadcast (the aux-state
+            // detector matches it); only the field-facing copy is re-spelled.
+            InlinePreeditMode.COMPOSING_TEXT -> composition.preedit?.replace(AUX_SEPARATOR, AUX_SEPARATOR_DISPLAY) ?: ""
             InlinePreeditMode.COMMIT_TEXT_PREVIEW -> composition.commitTextPreview ?: ""
         }
-        val composition = if (mode == InlinePreeditMode.COMPOSING_TEXT) {
-            CompositionProto()
-        } else {
-            composition
-        }
+        // The raw composition always rides to the UI (never blanked): the
+        // aux-code state detector reads the input tail off the preedit, and
+        // the app's field renders only the inline preedit above.
         handleRimeMessage(5, arrayOf(inlinePreedit))
         handleRimeMessage(6, arrayOf(composition))
     }
@@ -457,6 +458,12 @@ class Rime :
     }
 
     companion object {
+        /** The aux-code separator the engine parses (the cand_selector contract). */
+        private const val AUX_SEPARATOR = "/"
+
+        /** What the app's field shows in its place -- a raw slash reads as a typo. */
+        private const val AUX_SEPARATOR_DISPLAY = "·"
+
         private val messageFlow_ =
             MutableSharedFlow<RimeMessage<*>>(
                 extraBufferCapacity = 15,

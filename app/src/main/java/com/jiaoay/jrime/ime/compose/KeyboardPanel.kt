@@ -122,11 +122,12 @@ data class KeyAppearance(
     val composing: Boolean = false,
     val hasMenu: Boolean = false,
     val paging: Boolean = false,
+    val auxActive: Boolean = false,
 )
 
 /**
  * Resolves the token a [behavior] fires for [key]: behavior slots are walked
- * in the [KeyBehavior] order, with the composing/has-menu/paging slots
+ * in the [KeyBehavior] order, with the aux/composing/has-menu/paging slots
  * gated on the live input state.
  */
 internal fun TextKey.resolveToken(
@@ -136,6 +137,7 @@ internal fun TextKey.resolveToken(
     val ordered = when (behavior) {
         KeyBehavior.CLICK ->
             listOfNotNull(
+                if (appearance.auxActive) KeyBehavior.AUX else null,
                 if (appearance.composing) KeyBehavior.COMPOSING else null,
                 if (appearance.hasMenu) KeyBehavior.HAS_MENU else null,
                 if (appearance.paging) KeyBehavior.PAGING else null,
@@ -146,6 +148,7 @@ internal fun TextKey.resolveToken(
     }
     for (candidate in ordered) {
         val token = when (candidate) {
+            KeyBehavior.AUX -> aux
             KeyBehavior.COMPOSING -> composing
             KeyBehavior.HAS_MENU -> hasMenu
             KeyBehavior.PAGING -> paging
@@ -222,7 +225,7 @@ internal fun Modifier.dataKeyGestures(
                     longFired = true
                     currentDispatch(KeyAction(token, currentPresetKeys))
                 } else if (key.resolveToken(KeyBehavior.CLICK, currentAppearance)
-                    ?.let { KeyAction(it, currentPresetKeys).isRepeatable } == true
+                        ?.let { KeyAction(it, currentPresetKeys).isRepeatable } == true
                 ) {
                     longFired = true
                     while (!released) {
@@ -287,7 +290,7 @@ private fun KeyButton(
     val isSpacer = key.click == null && key.longClick == null && key.swipeUp == null &&
         key.swipeDown == null && key.swipeLeft == null && key.swipeRight == null &&
         key.composing == null && key.hasMenu == null && key.paging == null &&
-        key.combo == null && key.ascii == null
+        key.combo == null && key.ascii == null && key.aux == null
 
     if (isSpacer) {
         Box(modifier = modifier)

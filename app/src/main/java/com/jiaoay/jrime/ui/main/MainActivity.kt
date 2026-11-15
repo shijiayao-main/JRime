@@ -256,20 +256,61 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         SoundEffectManager.init()
         updateSetupBanner()
+        showSetupDialogIfNeeded()
         updateDeployBanner()
     }
 
     /**
      * The wizard is gone; enabling and selecting the IME are system-forced steps
-     * the app cannot perform, so the main screen carries them as a banner instead.
+     * the app cannot perform. The banner carries them as a passive hint; the
+     * dialog below makes the first run impossible to miss.
      */
-    private fun updateSetupBanner() {
+    private fun imeSetupState(): Pair<Boolean, Boolean> {
         val imm = getSystemService(InputMethodManager::class.java)
         val enabled = imm?.enabledInputMethodList?.any { it.packageName == packageName } == true
+        // Compare the settings id's package part exactly: a leftover id of a
+        // sibling build (the .debug suffix) starts with the same package name
+        // and would pass a startsWith check while the real IME is unselected.
         val selected = Settings.Secure
             .getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)
-            ?.startsWith(packageName) == true
+            ?.substringBefore('/') == packageName
+        return enabled to selected
+    }
+
+    private fun updateSetupBanner() {
+        val (enabled, selected) = imeSetupState()
         binding.setupBanner.isVisible = !(enabled && selected)
+    }
+
+    /** Session-level "later" latch: one dismissal stops the dialog until the process dies. */
+    private var setupDialogDismissed = false
+
+    /**
+     * The explicit first-run guide: a fresh install that was never enabled
+     * leaves typing silently dead, and the banner is too easy to miss. The
+     * dialog names the exact missing step and jumps to the system page --
+     * coming back from settings re-runs the check, so the guide closes
+     * itself the moment the user finishes the step.
+     */
+    private fun showSetupDialogIfNeeded() {
+        if (setupDialogDismissed || isFinishing) return
+        val (enabled, selected) = imeSetupState()
+        if (enabled && selected) return
+        val (title, message) =
+            if (!enabled) {
+                R.string.setup_dialog_enable_title to R.string.setup_dialog_enable_message
+            } else {
+                R.string.setup_dialog_select_title to R.string.setup_dialog_select_message
+            }
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton(R.string.setup_dialog_go) { _, _ ->
+                startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
+            }
+            .setNegativeButton(R.string.setup_dialog_later) { _, _ -> setupDialogDismissed = true }
+            .setOnCancelListener { setupDialogDismissed = true }
+            .show()
     }
 
     /** Set once the first engine start has settled, i.e. the released staging

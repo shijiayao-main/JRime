@@ -64,6 +64,17 @@
     <string name="trime_app_slogan">擊響中文之韻</string>
     <string name="custom_sound_effect_name">自訂按鍵音效</string>
     <string name="setup_banner_text">啟用並選擇 <b>JRime</b> 作為輸入法即可開始打字——點此開啟系統設定</string>
+    <string name="setup_dialog_enable_title">啟用 JRime</string>
+    <string name="setup_dialog_enable_message">JRime 已安裝但尚未啟用，現在打字不會有任何反應。請開啟系統的輸入法列表啟用 JRime——啟用後回到這裡，引導會自動消失。</string>
+    <string name="setup_dialog_select_title">將 JRime 設為目前輸入法</string>
+    <string name="setup_dialog_select_message">JRime 已啟用，但還不是目前輸入法。請在系統設定中把目前輸入法切換為 JRime。</string>
+    <string name="setup_dialog_go">去設定</string>
+    <string name="setup_dialog_later">稍後</string>
+    <string name="import_font_title">匯入字體</string>
+    <string name="import_font_summary_empty">選擇字體檔案（如花園明朝B），補齊系統字體缺少的生僻字顯示——重啟輸入法後生效</string>
+    <string name="import_font_summary_named">已匯入：%1$s——重啟輸入法後生效</string>
+    <string name="import_font_done">字體已匯入。切換一下輸入法（或重啟手機）後生效</string>
+    <string name="import_font_failed">字體匯入失敗：%1$s</string>
     <string name="deploy_banner_text">預置輸入數據缺失，暫時無法出字——點擊此處或使用工具欄的<b>部署</b>全量重建</string>
     <string name="done">完成</string>
     <string name="follow_system_day_night_color">跟隨系統設定主題色調</string>

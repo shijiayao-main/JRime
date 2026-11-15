@@ -49,6 +49,7 @@ class Key(
         bind(KeyBehavior.PAGING, keyDef.paging)
         bind(KeyBehavior.COMBO, keyDef.combo)
         bind(KeyBehavior.ASCII, keyDef.ascii)
+        bind(KeyBehavior.AUX, keyDef.aux)
     }
 
     var edgeFlags = 0

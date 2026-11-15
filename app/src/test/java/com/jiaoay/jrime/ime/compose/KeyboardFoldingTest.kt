@@ -117,6 +117,19 @@ class KeyboardFoldingTest :
             ) shouldBe KeyActionToken.Plain(",")
         }
 
+        "the comma key carries no hidden slots (the YAML leftovers are gone)" {
+            for (name in listOf("default", "flyhe36")) {
+                val comma = NativeTheme.theme.presetKeyboards.getValue(name)
+                    .keys.first { it.click == KeyActionToken.Plain(",") }
+                // the number-board long-press/swipe-up entrances moved to the
+                // action bar's "123" chip; the corner mark now names the key's
+                // composing-state job -- the aux-code separator
+                comma.longClick shouldBe null
+                comma.swipeUp shouldBe null
+                comma.hint shouldBe "辅助"
+            }
+        }
+
         "gboardLetterRows strips every non-letter-class key from the data board" {
             val presetKeys = NativeTheme.theme.presetKeys
             val letters = gboardLetterRows(NativeTheme.theme.presetKeyboards.getValue("default"), presetKeys)

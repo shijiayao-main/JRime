@@ -62,9 +62,14 @@ object KeyLayouts {
             key(click = "m", longClick = "\"", swipeDown = "M")
             key(click = "BackSpace", swipeDown = "Delete", width = 16f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
             key(click = "Keyboard_basic_symbol", width = 15f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
-            key(click = ",", composing = "/", longClick = "Keyboard_number", swipeUp = "Keyboard_number", label = "，", hint = "/", keyTextColor = "one_color", width = 15f)
+            // 逗号键组合态发 '/' 作辅助码分隔符：'/' 是方案层的刻意约定（speller
+            // alphabet 含 '/' 不含 ','，逗号会被标点处理直接上屏）；长按/上滑切
+            // 数字键盘的隐藏交互已移除（入口改到操作栏菜单行 "123"）。角标标出
+            // 该键组合态的辅助码语义（主人点名要的功能提示）
+            key(click = ",", composing = "/", label = "，", hint = "辅助", keyTextColor = "one_color", width = 15f)
             key(click = "space", swipeUp = "Up", swipeDown = "Keyboard_flyhe36", swipeLeft = "Left", swipeRight = "Right", width = 40f)
-            key(click = ".", longClick = "?", swipeUp = "?", swipeDown = "Commit_Dot", label = "。", hint = "?", keyTextColor = "one_color", width = 15f)
+            // 句号键辅助码态（输入串尾部如 "efgh/x"）单击改为选定次选上屏；其余状态仍为句号
+            key(click = ".", aux = "Control+2", longClick = "?", swipeUp = "?", swipeDown = "Commit_Dot", label = "。", hint = "?", keyTextColor = "one_color", width = 15f)
             key(click = "Return", width = 15f, keyTextSize = 24f, keyTextOffsetY = -2f, keyBackColor = "enter_bg_color", keyTextColor = "enter_text_color", hilitedKeyBackColor = "enter_pressed_bg_color", hilitedKeyTextColor = "enter_pressed_text_color")
         },
         "flyhe36" to keyboard("flyhe36") {
@@ -119,9 +124,9 @@ object KeyLayouts {
             key(click = "m", longClick = "\"", swipeDown = "M")
             key(click = "BackSpace", swipeDown = "Delete", width = 16f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
             key(click = "Keyboard_basic_symbol", width = 15f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
-            key(click = ",", composing = "/", longClick = "Keyboard_number", swipeUp = "Keyboard_number", label = "，", hint = "/", keyTextColor = "one_color", width = 15f)
+            key(click = ",", composing = "/", label = "，", hint = "辅助", keyTextColor = "one_color", width = 15f)
             key(click = "space", swipeUp = "Up", swipeDown = "Keyboard_default", swipeLeft = "Left", swipeRight = "Right", width = 40f)
-            key(click = ".", longClick = "?", swipeUp = "?", swipeDown = "Commit_Dot", label = "。", hint = "?", keyTextColor = "one_color", width = 15f)
+            key(click = ".", aux = "Control+2", longClick = "?", swipeUp = "?", swipeDown = "Commit_Dot", label = "。", hint = "?", keyTextColor = "one_color", width = 15f)
             key(click = "Return", width = 15f, keyTextSize = 24f, keyTextOffsetY = -2f, keyBackColor = "enter_bg_color", keyTextColor = "enter_text_color", hilitedKeyBackColor = "enter_pressed_bg_color", hilitedKeyTextColor = "enter_pressed_text_color")
         },
         "number" to keyboard("number") {

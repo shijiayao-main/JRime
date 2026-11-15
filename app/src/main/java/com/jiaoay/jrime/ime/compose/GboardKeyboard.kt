@@ -31,7 +31,7 @@ import com.jiaoay.jrime.ime.keyboard.KeyAction
  * inventory, never a face).
  */
 object GboardKeyboard {
-    const val ROW_HEIGHT = 65
+    const val ROW_HEIGHT = 58
 
     /** A full row spans this many units (the FlorisBoard weight grid). */
     internal const val ROW_UNITS = 10f
@@ -288,7 +288,9 @@ private fun ChromeRow(
         ChromeSlot(
             board = board,
             token = ".",
-            label = "。",
+            // While the aux code is active the key's face follows its job:
+            // the tap picks the second candidate, so the label says so.
+            label = if (keyAppearance.auxActive) "次选" else "。",
             labelSize = 20f,
             keyAppearance = keyAppearance,
             presetKeys = presetKeys,

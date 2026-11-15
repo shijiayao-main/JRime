@@ -64,6 +64,17 @@
     <string name="trime_app_slogan">Rimes with Your Keystrokes on Android</string>
     <string name="custom_sound_effect_name">Custom key Sound Effect</string>
     <string name="setup_banner_text">Enable and select <b>JRime</b> as your input method to start typing — tap to open settings</string>
+    <string name="setup_dialog_enable_title">Enable JRime</string>
+    <string name="setup_dialog_enable_message">JRime is installed but not enabled, so typing does nothing yet. Open the system\'s input-method list and turn JRime on — coming back here closes this guide automatically.</string>
+    <string name="setup_dialog_select_title">Make JRime the active input method</string>
+    <string name="setup_dialog_select_message">JRime is enabled but not the active input method. Switch the current input method to JRime in system settings.</string>
+    <string name="setup_dialog_go">Open settings</string>
+    <string name="setup_dialog_later">Later</string>
+    <string name="import_font_title">Import font</string>
+    <string name="import_font_summary_empty">Pick a font file (e.g. HanaMinB) to render the rare CJK ideographs the system fonts lack — applies after the input method restarts</string>
+    <string name="import_font_summary_named">Imported: %1$s — applies after the input method restarts</string>
+    <string name="import_font_done">Font imported. Switch the input method off and back on (or restart the phone) to apply</string>
+    <string name="import_font_failed">Font import failed: %1$s</string>
     <string name="deploy_banner_text">Precompiled input data is missing, so nothing can be typed yet — tap here or use <b>Deploy</b> in the toolbar to rebuild it</string>
     <string name="done">Done</string>
     <string name="follow_system_day_night_color">Follow system day/night color</string>

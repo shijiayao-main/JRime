@@ -936,10 +936,18 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
 
         return sequenceOf(
             when (type) {
+                // The raw input code: the composition rides to the UI
+                // unblanked (the aux-code state detector reads it), so a
+                // %2$s placeholder expands to the typed code, while the
+                // commit preview stays the first fallback below.
                 2 -> preedit
+
                 3 -> selected
+
                 4 -> beforeCursor
+
                 1 -> lastCommitted
+
                 else -> null
             },
             commitPreview,

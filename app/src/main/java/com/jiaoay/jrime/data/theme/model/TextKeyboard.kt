@@ -82,6 +82,7 @@ data class TextKeyboard(
         val paging: KeyActionToken? = null,
         val combo: KeyActionToken? = null,
         val ascii: KeyActionToken? = null,
+        val aux: KeyActionToken? = null,
     ) {
         companion object {
             val DEFAULTS = TextKey()

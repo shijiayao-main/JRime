@@ -47,6 +47,13 @@ class ImeUiState(
     var paging by mutableStateOf(false)
         private set
 
+    /**
+     * The aux-code input state: the composition's active segment is taking
+     * form codes after the "/" separator (detected off the preedit tail).
+     */
+    var auxActive by mutableStateOf(false)
+        private set
+
     /** The window the board manager last attached; drives the panel switch. */
     var currentWindow by mutableStateOf<BoardWindow?>(null)
         private set
@@ -115,6 +122,7 @@ class ImeUiState(
 
     override fun onCompositionUpdate(data: CompositionProto) {
         composition = data
+        auxActive = data.isAuxActive()
     }
 
     override fun onCandidateListUpdate(data: Candidates.Bulk) {
@@ -139,4 +147,22 @@ class ImeUiState(
             "ascii_punct" -> isAsciiPunct = value.value
         }
     }
+}
+
+/**
+ * The aux-code gate, mirrored from cand_selector.lua: 2-4 input letters,
+ * the "/" separator, then 0-2 form letters or a tone mark (I/U/N/M) at the
+ * tail. Confirmed segments render as CJK text, so a non-letter (or the
+ * string head) is the left boundary; a 5+ letter run is never an aux code.
+ */
+private val AUX_PREEDIT = Regex("(?:^|[^a-z])[a-z]{2,4}/([a-z]{0,2}|[IUNM])$")
+
+/**
+ * Whether the composition's active segment is taking aux codes: the preedit
+ * tail reads as input letters + "/" + form codes. The DISABLE inline mode
+ * appends the soft caret to the preedit, so it is stripped first.
+ */
+internal fun CompositionProto.isAuxActive(): Boolean {
+    val text = preedit?.trimEnd('\u2038') ?: return false
+    return text.isNotEmpty() && AUX_PREEDIT.containsMatchIn(text)
 }

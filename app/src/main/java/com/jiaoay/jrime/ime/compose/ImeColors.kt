@@ -10,11 +10,14 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.jiaoay.jrime.data.theme.ColorManager
+import com.jiaoay.jrime.data.theme.ImeFonts
 import com.jiaoay.jrime.data.theme.ThemeColors
 
 /**
@@ -87,6 +90,7 @@ fun rememberImeColors(state: ImeUiState): ImeColors {
 class GboardStyle
 internal constructor(
     colors: ImeColors,
+    family: FontFamily? = null,
 ) {
     val board = colors.keyboardBackground
     val letter = colors.keyBackground
@@ -103,28 +107,36 @@ internal constructor(
             fontSize = 9.sp,
             color = textVariant,
             textAlign = TextAlign.Center,
+            fontFamily = family,
         )
     val candidateStyle =
         TextStyle(
             fontSize = 18.sp,
             fontWeight = FontWeight.Normal,
             color = colors.candidateText,
+            fontFamily = family,
         )
     val candidateHighlightedStyle =
         TextStyle(
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
             color = colors.candidateHighlighted,
+            fontFamily = family,
         )
     val candidateCommentStyle =
         TextStyle(
             fontSize = 11.sp,
             color = colors.candidateComment,
+            fontFamily = family,
         )
 }
 
 @Composable
 fun gboardStyle(): GboardStyle {
     val colors = LocalImeColors.current
-    return remember(colors) { GboardStyle(colors) }
+    val context = LocalContext.current
+    // The font chain rides under every style: it resolves per palette, but
+    // the typeface itself is cached in ImeFonts on the directory signature,
+    // so a day/night flip never re-reads the chained files.
+    return remember(colors) { GboardStyle(colors, FontFamily(ImeFonts.currentTypeface(context))) }
 }

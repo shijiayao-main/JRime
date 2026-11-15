@@ -52,7 +52,7 @@ class KeyboardBuilder internal constructor(private val name: String) {
     var keyPressOffsetY: Float = 0f
 
     /**
-     * One key: the 13 behavior slots plus the visual fields, all by name.
+     * One key: the 14 behavior slots plus the visual fields, all by name.
      * A key whose every behavior slot is empty is a [spacer].
      */
     fun key(
@@ -77,6 +77,7 @@ class KeyboardBuilder internal constructor(private val name: String) {
         paging: String? = null,
         combo: String? = null,
         ascii: String? = null,
+        aux: String? = null,
         keyTextOffsetY: Float = 0f,
         keySymbolOffsetX: Float = 0f,
         keyBackColor: String = "",
@@ -85,7 +86,7 @@ class KeyboardBuilder internal constructor(private val name: String) {
         hilitedKeyBackColor: String = "",
         hilitedKeyTextColor: String = "",
     ) {
-        val slots = listOf(click, doubleClick, lazyDoubleClick, longClick, swipeUp, swipeDown, swipeLeft, swipeRight, composing, hasMenu, paging, combo, ascii)
+        val slots = listOf(click, doubleClick, lazyDoubleClick, longClick, swipeUp, swipeDown, swipeLeft, swipeRight, composing, hasMenu, paging, combo, ascii, aux)
         if (slots.all { it.isNullOrEmpty() }) {
             spacer(width)
             return
@@ -121,6 +122,7 @@ class KeyboardBuilder internal constructor(private val name: String) {
             paging = token(paging),
             combo = token(combo),
             ascii = token(ascii),
+            aux = token(aux),
         )
     }
 

@@ -44,6 +44,14 @@ class KeyActionTest :
                     action.modifier shouldBe KeyEvent.META_CTRL_ON
                 }
             }
+            `when`("the preset selects another keyboard board") {
+                then("the action resolves to Eisu carrying the board's name") {
+                    val action = plain("Keyboard_number")
+                    action.code shouldBe KeyEvent.KEYCODE_EISU
+                    action.select shouldBe "number"
+                    action.text shouldBe ""
+                }
+            }
             `when`("the preset sends Shift+Return") {
                 then("enter keeps the shift mask and carries no text or command") {
                     val action = KeyAction(

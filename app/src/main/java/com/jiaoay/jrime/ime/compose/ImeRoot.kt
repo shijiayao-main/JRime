@@ -85,8 +85,8 @@ private fun ImeRootContent(
     onDispatch: (KeyAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val appearance = remember(state.composing, state.hasMenu, state.paging) {
-        KeyAppearance(state.composing, state.hasMenu, state.paging)
+    val appearance = remember(state.composing, state.hasMenu, state.paging, state.auxActive) {
+        KeyAppearance(state.composing, state.hasMenu, state.paging, state.auxActive)
     }
     // The IME window is fullscreen and transparent (legacy contract); the
     // visible keyboard is a bottom-anchored band, everything above it stays
@@ -110,12 +110,12 @@ private fun ImeRootContent(
                 },
         ) {
             // The permanent action bar: idle it carries the menu row (settings,
-            // punctuation width, clipboard, emoji, CJK/EN, collapse); composing
-            // it becomes the candidate strip. The height never moves -- the
-            // band stays put when candidates arrive (the Gboard form).
+            // punctuation width, number, clipboard, emoji, CJK/EN, collapse);
+            // composing it becomes the candidate strip. The height never moves
+            // -- the band stays put when candidates arrive (the Gboard form).
             ActionBar(state, onDispatch)
             // The Gboard structure carries its own intrinsic height (fixed
-            // 65dp rows); the legacy keyboardHeight measurement reflected the
+            // 58dp rows); the legacy keyboardHeight measurement reflected the
             // old YAML renderer and clips the new taller content.
             PanelHost(
                 state = state,
@@ -142,10 +142,10 @@ private val BandButtonBreathing = 12.dp
 
 /**
  * The action bar: idle it is the menu row -- settings, punctuation width,
- * clipboard, emoji on the left, the CJK/EN toggle and the collapse key on
- * the right; composing it turns into the candidate strip (candidates in a
- * horizontally scrolling row, aux-code comments as small gray suffixes --
- * the aux codes make candidate picking exact on the fly) with only the
+ * number, clipboard, emoji on the left, the CJK/EN toggle and the collapse
+ * key on the right; composing it turns into the candidate strip (candidates
+ * in a horizontally scrolling row, aux-code comments as small gray suffixes
+ * -- the aux codes make candidate picking exact on the fly) with only the
  * CJK/EN toggle kept on the right. The composition itself never shows
  * here: the app's field already renders it as the composing underline (the
  * system contract).
@@ -176,6 +176,10 @@ private fun ActionBar(
                 actions.punctSwitch,
                 onDispatch,
             )
+            // The number entrance (Gboard's "?123" form): the comma key's
+            // hidden long-press/swipe-up board switch is gone, so the number
+            // board lives one tap away on the menu row.
+            ActionBarButton("123", actions.number, onDispatch)
             ActionBarButton("📋", actions.clipboard, onDispatch)
             // The same slot is the emoji entrance on the keyboard and the way
             // back from any non-keyboard panel (the liquid pages, the
@@ -230,6 +234,7 @@ private fun ActionBar(
 private class ActionBarActions(
     val settings: KeyAction,
     val punctSwitch: KeyAction,
+    val number: KeyAction,
     val clipboard: KeyAction,
     val emoji: KeyAction,
     val backToKeyboard: KeyAction,
@@ -244,6 +249,7 @@ private fun rememberActionBarActions(): ActionBarActions = remember {
     ActionBarActions(
         settings = action("Settings"),
         punctSwitch = action("punct_switch"),
+        number = action("Keyboard_number"),
         clipboard = action("clipboard_window"),
         emoji = action("liquid_keyboard_emoji"),
         backToKeyboard = action("back_to_keyboard"),
