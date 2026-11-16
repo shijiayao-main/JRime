@@ -53,30 +53,37 @@ class KeyboardFoldingTest :
             }
         }
 
-        "the default keyboard folds into the four classic rows" {
+        "the default keyboard folds into the five classic rows (the digit row on top)" {
             val (rows, _) = fold("default")
-            rows shouldHaveSize 4
+            rows shouldHaveSize 5
 
-            val first = rows[0]
+            val digits = rows[0]
+            digits shouldHaveSize 10
+            digits.sumOf { it.weight.toDouble() } shouldBe 100.0
+            digits.map { (it.key.click as KeyActionToken.Plain).token } shouldBe
+                listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
+            digits.forEach { it.weight shouldBe 10f }
+
+            val first = rows[1]
             first shouldHaveSize 10
             first.sumOf { it.weight.toDouble() } shouldBe 100.0
             first.map { (it.key.click as KeyActionToken.Plain).token } shouldBe
                 listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p")
             first.forEach { it.weight shouldBe 10f }
 
-            val home = rows[1]
+            val home = rows[2]
             // leading spacer(2) + a(12) s(11) d f g h j(10) k(11) l(12) + trailing spacer(2)
             home.sumOf { it.weight.toDouble() } shouldBe 100.0
             home.count { it.key.click != null } shouldBe 9
 
-            val bottom = rows[2]
+            val bottom = rows[3]
             // Shift(14) + z x c v b n m (7x10) + BackSpace(16) = 100
             bottom.sumOf { it.weight.toDouble() } shouldBe 100.0
             // the aux key in the shift slot has no click slot (it resolves
             // through composing/ascii), so eight click-bearing keys remain
             bottom.count { it.key.click != null } shouldBe 8
 
-            val functionRow = rows[3]
+            val functionRow = rows[4]
             functionRow.sumOf { it.weight.toDouble() } shouldBe 100.0
             // the comma is a plain comma again; the dedicated aux-code key
             // (in the shift slot) carries the separator while composing
@@ -142,20 +149,22 @@ class KeyboardFoldingTest :
         "gboardLetterRows strips every non-letter-class key from the data board" {
             val presetKeys = NativeTheme.theme.presetKeys
             val letters = gboardLetterRows(NativeTheme.theme.presetKeyboards.getValue("default"), presetKeys)
-            letters shouldHaveSize 3
-            // every key face is a single letter, nothing else
+            letters shouldHaveSize 4
+            // every key face is a single letter or digit, nothing else
             for (row in letters) {
                 for (key in row) {
                     val token = (key.click as? KeyActionToken.Plain)?.token.orEmpty()
                     token.length shouldBe 1
-                    token[0].isLetter() shouldBe true
+                    token[0].isLetterOrDigit() shouldBe true
                 }
             }
             letters[0].map { (it.click as? KeyActionToken.Plain)?.token } shouldBe
-                listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p")
+                listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
             letters[1].map { (it.click as? KeyActionToken.Plain)?.token } shouldBe
-                listOf("a", "s", "d", "f", "g", "h", "j", "k", "l")
+                listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p")
             letters[2].map { (it.click as? KeyActionToken.Plain)?.token } shouldBe
+                listOf("a", "s", "d", "f", "g", "h", "j", "k", "l")
+            letters[3].map { (it.click as? KeyActionToken.Plain)?.token } shouldBe
                 listOf("z", "x", "c", "v", "b", "n", "m")
 
             // the 36-key board keeps its digit row: letters and digits both count

@@ -28,6 +28,19 @@ object KeyLayouts {
             keyTextOffsetY = -.6f
             keySymbolOffsetY = 0f
             keyHintOffsetY = 0f
+            // 顶行数字（行为槽逐字照抄 flyhe36 的数字行模板）：空闲单击=数字
+            // 直上屏；组合态该行槽位由候选栏顶替（GboardKeyboard 渲染器行为），
+            // 行高恒定不跳
+            key(click = "1", longClick = "!", swipeUp = "!")
+            key(click = "2", longClick = "@", swipeUp = "@")
+            key(click = "3", longClick = "#", swipeUp = "#")
+            key(click = "4", longClick = "$", swipeUp = "$")
+            key(click = "5", longClick = "%", swipeUp = "%")
+            key(click = "6", longClick = "Commit_Caret", swipeUp = "Commit_Caret", swipeDown = "……")
+            key(click = "7", longClick = "&", swipeUp = "&", swipeDown = "-")
+            key(click = "8", longClick = "*", swipeUp = "*", swipeDown = "+")
+            key(click = "9", longClick = "(", swipeUp = "(", swipeDown = "<")
+            key(click = "0", longClick = ")", swipeUp = ")", swipeDown = ">")
             // Q 行长按=数字（Gboard 契约：角标只显示长按输出的字符）
             key(click = "q", longClick = "1", swipeDown = "~", hint = "1")
             key(click = "w", longClick = "2", swipeDown = "BackToPreviousSyllable", hint = "2")

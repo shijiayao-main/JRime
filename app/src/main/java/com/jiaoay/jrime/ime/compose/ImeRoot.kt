@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -45,8 +44,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jiaoay.jrime.core.CandidateProto
 import com.jiaoay.jrime.data.theme.model.KeyActionToken
+import com.jiaoay.jrime.data.theme.model.TextKeyboard
 import com.jiaoay.jrime.ime.clipboard.ClipboardPanel
 import com.jiaoay.jrime.ime.keyboard.InputFeedbackManager
 import com.jiaoay.jrime.ime.keyboard.KeyAction
@@ -57,9 +56,11 @@ import com.jiaoay.jrime.theme.NativeTheme
 import kotlinx.coroutines.delay
 
 /**
- * The Compose IME root: the permanent action bar (menu row idle, candidate
- * strip while composing -- one constant-height band) and the active panel --
- * the whole input-view area in one composition tree.
+ * The Compose IME root: the permanent action bar (menu row idle, composing
+ * code echo while typing -- one constant-height band) and the active panel --
+ * the whole input-view area in one composition tree. On the Gboard-structured
+ * keyboards the candidates render in the panel's digit-row slot while
+ * composing; the full-data panels keep them in the action bar.
  *
  * Stage-1 notes (task 1.3): liquid symbol pages still read the legacy
  * theme's model; the clipboard and switches panels render a placeholder
@@ -89,6 +90,14 @@ private fun ImeRootContent(
     val appearance = remember(state.composing, state.hasMenu, state.paging, state.auxActive, state.isAsciiMode) {
         KeyAppearance(state.composing, state.hasMenu, state.paging, state.auxActive, state.isAsciiMode)
     }
+    // The panel's board, hoisted so the action bar knows where the candidates
+    // render: on the Gboard-structured keyboard boards they live in the
+    // digit-row slot while composing; every other panel (the full-data boards,
+    // the liquid pages, the clipboard) keeps them in the action bar.
+    val board = rememberKeyboard(keyboardWindow, state.currentWindow)
+    val qwerty = remember(board) { isQwertyBoard(board, NativeTheme.theme.presetKeys) }
+    val candidatesInKeyboardRow =
+        qwerty && (state.currentWindow == null || state.currentWindow is KeyboardWindow)
     // The IME window is fullscreen and transparent (legacy contract); the
     // visible keyboard is a bottom-anchored band, everything above it stays
     // transparent so the app shows through. The band background paints
@@ -112,15 +121,16 @@ private fun ImeRootContent(
         ) {
             // The permanent action bar: idle it carries the menu row (settings,
             // punctuation width, number, clipboard, emoji, CJK/EN, collapse);
-            // composing it becomes the candidate strip. The height never moves
-            // -- the band stays put when candidates arrive (the Gboard form).
-            ActionBar(state, onDispatch)
+            // composing it shows the code echo, candidates only when the panel
+            // doesn't host them itself. The height never moves -- the band
+            // stays put when candidates arrive (the Gboard form).
+            ActionBar(state, onDispatch, candidatesInKeyboardRow)
             // The Gboard structure carries its own intrinsic height (fixed
-            // 58dp rows); the legacy keyboardHeight measurement reflected the
+            // 52dp rows); the legacy keyboardHeight measurement reflected the
             // old YAML renderer and clips the new taller content.
             PanelHost(
                 state = state,
-                keyboardWindow = keyboardWindow,
+                board = board,
                 appearance = appearance,
                 onDispatch = onDispatch,
                 modifier = Modifier.fillMaxWidth(),
@@ -144,18 +154,18 @@ private val BandButtonBreathing = 12.dp
 /**
  * The action bar: idle it is the menu row -- settings, punctuation width,
  * number, clipboard, emoji on the left, the CJK/EN toggle and the collapse
- * key on the right; composing it turns into the candidate strip (candidates
- * in a horizontally scrolling row, aux-code comments as small gray suffixes
- * -- the aux codes make candidate picking exact on the fly) with only the
- * CJK/EN toggle kept on the right. The composition itself never shows
- * here: the app's field already renders it as the composing underline (the
- * system contract).
+ * key on the right; composing it shows the code echo alone (candidates live
+ * in the keyboard's digit-row slot, so the echo never crowds them) with only
+ * the CJK/EN toggle kept on the right. On the panels that don't host the
+ * candidate slot themselves ([candidatesInKeyboardRow] false) the strip
+ * falls back into the bar's trailing space, the old form.
  */
 @Suppress("FunctionName")
 @Composable
 private fun ActionBar(
     state: ImeUiState,
     onDispatch: (KeyAction) -> Unit,
+    candidatesInKeyboardRow: Boolean,
 ) {
     val actions = rememberActionBarActions()
     val colors = LocalImeColors.current
@@ -220,10 +230,10 @@ private fun ActionBar(
             // the code itself -- the way the mainstream Chinese IMEs do.
             // The engine still gets "/" as the aux separator; the face shows
             // the middle dot, matching the inline copy.
-            val preedit = state.composition.preedit.orEmpty()
-            if (preedit.isNotEmpty()) {
+            val echo = compositionEchoText(state.composition.preedit)
+            if (echo.isNotEmpty()) {
                 BasicText(
-                    text = preedit.replace("/", "·"),
+                    text = echo,
                     style = gboardStyle().preeditStyle,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -231,16 +241,13 @@ private fun ActionBar(
                 )
                 CandidateDivider()
             }
-            LazyRow(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                itemsIndexed(state.candidates) { index, candidate ->
-                    if (index > 0) {
-                        CandidateDivider()
-                    }
-                    CandidateWord(index = index, candidate = candidate, state = state)
-                }
+            // On the Gboard boards the candidates render in the digit-row
+            // slot below; the echo owns this bar. The other panels keep the
+            // strip right here (the pre-candidates-slot form).
+            if (!candidatesInKeyboardRow) {
+                CandidateStrip(state, Modifier.weight(1f))
+            } else {
+                Spacer(modifier = Modifier.weight(1f))
             }
             AsciiSwitchButton(state, actions.asciiSwitch, onDispatch)
         }
@@ -365,50 +372,9 @@ private fun AsciiSwitchButton(
 
 @Suppress("FunctionName")
 @Composable
-private fun CandidateWord(
-    index: Int,
-    candidate: CandidateProto,
-    state: ImeUiState,
-) {
-    val style = gboardStyle()
-    val highlighted = index == state.highlightedCandidate
-    Row(
-        modifier = Modifier
-            .clickable { state.selectCandidate(index) }
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        BasicText(
-            text = candidate.text,
-            style = if (highlighted) style.candidateHighlightedStyle else style.candidateStyle,
-        )
-        if (candidate.comment.isNotEmpty()) {
-            BasicText(
-                text = candidate.comment,
-                style = style.candidateCommentStyle,
-                modifier = Modifier.padding(start = 2.dp, top = 2.dp),
-            )
-        }
-    }
-}
-
-@Suppress("FunctionName")
-@Composable
-private fun CandidateDivider() {
-    Spacer(
-        modifier = Modifier
-            .padding(horizontal = 2.dp)
-            .width(1.dp)
-            .height(22.dp)
-            .background(LocalImeColors.current.stripDivider),
-    )
-}
-
-@Suppress("FunctionName")
-@Composable
 private fun PanelHost(
     state: ImeUiState,
-    keyboardWindow: KeyboardWindow,
+    board: TextKeyboard,
     appearance: KeyAppearance,
     onDispatch: (KeyAction) -> Unit,
     modifier: Modifier = Modifier,
@@ -428,7 +394,6 @@ private fun PanelHost(
         // service attaches the keyboard window on the first schema message,
         // which races the first frame.
         is KeyboardWindow, null -> {
-            val board = rememberKeyboard(keyboardWindow, window)
             GboardKeyboard(
                 board = board,
                 keyAppearance = appearance,
@@ -436,6 +401,10 @@ private fun PanelHost(
                 onDispatch = onDispatch,
                 modifier = modifier,
                 isAsciiMode = state.isAsciiMode,
+                // While composing the digit-row slot shows the candidates;
+                // the gray hint covers the empty-candidate moments so the
+                // row never collapses (nor reads as "tap the digits").
+                composingContent = { CandidateStrip(state, Modifier.fillMaxSize(), emptyHint = true) },
             )
         }
 
@@ -447,7 +416,7 @@ private fun PanelHost(
 private fun rememberKeyboard(
     keyboardWindow: KeyboardWindow,
     window: BoardWindow?,
-): com.jiaoay.jrime.data.theme.model.TextKeyboard {
+): TextKeyboard {
     val name by keyboardWindow.currentKeyboardName.collectAsState()
     val boardName = name.ifEmpty { "default" }
     return remember(boardName) {

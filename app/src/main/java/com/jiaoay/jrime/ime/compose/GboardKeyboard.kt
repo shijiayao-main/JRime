@@ -5,6 +5,7 @@
 
 package com.jiaoay.jrime.ime.compose
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,6 +30,11 @@ import com.jiaoay.jrime.ime.keyboard.KeyAction
  * chrome slot still resolves its data key first, so long-press and swipe
  * behaviors survive the redesign (the old YAML data stays a behavior
  * inventory, never a face).
+ *
+ * The top row is data too: idle it renders the digit row (1-9, 0); while
+ * composing the slot is handed to the app-provided candidate strip
+ * ([composingContent]). Either way it stays one pinned row -- the band never
+ * jumps when the state flips.
  */
 object GboardKeyboard {
     const val ROW_HEIGHT = 52
@@ -51,10 +57,12 @@ internal fun backspaceUnits(letterCount: Int): Float = (GboardKeyboard.ROW_UNITS
     .coerceAtLeast(GboardKeyboard.BACKSPACE_MIN_UNITS)
 
 /**
- * Renders the Gboard rows: the data letter rows (a shorter one centered like
- * the classic home-row stagger), the shift-flanked bottom letter row, and the
- * hardcoded function row. Boards that don't fit the letter structure (symbol,
- * number, editor pages) fall back to [KeyboardPanel] at the pinned row height.
+ * Renders the Gboard rows: the data digit row on top (composing hands its
+ * slot to [composingContent], the candidate strip), the data letter rows (a
+ * shorter one centered like the classic home-row stagger), the shift-flanked
+ * bottom letter row, and the hardcoded function row. Boards that don't fit
+ * the letter structure (symbol, number, editor pages) fall back to
+ * [KeyboardPanel] at the pinned row height.
  */
 @Suppress("FunctionName")
 @Composable
@@ -65,6 +73,7 @@ fun GboardKeyboard(
     onDispatch: (KeyAction) -> Unit,
     modifier: Modifier = Modifier,
     isAsciiMode: Boolean = false,
+    composingContent: (@Composable () -> Unit)? = null,
 ) {
     val qwerty = remember(board, presetKeys) { isQwertyBoard(board, presetKeys) }
     if (!qwerty) {
@@ -80,9 +89,35 @@ fun GboardKeyboard(
         )
         return
     }
-    val rows = remember(board, presetKeys) { gboardLetterRows(board, presetKeys) }
+    val (digitRow, letterRows) =
+        remember(board, presetKeys) { splitDigitRow(gboardLetterRows(board, presetKeys)) }
     Column(modifier = modifier.fillMaxWidth()) {
-        for (row in rows.dropLast(1)) {
+        // The top slot: composing shows the candidate strip the app provides,
+        // idle the data digit row. Both are one pinned row -- the band height
+        // never moves when the state flips (the dataKeyGestures teardown
+        // contract keeps a mid-gesture swap from sticking a key face).
+        if (keyAppearance.composing && composingContent != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(GboardKeyboard.ROW_HEIGHT.dp),
+            ) {
+                composingContent()
+            }
+        } else {
+            digitRow?.let { digits ->
+                LetterRow(
+                    keys = digits,
+                    keyAppearance = keyAppearance,
+                    presetKeys = presetKeys,
+                    onDispatch = onDispatch,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(GboardKeyboard.ROW_HEIGHT.dp),
+                )
+            }
+        }
+        for (row in letterRows.dropLast(1)) {
             LetterRow(
                 keys = row,
                 keyAppearance = keyAppearance,
@@ -93,7 +128,7 @@ fun GboardKeyboard(
                     .height(GboardKeyboard.ROW_HEIGHT.dp),
             )
         }
-        rows.lastOrNull()?.let { letters ->
+        letterRows.lastOrNull()?.let { letters ->
             ShiftRow(
                 board = board,
                 letters = letters,
@@ -130,6 +165,23 @@ internal fun gboardLetterRows(
 ): List<List<TextKeyboard.TextKey>> = foldRows(board, board.width.takeIf { it > 0f } ?: 10f)
     .map { row -> row.map { it.key }.filter { isLetterClassKey(it, presetKeys) } }
     .filter { it.isNotEmpty() }
+
+/**
+ * Splits the leading digit row off the letter rows: a first row whose every
+ * key clicks a single digit is the digit row -- composing hands its slot to
+ * the candidate strip, so it must be separable from the letter rows. Boards
+ * whose first row is anything else (symbol pages) keep all rows.
+ */
+internal fun splitDigitRow(
+    rows: List<List<TextKeyboard.TextKey>>,
+): Pair<List<TextKeyboard.TextKey>?, List<List<TextKeyboard.TextKey>>> {
+    val first = rows.firstOrNull() ?: return null to rows
+    val allDigits = first.all { key ->
+        val token = (key.click as? KeyActionToken.Plain)?.token
+        token != null && token.length == 1 && token[0].isDigit()
+    }
+    return if (allDigits) first to rows.drop(1) else null to rows
+}
 
 private fun isLetterClassKey(
     key: TextKeyboard.TextKey,
