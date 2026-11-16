@@ -52,7 +52,10 @@ object KeyLayouts {
             key(click = "k", longClick = "{", swipeUp = "{", swipeDown = "[", width = 11f)
             key(click = "l", longClick = "}", swipeUp = "}", swipeDown = "]", width = 12f)
             spacer(2f)
-            key(click = "Shift_L", doubleClick = "Shift_L2", width = 14f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
+            // The shift slot doubles as the CJK/EN toggle: in CJK the key
+            // switches the language (the Gboard location), in ASCII it is the
+            // plain shift it always was.
+            key(click = "ascii_switch", ascii = "Shift_L", width = 14f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
             key(click = "z", longClick = "undo")
             key(click = "x", longClick = "cut")
             key(click = "c", longClick = "copy")
@@ -114,7 +117,10 @@ object KeyLayouts {
             key(click = "k", longClick = "{", swipeUp = "{", swipeDown = "[", width = 11f)
             key(click = "l", longClick = "}", swipeUp = "}", swipeDown = "]", width = 12f)
             spacer(2f)
-            key(click = "Shift_L", doubleClick = "Shift_L2", width = 14f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
+            // The shift slot doubles as the CJK/EN toggle: in CJK the key
+            // switches the language (the Gboard location), in ASCII it is the
+            // plain shift it always was.
+            key(click = "ascii_switch", ascii = "Shift_L", width = 14f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
             key(click = "z", longClick = "undo")
             key(click = "x", longClick = "cut")
             key(click = "c", longClick = "copy")

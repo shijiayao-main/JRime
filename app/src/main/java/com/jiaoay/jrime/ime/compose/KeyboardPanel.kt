@@ -123,6 +123,7 @@ data class KeyAppearance(
     val hasMenu: Boolean = false,
     val paging: Boolean = false,
     val auxActive: Boolean = false,
+    val isAsciiMode: Boolean = false,
 )
 
 /**
@@ -141,6 +142,7 @@ internal fun TextKey.resolveToken(
                 if (appearance.composing) KeyBehavior.COMPOSING else null,
                 if (appearance.hasMenu) KeyBehavior.HAS_MENU else null,
                 if (appearance.paging) KeyBehavior.PAGING else null,
+                if (appearance.isAsciiMode) KeyBehavior.ASCII else null,
                 KeyBehavior.CLICK,
             )
 

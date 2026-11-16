@@ -39,11 +39,10 @@ object ImeFonts {
     private val FONT_EXTENSIONS = setOf("ttf", "otf", "ttc")
 
     /** Font files the user imported, in name order for a stable chain. */
-    fun fontFiles(): List<File> =
-        fontDir
-            .listFiles { f -> f.isFile && f.extension.lowercase() in FONT_EXTENSIONS }
-            ?.sortedBy { it.name }
-            .orEmpty()
+    fun fontFiles(): List<File> = fontDir
+        .listFiles { f -> f.isFile && f.extension.lowercase() in FONT_EXTENSIONS }
+        ?.sortedBy { it.name }
+        .orEmpty()
 
     /**
      * The IME-wide typeface: the shipped subset with the user imports
@@ -78,28 +77,27 @@ object ImeFonts {
      * one dies with the sweep. The copy is unconditional -- a few MB on
      * first use per version, nothing when the file already matches.
      */
-    private fun releaseBuiltin(context: Context): File? =
-        runCatching {
-            val target = File(fontDir, "builtin-${BuildConfig.BUILD_VERSION_NAME}.ttf")
-            val asset = context.assets.open(BUILTIN_ASSET)
-            if (target.isFile && target.length() == asset.available().toLong()) {
-                asset.close()
-            } else {
-                asset.use { input ->
-                    val tmp = File(fontDir, "builtin.tmp")
-                    tmp.outputStream().use { output -> input.copyTo(output) }
-                    if (target.isFile) target.delete()
-                    if (!tmp.renameTo(target)) {
-                        tmp.delete()
-                        error("rename failed")
-                    }
+    private fun releaseBuiltin(context: Context): File? = runCatching {
+        val target = File(fontDir, "builtin-${BuildConfig.BUILD_VERSION_NAME}.ttf")
+        val asset = context.assets.open(BUILTIN_ASSET)
+        if (target.isFile && target.length() == asset.available().toLong()) {
+            asset.close()
+        } else {
+            asset.use { input ->
+                val tmp = File(fontDir, "builtin.tmp")
+                tmp.outputStream().use { output -> input.copyTo(output) }
+                if (target.isFile) target.delete()
+                if (!tmp.renameTo(target)) {
+                    tmp.delete()
+                    error("rename failed")
                 }
-                Timber.d("Released the built-in subset font: $target (${target.length()} bytes)")
             }
-            target
-        }.onFailure {
-            Timber.e(it, "Failed to release the built-in font; shipped coverage unavailable")
-        }.getOrNull()
+            Timber.d("Released the built-in subset font: $target (${target.length()} bytes)")
+        }
+        target
+    }.onFailure {
+        Timber.e(it, "Failed to release the built-in font; shipped coverage unavailable")
+    }.getOrNull()
 
     /**
      * The cached chain, keyed on the directory signature: building reads
@@ -126,29 +124,27 @@ object ImeFonts {
     suspend fun import(
         context: Context,
         uri: Uri,
-    ): Result<File> =
-        withContext(Dispatchers.IO) {
-            runCatching {
-                val name = queryDisplayName(context, uri)
-                    ?.takeIf { it.contains('.') && it.substringAfterLast('.').lowercase() in FONT_EXTENSIONS }
-                    ?: "imported-${System.currentTimeMillis()}.ttf"
-                val target = File(fontDir, name)
-                context.contentResolver.openInputStream(uri)!!.use { input ->
-                    target.outputStream().use { output -> input.copyTo(output) }
-                }
-                Timber.d("Imported font: $target (${target.length()} bytes)")
-                target
+    ): Result<File> = withContext(Dispatchers.IO) {
+        runCatching {
+            val name = queryDisplayName(context, uri)
+                ?.takeIf { it.contains('.') && it.substringAfterLast('.').lowercase() in FONT_EXTENSIONS }
+                ?: "imported-${System.currentTimeMillis()}.ttf"
+            val target = File(fontDir, name)
+            context.contentResolver.openInputStream(uri)!!.use { input ->
+                target.outputStream().use { output -> input.copyTo(output) }
             }
+            Timber.d("Imported font: $target (${target.length()} bytes)")
+            target
         }
+    }
 
     private fun queryDisplayName(
         context: Context,
         uri: Uri,
-    ): String? =
-        context.contentResolver
-            .query(uri, null, null, null, null)
-            ?.use { cursor ->
-                val index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                if (index >= 0 && cursor.moveToFirst()) cursor.getString(index) else null
-            }
+    ): String? = context.contentResolver
+        .query(uri, null, null, null, null)
+        ?.use { cursor ->
+            val index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+            if (index >= 0 && cursor.moveToFirst()) cursor.getString(index) else null
+        }
 }

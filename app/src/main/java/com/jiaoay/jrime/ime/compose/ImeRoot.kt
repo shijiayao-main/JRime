@@ -85,8 +85,8 @@ private fun ImeRootContent(
     onDispatch: (KeyAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val appearance = remember(state.composing, state.hasMenu, state.paging, state.auxActive) {
-        KeyAppearance(state.composing, state.hasMenu, state.paging, state.auxActive)
+    val appearance = remember(state.composing, state.hasMenu, state.paging, state.auxActive, state.isAsciiMode) {
+        KeyAppearance(state.composing, state.hasMenu, state.paging, state.auxActive, state.isAsciiMode)
     }
     // The IME window is fullscreen and transparent (legacy contract); the
     // visible keyboard is a bottom-anchored band, everything above it stays

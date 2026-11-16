@@ -31,7 +31,7 @@ import com.jiaoay.jrime.ime.keyboard.KeyAction
  * inventory, never a face).
  */
 object GboardKeyboard {
-    const val ROW_HEIGHT = 58
+    const val ROW_HEIGHT = 52
 
     /** A full row spans this many units (the FlorisBoard weight grid). */
     internal const val ROW_UNITS = 10f
@@ -203,15 +203,17 @@ private fun ShiftRow(
     Row(modifier = modifier) {
         ChromeSlot(
             board = board,
-            token = "Shift_L",
-            label = "⇧",
+            // The slot is dual-purpose: in CJK it switches the language (the
+            // Gboard location), in ASCII it is the plain shift (the data
+            // key's ascii slot). The face says which job it carries now.
+            token = "ascii_switch",
+            label = if (isAsciiMode) "⇧" else "中",
             labelSize = 20f,
             keyAppearance = keyAppearance,
             presetKeys = presetKeys,
             onDispatch = onDispatch,
             modifier = Modifier.weight(GboardKeyboard.SHIFT_UNITS),
-            // The shift key doubles as the CJK/EN toggle's on-key feedback:
-            // lit while ascii_mode is on, matching the action-bar chip.
+            // Lit while ascii_mode is on, matching the action-bar chip.
             highlight = isAsciiMode,
         )
         letters.forEach { key ->

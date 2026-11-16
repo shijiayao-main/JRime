@@ -332,10 +332,12 @@ class Rime :
         }
         val inlinePreedit = when (mode) {
             InlinePreeditMode.DISABLE -> ""
+
             // The aux separator stays "/" in the engine (the cand_selector
             // contract) and in the composition broadcast (the aux-state
             // detector matches it); only the field-facing copy is re-spelled.
             InlinePreeditMode.COMPOSING_TEXT -> composition.preedit?.replace(AUX_SEPARATOR, AUX_SEPARATOR_DISPLAY) ?: ""
+
             InlinePreeditMode.COMMIT_TEXT_PREVIEW -> composition.commitTextPreview ?: ""
         }
         // The raw composition always rides to the UI (never blanked): the
