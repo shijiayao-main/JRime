@@ -12,7 +12,11 @@ project(jrime-host-tools)
 
 set(JNI_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
 
-add_link_options("LINKER:--build-id=none")
+# Apple ld rejects --build-id=none (GNU ld/lld only); it is only a
+# reproducibility nicety for a host tool, so skip it on Darwin.
+if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
+  add_link_options("LINKER:--build-id=none")
+endif()
 
 set(CMAKE_MODULE_PATH "${JNI_ROOT}/cmake" ${CMAKE_MODULE_PATH})
 
