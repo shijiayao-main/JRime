@@ -241,7 +241,12 @@ private fun ActionBar(
                     style = gboardStyle().preeditStyle,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(horizontal = 8.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        // tap the echoed code to cancel the composition (the
+                        // Esc affordance): start the syllable over without
+                        // touching what the field already holds
+                        .clickable { onDispatch(actions.escape) },
                 )
                 CandidateDivider()
             }
@@ -268,6 +273,7 @@ private class ActionBarActions(
     val backToKeyboard: KeyAction,
     val asciiSwitch: KeyAction,
     val hide: KeyAction,
+    val escape: KeyAction,
 )
 
 @Composable
@@ -283,6 +289,7 @@ private fun rememberActionBarActions(): ActionBarActions = remember {
         backToKeyboard = action("back_to_keyboard"),
         asciiSwitch = action("ascii_switch"),
         hide = action("Hide"),
+        escape = action("Escape"),
     )
 }
 
