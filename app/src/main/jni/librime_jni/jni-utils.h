@@ -79,7 +79,15 @@ class JEnv {
   explicit JEnv(JavaVM* jvm) : jvm_(jvm) {
     if (jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) ==
         JNI_EDETACHED) {
+#if defined(__ANDROID__)
       attached_ = jvm->AttachCurrentThread(&env, nullptr) == JNI_OK;
+#else
+      // Desktop JDKs declare AttachCurrentThread(void**, void*) while the
+      // Android NDK declares JNIEnv**: reinterpret_cast satisfies both.
+      attached_ =
+          jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr) ==
+          JNI_OK;
+#endif
     }
   }
 
@@ -146,7 +154,11 @@ class GlobalRefSingleton {
 
   explicit GlobalRefSingleton(JavaVM* jvm_) : jvm(jvm_) {
     JNIEnv* env;
+#if defined(__ANDROID__)
     jvm->AttachCurrentThread(&env, nullptr);
+#else
+    jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr);
+#endif
 
     Object = reinterpret_cast<jclass>(
         env->NewGlobalRef(env->FindClass("java/lang/Object")));
