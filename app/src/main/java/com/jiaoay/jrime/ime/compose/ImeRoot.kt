@@ -91,13 +91,17 @@ private fun ImeRootContent(
         KeyAppearance(state.composing, state.hasMenu, state.paging, state.auxActive, state.isAsciiMode)
     }
     // The panel's board, hoisted so the action bar knows where the candidates
-    // render: on the Gboard-structured keyboard boards they live in the
-    // digit-row slot while composing; every other panel (the full-data boards,
-    // the liquid pages, the clipboard) keeps them in the action bar.
+    // render: on the Gboard-structured keyboard boards that lead with the
+    // digit row they live in the digit-row slot while composing; every other
+    // panel (boards without a leading digit row, the full-data boards, the
+    // liquid pages, the clipboard) keeps them in the action bar. The two
+    // checks share one invariant (hasLeadingDigitRow) with the keyboard's top
+    // slot, so the candidates can never vanish between the two surfaces.
     val board = rememberKeyboard(keyboardWindow, state.currentWindow)
     val qwerty = remember(board) { isQwertyBoard(board, NativeTheme.theme.presetKeys) }
+    val digitRowTop = remember(board) { hasLeadingDigitRow(board, NativeTheme.theme.presetKeys) }
     val candidatesInKeyboardRow =
-        qwerty && (state.currentWindow == null || state.currentWindow is KeyboardWindow)
+        qwerty && digitRowTop && (state.currentWindow == null || state.currentWindow is KeyboardWindow)
     // The IME window is fullscreen and transparent (legacy contract); the
     // visible keyboard is a bottom-anchored band, everything above it stays
     // transparent so the app shows through. The band background paints

@@ -95,8 +95,10 @@ fun GboardKeyboard(
         // The top slot: composing shows the candidate strip the app provides,
         // idle the data digit row. Both are one pinned row -- the band height
         // never moves when the state flips (the dataKeyGestures teardown
-        // contract keeps a mid-gesture swap from sticking a key face).
-        if (keyAppearance.composing && composingContent != null) {
+        // contract keeps a mid-gesture swap from sticking a key face). The
+        // swap only happens when the board actually leads with digits
+        // (hasLeadingDigitRow): otherwise both states render letter rows only.
+        if (keyAppearance.composing && composingContent != null && digitRow != null) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -182,6 +184,18 @@ internal fun splitDigitRow(
     }
     return if (allDigits) first to rows.drop(1) else null to rows
 }
+
+/**
+ * Whether the folded rows open with the digit row -- the shared invariant
+ * behind the composing slot swap: the keyboard renders the composing content
+ * in the digit slot and the action bar yields its candidates only when this
+ * holds (always consumed together with [isQwertyBoard]), so the band height
+ * never jumps between the two states on any board.
+ */
+internal fun hasLeadingDigitRow(
+    board: TextKeyboard,
+    presetKeys: Map<String, PresetKey>,
+): Boolean = splitDigitRow(gboardLetterRows(board, presetKeys)).first != null
 
 private fun isLetterClassKey(
     key: TextKeyboard.TextKey,

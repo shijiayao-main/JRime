@@ -71,6 +71,21 @@ class KeyboardTopRowTest :
             rest shouldBe emptyList()
         }
 
+        "hasLeadingDigitRow mirrors the slot-swap contract" {
+            val presetKeys = NativeTheme.theme.presetKeys
+            // the shipped qwerty boards lead with the digit row: the top slot
+            // swap and the action-bar yield both key off this one check
+            for (name in listOf("default", "flyhe36")) {
+                hasLeadingDigitRow(NativeTheme.theme.presetKeyboards.getValue(name), presetKeys) shouldBe true
+            }
+            // glyph-opening pages own no digit row (candidates stay in the
+            // action bar); digit-opening pages like number never reach this
+            // path -- the keyboard asks only under isQwertyBoard
+            for (name in listOf("basic_symbol", "math_symbol")) {
+                hasLeadingDigitRow(NativeTheme.theme.presetKeyboards.getValue(name), presetKeys) shouldBe false
+            }
+        }
+
         "the default digit row mirrors the flyhe36 behavior slots" {
             val keys = NativeTheme.theme.presetKeyboards.getValue("default").keys
             val flyhe36 = NativeTheme.theme.presetKeyboards.getValue("flyhe36").keys
