@@ -1,0 +1,15 @@
+# Harness H1 基线语料(doc/harness-design.md §7 的确定性子集)。
+# 一行一用例;steps 为 op token 列表:k:<librime键名>/sel:<idx>/commit/pg:next/pg:prev/opt:<name>=<bool>。
+# 不含 date/time 等随时间变化的场景——golden 要求逐字节一致。
+{"id":"word-2char","tags":["fullcode"],"setup":{"schema":"flypy_xhfast"},"steps":["k:n","k:i","k:h","k:c"]}
+{"id":"word-select-commit","tags":["fullcode","commit"],"setup":{"schema":"flypy_xhfast"},"steps":["k:n","k:i","k:h","k:c","sel:0"]}
+{"id":"word-san-tian","tags":["fullcode"],"setup":{"schema":"flypy_xhfast"},"steps":["k:s","k:j","k:t","k:m"]}
+{"id":"jianpin-single-letter","tags":["jianpin"],"setup":{"schema":"flypy_xhfast"},"steps":["k:n"]}
+{"id":"fuzzy-ju","tags":["fuzzy"],"setup":{"schema":"flypy_xhfast"},"steps":["k:j","k:u"]}
+{"id":"auxcode-slash","tags":["auxcode"],"setup":{"schema":"flypy_xhfast"},"steps":["k:n","k:i","k:h","k:c","k:slash","k:h"]}
+{"id":"punct-comma","tags":["punct"],"setup":{"schema":"flypy_xhfast"},"steps":["k:comma"]}
+{"id":"punct-after-word","tags":["punct"],"setup":{"schema":"flypy_xhfast"},"steps":["k:n","k:i","k:h","k:c","k:comma"]}
+{"id":"backspace-edit","tags":["edit"],"setup":{"schema":"flypy_xhfast"},"steps":["k:n","k:i","k:h","k:BackSpace"]}
+{"id":"ascii-mode","tags":["ascii"],"setup":{"schema":"flypy_xhfast"},"steps":["opt:ascii_mode=true","k:h","k:i"]}
+{"id":"english-star","tags":["english"],"setup":{"schema":"flypy_xhfast"},"steps":["k:h","k:e","k:l","k:l","k:o","k:asterisk"]}
+{"id":"userdict-freq","tags":["userdict"],"setup":{"schema":"flypy_xhfast"},"steps":["k:n","k:i","k:h","k:c","sel:0","k:n","k:i","k:h","k:c","sel:0","k:n","k:i","k:h","k:c","sel:0","k:n","k:i","k:h","k:c"]}

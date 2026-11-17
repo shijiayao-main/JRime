@@ -1,5 +1,9 @@
 package com.jiaoay.jrime.core;
 
 public class CommitProto {
-    public CommitProto(String text) {}
+    public final String text;
+
+    public CommitProto(String text) {
+        this.text = text;
+    }
 }

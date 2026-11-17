@@ -1,0 +1,5 @@
+{"step":0,"op":"start","handled":true,"raw":"","preedit":"","commit":null,"ascii":false,"composing":false,"schema":"flypy_xhfast","cands":[]}
+{"step":1,"op":"opt:ascii_mode=true","handled":true,"raw":"","preedit":"","commit":null,"ascii":false,"composing":false,"schema":"flypy_xhfast","cands":[]}
+{"step":2,"op":"k:h","handled":false,"raw":"","preedit":"","commit":null,"ascii":false,"composing":false,"schema":"flypy_xhfast","cands":[]}
+{"step":3,"op":"k:i","handled":false,"raw":"","preedit":"","commit":null,"ascii":false,"composing":false,"schema":"flypy_xhfast","cands":[]}
+{"step":4,"op":"end","handled":true,"raw":"","preedit":"","commit":null,"ascii":false,"composing":false,"schema":"flypy_xhfast","cands":[]}
