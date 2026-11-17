@@ -134,6 +134,22 @@ endforeach()
 
 add_subdirectory("${JNI_ROOT}/librime" "${CMAKE_BINARY_DIR}/librime-build")
 
+# librime's tools unconditionally define RIME_IMPORTS (upstream assumes
+# Windows consumers link the shared DLL); this host build is static, where
+# dllimport declarations cannot be satisfied. Drop the define on the tool
+# targets so RIME_API falls through to the plain static-library branch.
+if(WIN32)
+  foreach(_jrime_tool rime_console rime_deployer rime_dict_manager)
+    if(TARGET ${_jrime_tool})
+      get_target_property(_jrime_defs ${_jrime_tool} COMPILE_DEFINITIONS)
+      if(_jrime_defs)
+        list(REMOVE_ITEM _jrime_defs "RIME_IMPORTS")
+        set_property(TARGET ${_jrime_tool} PROPERTY COMPILE_DEFINITIONS "${_jrime_defs}")
+      endif()
+    endif()
+  endforeach()
+endif()
+
 # boost::regex symbols come from the Boost::regex target built above (same as
 # the device build, where the jni layer links it).
 target_link_libraries(rime_deployer Boost::regex libopencc leveldb marisa yaml-cpp)
