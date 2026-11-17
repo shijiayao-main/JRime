@@ -12,6 +12,10 @@ on:
       - 'doc/**'
       - '**.md'
       - '.gitignore'
+      # the desktop kernel/harness track never feeds the Android build
+      - 'desktop/**'
+      - 'harness/**'
+      - 'macos/**'
 
 env:
   CI_NAME: Commit CI
