@@ -84,9 +84,8 @@ class JEnv {
 #else
       // Desktop JDKs declare AttachCurrentThread(void**, void*) while the
       // Android NDK declares JNIEnv**: reinterpret_cast satisfies both.
-      attached_ =
-          jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr) ==
-          JNI_OK;
+      attached_ = jvm->AttachCurrentThread(reinterpret_cast<void**>(&env),
+                                           nullptr) == JNI_OK;
 #endif
     }
   }
