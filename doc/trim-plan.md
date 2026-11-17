@@ -8,7 +8,7 @@
 
 - 主方案是 **flypy_xhfast**(`default.custom.yaml:13`、`rime/build/default.yaml:136`、`core/data/UserDataManager.kt:35` 三处一致)。flyhe_fast / flypy_radical / easy_en 是它的 dependencies(`flypy_xhfast.schema.yaml:15-18`,功能底座/部件反查/英文)——**四个 build 目录与 schema 闭包一个都不能删**。
 - grammar 配置启用(`flypy_xhfast.schema.yaml:126-135`,`zh-hans-t-huayu-v7-bgw`)但 .gram 数据不在包内(roadmap 决策 2:不内置、保持 native 链接、经资产包补件)→ **octagram / predict 插件不裁**(`rime_jni.cc:18-26` 链接保留)。
-- JNI 面 44 个 external fun(`core/Rime.kt:490-600`);librime_jni C++ 共 1,380 行(Trime 血统)。
+- JNI 面全仓 47 个 external fun 声明(core/Rime.kt 裁剪前 29、其他文件 18);librime_jni C++ 共 1,380 行(Trime 血统)。
 - 资产 110MB:rime/build 82M + fonts 25M + shared 2.6M(opencc 1.4M、lua 368K、字体 708K)。
 
 ## 2. T1 零引用死代码(直接删)

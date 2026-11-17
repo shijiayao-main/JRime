@@ -52,12 +52,6 @@ interface RimeApi {
 
     suspend fun moveCursorPos(position: Int)
 
-    suspend fun availableSchemata(): Array<SchemaItem>
-
-    suspend fun enabledSchemata(): Array<SchemaItem>
-
-    suspend fun setEnabledSchemata(schemaIds: Array<String>): Boolean
-
     suspend fun selectedSchemata(): Array<SchemaItem>
 
     suspend fun selectedSchemaId(): String

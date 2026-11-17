@@ -204,12 +204,6 @@ class Rime :
         emitResponse()
     }
 
-    override suspend fun availableSchemata(): Array<SchemaItem> = withRimeContext { getAvailableRimeSchemaList() }
-
-    override suspend fun enabledSchemata(): Array<SchemaItem> = withRimeContext { getSelectedRimeSchemaList() }
-
-    override suspend fun setEnabledSchemata(schemaIds: Array<String>) = withRimeContext { selectRimeSchemas(schemaIds) }
-
     override suspend fun selectedSchemata(): Array<SchemaItem> = withRimeContext { getRimeSchemaList() }
 
     override suspend fun selectedSchemaId(): String = withRimeContext { getCurrentRimeSchema() }
@@ -496,18 +490,6 @@ class Rime :
         @JvmStatic
         external fun exitRime()
 
-        @JvmStatic
-        external fun deployRimeSchemaFile(schemaFile: String): Boolean
-
-        @JvmStatic
-        external fun deployRimeConfigFile(
-            fileName: String,
-            versionKey: String,
-        ): Boolean
-
-        @JvmStatic
-        external fun syncRimeUserData(): Boolean
-
         // input
         @JvmStatic
         external fun processRimeKey(
@@ -571,15 +553,6 @@ class Rime :
 
         @JvmStatic
         external fun changeRimeCandidatePage(backward: Boolean): Boolean
-
-        @JvmStatic
-        external fun getAvailableRimeSchemaList(): Array<SchemaItem>
-
-        @JvmStatic
-        external fun getSelectedRimeSchemaList(): Array<SchemaItem>
-
-        @JvmStatic
-        external fun selectRimeSchemas(schemaIds: Array<String>): Boolean
 
         @JvmStatic
         external fun getRimeCandidates(

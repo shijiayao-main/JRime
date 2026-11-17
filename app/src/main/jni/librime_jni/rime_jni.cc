@@ -288,29 +288,6 @@ Java_com_jiaoay_jrime_core_Rime_exitRime(JNIEnv* env, jclass /* thiz */) {
   Rime::Instance().exit();
 }
 
-// deployment
-extern "C" JNIEXPORT jboolean JNICALL
-Java_com_jiaoay_jrime_core_Rime_deployRimeSchemaFile(JNIEnv* env,
-                                                     jclass /* thiz */,
-                                                     jstring schema_file) {
-  return Rime::Instance().deploySchema(*CString(env, schema_file));
-}
-
-extern "C" JNIEXPORT jboolean JNICALL
-Java_com_jiaoay_jrime_core_Rime_deployRimeConfigFile(JNIEnv* env,
-                                                     jclass /* thiz */,
-                                                     jstring file_name,
-                                                     jstring version_key) {
-  return Rime::Instance().deployConfigFile(*CString(env, file_name),
-                                           *CString(env, version_key));
-}
-
-extern "C" JNIEXPORT jboolean JNICALL
-Java_com_jiaoay_jrime_core_Rime_syncRimeUserData(JNIEnv* env,
-                                                 jclass /* thiz */) {
-  return Rime::Instance().sync();
-}
-
 // input
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_jiaoay_jrime_core_Rime_processRimeKey(JNIEnv* env, jclass /* thiz */,

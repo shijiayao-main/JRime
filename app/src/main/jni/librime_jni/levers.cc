@@ -23,42 +23,6 @@ class SwitcherSettings {
       levers->custom_settings_destroy((RimeCustomSettings*)switcher);
   }
 
-  std::vector<SchemaItem> availableSchemas() {
-    std::vector<SchemaItem> result;
-    RimeSchemaList list{};
-    if (levers->get_available_schema_list(switcher, &list)) {
-      result = SchemaItem::fromCList(list);
-      levers->schema_list_destroy(&list);
-    }
-    return std::move(result);
-  }
-
-  std::vector<SchemaItem> selectedSchemas() {
-    std::vector<SchemaItem> result;
-    RimeSchemaList list{};
-    if (levers->get_selected_schema_list(switcher, &list)) {
-      result = SchemaItem::fromCList(list);
-      levers->schema_list_destroy(&list);
-    }
-    return std::move(result);
-  }
-
-  bool selectSchemas(const std::vector<std::string>& schemas) {
-    auto length = schemas.size();
-    const char** input = new const char*[length];
-    int i = 0;
-    for (const auto& id : schemas) {
-      input[i++] = id.c_str();
-    }
-    bool result =
-        levers->select_schemas(switcher, input, static_cast<int>(length));
-    if (result) {
-      levers->save_settings((RimeCustomSettings*)switcher);
-    }
-    delete[] input;
-    return result;
-  }
-
   std::vector<std::string> userDictList() {
     std::vector<std::string> result;
     RimeUserDictIterator iter{};
@@ -93,28 +57,6 @@ class SwitcherSettings {
   RimeLeversApi* levers;
   RimeSwitcherSettings* switcher;
 };
-
-extern "C" JNIEXPORT jobjectArray JNICALL
-Java_com_jiaoay_jrime_core_Rime_getAvailableRimeSchemaList(JNIEnv* env,
-                                                           jclass /* thiz */) {
-  SwitcherSettings switcher;
-  return rimeSchemaListToJObjectArray(env, switcher.availableSchemas());
-}
-
-extern "C" JNIEXPORT jobjectArray JNICALL
-Java_com_jiaoay_jrime_core_Rime_getSelectedRimeSchemaList(JNIEnv* env,
-                                                          jclass /* thiz */) {
-  SwitcherSettings switcher;
-  return rimeSchemaListToJObjectArray(env, switcher.selectedSchemas());
-}
-
-extern "C" JNIEXPORT jboolean JNICALL
-Java_com_jiaoay_jrime_core_Rime_selectRimeSchemas(JNIEnv* env,
-                                                  jclass /* thiz */,
-                                                  jobjectArray array) {
-  SwitcherSettings switcher;
-  return switcher.selectSchemas(stringArrayToStringVector(env, array));
-}
 
 extern "C" JNIEXPORT jobjectArray JNICALL
 Java_com_jiaoay_jrime_data_userdict_UserDictManager_getUserDictList(

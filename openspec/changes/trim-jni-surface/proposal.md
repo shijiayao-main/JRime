@@ -2,7 +2,7 @@
 
 ## Why
 
-JNI 面自 Trime 原样继承(44 个 external fun),其中 6 个入口在全仓为零调用:三个 on-device 逐文件部署/全量同步入口(deployRimeSchemaFile / deployRimeConfigFile / syncRimeUserData——字典已离线预编译进 assets/rime/build,部署链唯一入口是 startRimeMaintenance)与三个方案启用管理入口(availableSchemata / enabledSchemata / setEnabledSchemata——方案列表 UI 实际只用 selectedSchemata / selectedSchemaId / selectSchema)。死入口不只是死代码:它们把「运行时改配置/切方案」的能力面继续暴露在 ABI 上,是 Trime「配置面过广」病灶在代码层的残留。另有两件死资产仅被注释行引用。依据:doc/trim-plan.md(2026-11-17,含逐项 file:line 与全仓调用点核查)。
+JNI 面自 Trime 原样继承(47 个 external fun),其中 6 个入口在全仓为零调用:三个 on-device 逐文件部署/全量同步入口(deployRimeSchemaFile / deployRimeConfigFile / syncRimeUserData——字典已离线预编译进 assets/rime/build,部署链唯一入口是 startRimeMaintenance)与三个方案启用管理入口(availableSchemata / enabledSchemata / setEnabledSchemata——方案列表 UI 实际只用 selectedSchemata / selectedSchemaId / selectSchema)。死入口不只是死代码:它们把「运行时改配置/切方案」的能力面继续暴露在 ABI 上,是 Trime「配置面过广」病灶在代码层的残留。另有两件死资产仅被注释行引用。依据:doc/trim-plan.md(2026-11-17,含逐项 file:line 与全仓调用点核查)。
 
 ## What Changes
 
