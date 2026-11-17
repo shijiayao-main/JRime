@@ -8,9 +8,11 @@ ready -> n i h c -> first candidate 你好 -> sel 0 -> commit 你好.
 Prereq: harness/build/librime_jni.dylib exists (run ./harness/smoke.sh once).
 """
 import json
+import os
 import shutil
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -18,14 +20,45 @@ ASSETS = ROOT / "app/src/main/assets"
 DYLIB = ROOT / "harness/build/librime_jni.dylib"
 JAVA = Path(subprocess.run(["/usr/libexec/java_home"], capture_output=True,
                            text=True).stdout.strip())
+KOTLIN_VERSION = "2.4.21"
+
+
+def ensure_kotlinc() -> Path:
+    build = ROOT / "desktop/build"
+    dist = build / f"kotlinc-{KOTLIN_VERSION}"
+    if (dist / "bin/kotlinc").is_file():
+        return dist
+    # reuse the copy harness/smoke.sh fetches (build.sh step [1/6] does too)
+    harness_dist = ROOT / "harness/build" / f"kotlinc-{KOTLIN_VERSION}"
+    if (harness_dist / "bin/kotlinc").is_file():
+        return harness_dist
+    build.mkdir(parents=True, exist_ok=True)
+    archive = build / "kotlin-compiler.zip"
+    url = (f"https://github.com/JetBrains/kotlin/releases/download/"
+           f"v{KOTLIN_VERSION}/kotlin-compiler-{KOTLIN_VERSION}.zip")
+    subprocess.run(["curl", "-fL", "-o", str(archive), url], check=True)
+    shutil.rmtree(build / "kotlinc", ignore_errors=True)
+    with zipfile.ZipFile(archive) as z:
+        z.extractall(build)
+    (build / "kotlinc").rename(dist)
+    # zipfile.extractall does not preserve the executable bit from the archive
+    for entry in (dist / "bin").iterdir():
+        if entry.is_file():
+            entry.chmod(0o755)
+    return dist
 
 
 def compile_engine() -> Path:
     classes = ROOT / "desktop/build/classes"
     shutil.rmtree(classes, ignore_errors=True)
     classes.mkdir(parents=True)
-    sources = [str(p) for p in (ROOT / "desktop/engine/java").rglob("*.java")]
-    subprocess.run([str(JAVA / "bin/javac"), "-d", str(classes), *sources], check=True)
+    kotlinc = ensure_kotlinc()
+    sources = [str(p) for p in (ROOT / "desktop/engine/java").rglob("*.kt")]
+    env = {**os.environ, "JAVA_HOME": str(JAVA)}
+    subprocess.run([str(kotlinc / "bin/kotlinc"), "-d", str(classes), *sources],
+                   check=True, env=env)
+    with zipfile.ZipFile(kotlinc / "lib/kotlin-stdlib.jar") as z:
+        z.extractall(classes)
     return classes
 
 

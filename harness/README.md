@@ -8,8 +8,8 @@
 - **内核替换**(路线二,`doc/harness-design.md`):H4 的 KotlinEngine 将作为第二
   driver 后端接入同一协议;本脚本是该线的 H0 起点。
 
-`java/com/jiaoay/jrime/core/*.java` 是与 `jni-utils.h` GlobalRefSingleton 解析签名
-逐条对齐的桌面 JVM 桩,只服务于 JNI_OnLoad 的类解析与回调回环,不是真实 Kotlin 类。
+`java/com/jiaoay/jrime/core/*.kt` 是与 `jni-utils.h` GlobalRefSingleton 解析签名
+逐条对齐的桌面 JVM 桩,只服务于 JNI_OnLoad 的类解析与回调回环,不是 app 侧的实现。
 
 ## 前置
 
@@ -42,7 +42,7 @@ python3 harness/run_cases.py verify                             # 重放对照 g
 ```
 
 - 语料:`harness/corpora/baseline.jsonl`(12 条确定性场景;`date/time` 等随时间
-  变化的场景不入 golden)。op 词汇表见 `Replay.java` 头注释;驱动经过
+  变化的场景不入 golden)。op 词汇表见 `Replay.kt` 头注释;驱动经过
   `RimeKeyEvent.parse`(key.cc)解析键名,不手写 keysym 表。
 - **oracle 是引擎级的**:引擎返回未处理的键(`handled:false`——ascii 模式下的字
   符、空输入时的逗号)由应用层自行上屏;trace 只记录引擎行为,H4 的 KotlinEngine

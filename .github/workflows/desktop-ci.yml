@@ -155,7 +155,10 @@ jobs:
       - name: Package the engine core
         run: |
           mkdir -p pkg/lib pkg/engine
-          javac -d pkg/engine $(find desktop/engine/java -name '*.java')
+          curl -fL -o kotlinc.zip https://github.com/JetBrains/kotlin/releases/download/v2.4.21/kotlin-compiler-2.4.21.zip
+          unzip -q kotlinc.zip -d kotlinc
+          ./kotlinc/kotlinc/bin/kotlinc -d pkg/engine $(find desktop/engine/java -name '*.kt')
+          unzip -qo kotlinc/kotlinc/lib/kotlin-stdlib.jar -d pkg/engine
           cp desktop/build/librime_jni.so pkg/lib/
           cp -R app/src/main/assets/shared pkg/rime
           cp -R app/src/main/assets/rime/build pkg/rime/build
@@ -206,9 +209,12 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path pkg/lib, pkg/engine | Out-Null
-          $sources = Get-ChildItem desktop/engine/java -Recurse -Filter *.java | Select-Object -ExpandProperty FullName
-          & "$env:JAVA_HOME/bin/javac" -d pkg/engine @sources
-          if ($LASTEXITCODE -ne 0) { throw "javac failed" }
+          curl.exe -fL -o kotlinc.zip https://github.com/JetBrains/kotlin/releases/download/v2.4.21/kotlin-compiler-2.4.21.zip
+          Expand-Archive kotlinc.zip -DestinationPath kotlinc
+          $sources = Get-ChildItem desktop/engine/java -Recurse -Filter *.kt | Select-Object -ExpandProperty FullName
+          & kotlinc/kotlinc/bin/kotlinc.bat -d pkg/engine $sources
+          if ($LASTEXITCODE -ne 0) { throw "kotlinc failed" }
+          Expand-Archive kotlinc/kotlinc/lib/kotlin-stdlib.jar -DestinationPath pkg/engine -Force
           Copy-Item desktop/build/librime_jni.dll pkg/lib/
           Copy-Item -Recurse app/src/main/assets/shared pkg/rime
           Copy-Item -Recurse app/src/main/assets/rime/build pkg/rime/build

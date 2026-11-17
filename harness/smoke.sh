@@ -44,8 +44,19 @@ clang++ -dynamiclib -o librime_jni.dylib \
   -lz \
   -Wl,-undefined,error
 
-echo "== compiling Java stubs + drivers"
-javac -d classes $(find "$REPO/harness/java" "$REPO/desktop/engine/java" -name '*.java')
+echo "== compiling Kotlin stubs + drivers"
+KOTLIN_VERSION=2.4.21
+KOTLINC=$OUT/kotlinc-$KOTLIN_VERSION
+if [ ! -x "$KOTLINC/bin/kotlinc" ]; then
+  curl -fL -o "$OUT/kotlin-compiler.zip" \
+    "https://github.com/JetBrains/kotlin/releases/download/v$KOTLIN_VERSION/kotlin-compiler-$KOTLIN_VERSION.zip"
+  rm -rf "$OUT/kotlinc"
+  unzip -q "$OUT/kotlin-compiler.zip" -d "$OUT"
+  mv "$OUT/kotlinc" "$KOTLINC"
+fi
+JAVA_HOME="$JDK" "$KOTLINC/bin/kotlinc" -d classes \
+  $(find "$REPO/harness/java" "$REPO/desktop/engine/java" -name '*.kt')
+unzip -qo "$KOTLINC/lib/kotlin-stdlib.jar" -d classes
 
 echo "== running smoke"
 java -Djava.library.path="$OUT" -cp classes Smoke "$OUT/data"
