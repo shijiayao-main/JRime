@@ -5,8 +5,10 @@
 
 package com.jiaoay.jrime.ime.compose
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -18,6 +20,8 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.jiaoay.jrime.core.CandidateProto
 
@@ -33,7 +37,9 @@ internal fun compositionEchoText(preedit: String?): String = preedit.orEmpty().t
  * The candidate strip: a horizontally scrolling row of candidates (18sp, the
  * highlighted one bold blue, aux-code comments as small gray suffixes, 1dp
  * hairline dividers). A tap commits through [ImeUiState.selectCandidate] --
- * the same path the action bar's strip always rode on. While composing the
+ * the same path the action bar's strip always rode on -- and a long-press
+ * deletes the suggestion from the user lexicon ([ImeUiState.deleteCandidate]).
+ * While composing the
  * strip lives in the keyboard's digit-row slot ([GboardKeyboard]'s
  * [GboardKeyboard.ROW_HEIGHT] top row); the full-data panels keep it in the
  * action bar.
@@ -69,6 +75,7 @@ internal fun CandidateStrip(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Suppress("FunctionName")
 @Composable
 internal fun CandidateWord(
@@ -77,10 +84,20 @@ internal fun CandidateWord(
     state: ImeUiState,
 ) {
     val style = gboardStyle()
+    val haptics = LocalHapticFeedback.current
     val highlighted = index == state.highlightedCandidate
     Row(
         modifier = Modifier
-            .clickable { state.selectCandidate(index) }
+            .combinedClickable(
+                onClick = { state.selectCandidate(index) },
+                // the fast-input hygiene move: a long-pressed suggestion
+                // leaves the user lexicon (haptic first, no dialog -- the
+                // Rime stream refreshes the strip on its own)
+                onLongClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    state.deleteCandidate(index)
+                },
+            )
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

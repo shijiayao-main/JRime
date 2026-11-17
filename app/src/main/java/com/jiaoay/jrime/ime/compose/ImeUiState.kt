@@ -116,6 +116,13 @@ class ImeUiState(
         rime.launchOnReady { it.selectCandidate(index, global = true) }
     }
 
+    // The fast-input hygiene move: the long-pressed suggestion leaves the
+    // user lexicon (global) so it stops coming back; the Rime stream
+    // refreshes the strip on its own.
+    fun deleteCandidate(index: Int) {
+        rime.launchOnReady { it.deleteCandidate(index, global = true) }
+    }
+
     fun changeCandidatePage(backward: Boolean) {
         rime.launchOnReady { it.changeCandidatePage(backward) }
     }
