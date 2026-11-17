@@ -199,7 +199,7 @@ jobs:
 
       - name: Build host librime and deps
         run: |
-          cmake -S app/src/main/jni/host -B app/src/main/jni/host/build-host
+          cmake -S app/src/main/jni/host -B app/src/main/jni/host/build-host -A x64 -T ClangCL
           cmake --build app/src/main/jni/host/build-host --config Release -j4
 
       - name: Build librime_jni.dll
