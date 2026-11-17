@@ -45,7 +45,7 @@ clang++ -dynamiclib -o librime_jni.dylib \
   -Wl,-undefined,error
 
 echo "== compiling Java stubs + drivers"
-javac -d classes $(find "$REPO/harness/java" -name '*.java')
+javac -d classes $(find "$REPO/harness/java" "$REPO/desktop/engine/java" -name '*.java')
 
 echo "== running smoke"
 java -Djava.library.path="$OUT" -cp classes Smoke "$OUT/data"
