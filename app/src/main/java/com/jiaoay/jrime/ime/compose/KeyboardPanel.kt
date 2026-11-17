@@ -5,6 +5,7 @@
 
 package com.jiaoay.jrime.ime.compose
 
+import android.content.SharedPreferences
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.jiaoay.jrime.data.prefs.AppPrefs
 import com.jiaoay.jrime.data.theme.model.KeyActionToken
 import com.jiaoay.jrime.data.theme.model.TextKeyboard
 import com.jiaoay.jrime.data.theme.model.TextKeyboard.TextKey
@@ -173,16 +176,98 @@ internal fun TextKey.resolveToken(
     return null
 }
 
-/** The swipe displacement (dp) past which a gesture counts as a swipe. */
-private val SWIPE_THRESHOLD = 40.dp
+/**
+ * The gesture knobs the preference-backed handlers ride on. The raw values
+ * are the stored preferences; the effective ones map the special 0 semantics
+ * (swipe travel = off, long-press timeout = follow the system setting) and
+ * clamp stale values back into the slider's reachable range. The ranges
+ * mirror the AppPrefs.Keyboard delegate declarations.
+ */
+internal data class GestureThresholds(
+    val swipeTravelDp: Int,
+    val longPressTimeoutMs: Int,
+    val repeatIntervalMs: Int,
+)
+
+/** The smallest positive swipe travel the slider can reach (the step floor). */
+internal const val SWIPE_TRAVEL_MIN_DP = 10
+
+internal const val SWIPE_TRAVEL_MAX_DP = 400
+
+/**
+ * The swipe threshold's effective travel (dp): 0 (or below) disables swipe
+ * detection entirely -- null, never a 0dp threshold (that would judge every
+ * touch a swipe) -- and anything else clamps into the reachable range.
+ */
+internal fun effectiveSwipeTravelDp(value: Int): Int? = if (value <= 0) null else value.coerceIn(SWIPE_TRAVEL_MIN_DP, SWIPE_TRAVEL_MAX_DP)
+
+/** The smallest long-press timeout the slider can reach. */
+internal const val LONG_PRESS_TIMEOUT_MIN_MS = 100
+
+internal const val LONG_PRESS_TIMEOUT_MAX_MS = 1000
+
+/**
+ * The long-press timeout's effective value (ms): 0 (or below) follows the
+ * system long-press timeout -- null, resolved against the ViewConfiguration
+ * at the gesture -- and anything else clamps into the reachable range. Never
+ * a bare 0ms long-press.
+ */
+internal fun effectiveLongPressTimeoutMs(value: Int): Int? = if (value <= 0) null else value.coerceIn(LONG_PRESS_TIMEOUT_MIN_MS, LONG_PRESS_TIMEOUT_MAX_MS)
+
+internal const val REPEAT_INTERVAL_MIN_MS = 10
+
+internal const val REPEAT_INTERVAL_MAX_MS = 100
+
+/** The repeat cadence's effective value (ms), clamped into the reachable range. */
+internal fun effectiveRepeatIntervalMs(value: Int): Int = value.coerceIn(REPEAT_INTERVAL_MIN_MS, REPEAT_INTERVAL_MAX_MS)
+
+/**
+ * The gesture knobs, read live from the keyboard preferences (the
+ * keyboard_row_height pattern): read once per composition, and a settings
+ * change updates them through the preference listener.
+ */
+@Composable
+internal fun rememberGestureThresholds(): GestureThresholds {
+    val keyboardPrefs = remember { AppPrefs.defaultInstance().keyboard }
+    var thresholds by remember {
+        mutableStateOf(
+            GestureThresholds(
+                swipeTravelDp = keyboardPrefs.swipeTravel.getValue(),
+                longPressTimeoutMs = keyboardPrefs.longPressTimeout.getValue(),
+                repeatIntervalMs = keyboardPrefs.repeatInterval.getValue(),
+            ),
+        )
+    }
+    DisposableEffect(keyboardPrefs) {
+        val listener =
+            SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                if (key == AppPrefs.Keyboard.SWIPE_TRAVEL ||
+                    key == AppPrefs.Keyboard.LONG_PRESS_TIMEOUT ||
+                    key == AppPrefs.Keyboard.REPEAT_INTERVAL
+                ) {
+                    thresholds = GestureThresholds(
+                        swipeTravelDp = keyboardPrefs.swipeTravel.getValue(),
+                        longPressTimeoutMs = keyboardPrefs.longPressTimeout.getValue(),
+                        repeatIntervalMs = keyboardPrefs.repeatInterval.getValue(),
+                    )
+                }
+            }
+        keyboardPrefs.swipeTravel.sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
+        onDispose {
+            keyboardPrefs.swipeTravel.sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }
+    return thresholds
+}
 
 /**
  * The gesture handler every data key rides on (the behavior contract):
  * press visuals on down, tap resolves the state-aware click slot, long-press
  * fires the long-click slot, release displacement past the threshold fires
  * the swipe slots, and a repeatable click (backspace-style) repeats while
- * held. Shared by the Gboard data keys and this panel's own [KeyButton] so
- * the two renderers can never drift apart behaviorally.
+ * held. The thresholds ride the keyboard preferences (swipe travel, long-press
+ * timeout, repeat interval). Shared by the Gboard data keys and this panel's
+ * own [KeyButton] so the two renderers can never drift apart behaviorally.
  */
 @Composable
 internal fun Modifier.dataKeyGestures(
@@ -193,16 +278,26 @@ internal fun Modifier.dataKeyGestures(
     onPressed: (Boolean) -> Unit,
 ): Modifier {
     val scope = rememberCoroutineScope()
-    val swipeThresholdPx = with(LocalDensity.current) { SWIPE_THRESHOLD.toPx() }
+    val thresholds = rememberGestureThresholds()
+    // The swipe threshold rides the swipe-travel preference; the disabled
+    // value (0) maps to an infinite threshold no displacement can pass --
+    // never a 0dp threshold, which would judge every touch a swipe.
+    val swipeThresholdPx =
+        effectiveSwipeTravelDp(thresholds.swipeTravelDp)
+            ?.let { travel -> with(LocalDensity.current) { travel.dp.toPx() } }
+            ?: Float.POSITIVE_INFINITY
     // Composing-state flips must never restart this handler: a restart
     // cancels the in-flight gesture (the pressed face sticks, the tap is
     // eaten -- the "stuck key" feel) and orphans the repeat job, which then
-    // never sees `released` and repeats forever. The live values ride in
-    // through updated state instead of pointerInput restart keys.
+    // never sees `released` and repeats forever. The live values (state
+    // flags and preference-backed thresholds alike) ride in through updated
+    // state instead of pointerInput restart keys.
     val currentAppearance by rememberUpdatedState(keyAppearance)
     val currentPresetKeys by rememberUpdatedState(presetKeys)
     val currentDispatch by rememberUpdatedState(onDispatch)
     val currentPressed by rememberUpdatedState(onPressed)
+    val currentThresholds by rememberUpdatedState(thresholds)
+    val currentSwipeThresholdPx by rememberUpdatedState(swipeThresholdPx)
     return this.pointerInput(key) {
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false)
@@ -221,7 +316,12 @@ internal fun Modifier.dataKeyGestures(
             var released = false
             var longFired = false
             val holdJob = scope.launch {
-                delay(viewConfiguration.longPressTimeoutMillis)
+                // 0 means follow the system long-press timeout (the
+                // accessibility setting respect included), never a 0ms hold.
+                val longPressTimeoutMs =
+                    effectiveLongPressTimeoutMs(currentThresholds.longPressTimeoutMs)
+                        ?: viewConfiguration.longPressTimeoutMillis
+                delay(longPressTimeoutMs.toLong())
                 val token = key.resolveToken(KeyBehavior.LONG_CLICK, currentAppearance)
                 if (token != null) {
                     longFired = true
@@ -235,7 +335,7 @@ internal fun Modifier.dataKeyGestures(
                         if (clickToken != null) {
                             currentDispatch(KeyAction(clickToken, currentPresetKeys))
                         }
-                        delay(80)
+                        delay(effectiveRepeatIntervalMs(currentThresholds.repeatIntervalMs).toLong())
                     }
                 }
             }
@@ -244,7 +344,7 @@ internal fun Modifier.dataKeyGestures(
                 val up = waitForUpOrCancellation()
                 if (up != null && !longFired) {
                     val delta = up.position - downPos
-                    val threshold = swipeThresholdPx
+                    val threshold = currentSwipeThresholdPx
                     val swipeBehavior = when {
                         delta.y < -threshold && key.swipeUp != null -> KeyBehavior.SWIPE_UP
                         delta.y > threshold && key.swipeDown != null -> KeyBehavior.SWIPE_DOWN

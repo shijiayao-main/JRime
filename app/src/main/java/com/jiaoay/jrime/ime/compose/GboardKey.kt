@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -172,7 +173,10 @@ fun GboardDataKey(
 /**
  * A chrome key the board data doesn't carry: fires [action] on tap; a
  * repeatable action (backspace-style) repeats after the long-press timeout.
- * Used only as the fallback when a Gboard-structured row misses its data key.
+ * The timing rides the same preference-backed knobs the data keys use (the
+ * long-press timeout, the repeat interval) so the fallback can never drift
+ * from the [dataKeyGestures] pace. Used only as the fallback when a
+ * Gboard-structured row misses its data key.
  */
 @Suppress("FunctionName")
 @Composable
@@ -189,6 +193,7 @@ fun GboardChromeKey(
 ) {
     var pressed by remember(action) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val currentThresholds by rememberUpdatedState(rememberGestureThresholds())
 
     fun fire() {
         onDispatch(KeyAction(KeyActionToken.Plain(action), presetKeys))
@@ -217,10 +222,16 @@ fun GboardChromeKey(
                     val repeatJob =
                         if (repeatable) {
                             scope.launch {
-                                delay(viewConfiguration.longPressTimeoutMillis)
+                                // 0 means follow the system long-press timeout
+                                // (the accessibility setting respect included),
+                                // never a 0ms hold.
+                                val longPressTimeoutMs =
+                                    effectiveLongPressTimeoutMs(currentThresholds.longPressTimeoutMs)
+                                        ?: viewConfiguration.longPressTimeoutMillis
+                                delay(longPressTimeoutMs.toLong())
                                 while (isActive) {
                                     fire()
-                                    delay(50)
+                                    delay(effectiveRepeatIntervalMs(currentThresholds.repeatIntervalMs).toLong())
                                 }
                             }
                         } else {

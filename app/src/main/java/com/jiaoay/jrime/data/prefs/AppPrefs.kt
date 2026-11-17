@@ -250,10 +250,13 @@ class AppPrefs(
         val speakOnCommit = switch(R.string.speak_on_commit, SPEAK_ON_COMMIT, false)
         val popupOnKeyPress = switch(R.string.popup_on_key_press, POPUP_ON_KEY_PRESS, false)
         val expandKeypressArea = switch(R.string.expand_keypress_area_to_edge, EXPAND_KEYPRESS_AREA, false)
+
+        // The displacement (dp) past which a touch counts as a swipe; 0
+        // (shown as "Disable") turns swipe detection off entirely.
         val swipeTravel = int(
             R.string.key_swipe_travel,
             SWIPE_TRAVEL,
-            60,
+            40,
             0,
             400,
             "dp",
@@ -273,20 +276,26 @@ class AppPrefs(
             R.string.disable,
         )
 
+        // The long-press trigger delay; 0 (the default, shown as "System
+        // default") follows the system long-press timeout, the accessibility
+        // setting respect included. An explicit value overrides it.
         val longPressTimeout = int(
             R.string.key_long_press_timeout,
             LONG_PRESS_TIMEOUT,
-            300,
-            100,
+            0,
+            0,
             1000,
             "ms",
             10,
+            R.string.system_default,
         )
 
+        // The backspace-style repeat cadence; 80ms is the pace the gesture
+        // code always ran at before this preference took effect.
         val repeatInterval = int(
             R.string.key_repeat_interval,
             REPEAT_INTERVAL,
-            30,
+            80,
             10,
             100,
             "ms",
