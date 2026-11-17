@@ -33,6 +33,11 @@ option(BUILD_SHARED_LIBS "" OFF)
 option(BUILD_TESTING "" OFF)
 option(ENABLE_LOGGING "Enable logging with spdlog library" ON)
 
+# The desktop bridge links librime.a into a shared object (librime_jni.so on
+# Linux): every static object must be position-independent or the link fails
+# with R_X86_64_PC32 relocations. macOS/Windows tolerate this flag too.
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # Boost: reuse (or first-create) the tree and archive owned by the device build.
 set(BOOST_VERSION 1.92.0)
 if(NOT EXISTS "${JNI_ROOT}/boost-${BOOST_VERSION}.tar.xz")
