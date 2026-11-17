@@ -77,7 +77,7 @@ harness/
 
 | 阶段 | 内容 | 验收 |
 |---|---|---|
-| H0 | 冒烟产品化:/tmp/jrime-smoke 构建脚本收进 `:harness` gradle 任务;`jni-utils.h` 2 行补丁上游化(`#ifdef` 分支) | gradle 一键出 dylib + Smoke PASS |
+| H0 | 冒烟产品化:构建与冒烟收进 `harness/smoke.sh`(gradle 模块化推迟到 H1 再议);`jni-utils.h` 2 行补丁上游化(`#ifdef` 分支) | `harness/smoke.sh` 一键出 dylib + Smoke PASS |
 | H1 | ReplayDriver + 用例 schema + 隔离目录管理 | 10 用例重录两次 golden 逐字节一致 |
 | H2 | 60+ 用例 golden 入库 | 本地重跑 diff = 0 |
 | H3 | diff 报告 + 一致率矩阵 | 人为注入排序差异能被 L1 捕获、缺候选能被 L0 捕获 |
