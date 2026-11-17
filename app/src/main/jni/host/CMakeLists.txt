@@ -21,12 +21,14 @@ endif()
 set(CMAKE_MODULE_PATH "${JNI_ROOT}/cmake" ${CMAKE_MODULE_PATH})
 
 # librime's src/CMakeLists.txt includes AddRCInfo.cmake from CMAKE_SOURCE_DIR
-# on WIN32; in this host build CMAKE_SOURCE_DIR is jni/host, so shim the file
-# over from the vendored librime tree.
+# on WIN32; in this host build CMAKE_SOURCE_DIR is jni/host, so shim a patched
+# copy over from the vendored librime tree: the MinGW-only rc flag
+# -finput-charset=UTF-8 makes MSVC rc.exe fail with RC1103.
 if(WIN32)
   file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/cmake")
-  file(COPY "${JNI_ROOT}/librime/cmake/AddRCInfo.cmake"
-       DESTINATION "${CMAKE_SOURCE_DIR}/cmake")
+  file(READ "${JNI_ROOT}/librime/cmake/AddRCInfo.cmake" _jrime_rc_info)
+  string(REPLACE " -finput-charset=UTF-8" "" _jrime_rc_info "${_jrime_rc_info}")
+  file(WRITE "${CMAKE_SOURCE_DIR}/cmake/AddRCInfo.cmake" "${_jrime_rc_info}")
 endif()
 
 option(BUILD_SHARED_LIBS "" OFF)
