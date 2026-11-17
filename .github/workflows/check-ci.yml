@@ -30,6 +30,18 @@ jobs:
         with:
           packages: 'platform-tools'
 
+      - name: Pin clang-format 22.1.8 (the version the Makefile targets)
+        run: |
+          python3 -m venv /tmp/clangfmt
+          /tmp/clangfmt/bin/pip install --quiet clang-format==22.1.8
+          echo /tmp/clangfmt/bin >> "$GITHUB_PATH"
+
+      - name: Cache the Boost tarball (the host precompile downloads it when missing)
+        uses: actions/cache@v6
+        with:
+          path: app/src/main/jni/boost-1.92.0.tar.xz
+          key: boost-1.92.0
+
       - name: Check code style
         run: make style-lint
 

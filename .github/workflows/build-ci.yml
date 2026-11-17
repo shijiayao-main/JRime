@@ -47,6 +47,13 @@ jobs:
         with:
           packages: 'platform-tools cmake;4.1.2'
 
+      - name: Cache the Boost tarball (the host precompile downloads it when missing)
+        uses: actions/cache@v6
+        with:
+          path: app/src/main/jni/boost-1.92.0.tar.xz
+          # bump the key together with BOOST_VERSION in app/src/main/jni/host/CMakeLists.txt
+          key: boost-1.92.0
+
       - name: Calculate JNI cache hash
         id: cache-hash
         run: |
