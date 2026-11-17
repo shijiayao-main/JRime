@@ -1,0 +1,214 @@
+# SPDX-FileCopyrightText: 2015 - 2026 Rime community
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Desktop Packages
+on:
+  workflow_dispatch:
+
+env:
+  CI_NAME: Desktop Packages CI
+
+jobs:
+  # Android APK — same recipe as build-ci (NDK cross-compile inside gradle).
+  android-apk:
+    runs-on: ubuntu-26.04
+    env:
+      BUILD_ABI: armeabi-v7a,arm64-v8a,x86,x86_64
+    steps:
+      - name: Fetch source code
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: "temurin"
+          java-version: 25
+          cache: 'gradle'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools cmake;4.1.2'
+
+      - name: Cache the Boost tarball
+        uses: actions/cache@v6
+        with:
+          path: app/src/main/jni/boost-1.92.0.tar.xz
+          key: boost-1.92.0
+
+      - name: Calculate JNI cache hash
+        id: cache-hash
+        run: ./gradlew :app:calculateNativeCacheHash
+
+      - name: Fetch JNI cache
+        uses: actions/cache@v6
+        id: jni-cache
+        with:
+          path: "app/prebuilt"
+          key: ${{ runner.os }}-desktop-jni-debug-${{ steps.cache-hash.outputs.native-cache-hash }}
+
+      - name: Build debug APK
+        run: make debug
+
+      - name: Add JNI cache
+        if: ${{ !steps.jni-cache.outputs.cache-hit }}
+        run: cp -R app/build/intermediates/merged_native_libs/debug/mergeDebugNativeLibs/out/lib app/prebuilt
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: jrime-android-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 90
+
+  # macOS IME app (Swift IMK shell + jlink runtime + engine + librime_jni.dylib).
+  macos-app:
+    runs-on: macos-26
+    steps:
+      - name: Fetch source code
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: "temurin"
+          java-version: 25
+
+      - name: Cache the Boost tarball
+        uses: actions/cache@v6
+        with:
+          path: app/src/main/jni/boost-1.92.0.tar.xz
+          key: boost-1.92.0
+
+      - name: Build host librime and deps
+        run: |
+          cmake -S app/src/main/jni/host -B app/src/main/jni/host/build-host -DCMAKE_BUILD_TYPE=Release
+          cmake --build app/src/main/jni/host/build-host -j3
+
+      - name: Build bridge dylib and run the desktop smoke
+        run: JDK="$JAVA_HOME" ./harness/smoke.sh
+
+      - name: Build JRimeIME.app
+        run: ./macos/JRimeIME/build.sh
+
+      - name: Zip the app
+        run: |
+          cd macos/build
+          zip -qry JRimeIME-macos.zip JRimeIME.app
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: jrime-ime-macos
+          path: macos/build/JRimeIME-macos.zip
+          retention-days: 90
+
+  # Linux desktop engine core: librime_jni.so + engine classes + rime assets.
+  # (The ibus shell consumes exactly this package.)
+  linux-engine:
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Fetch source code
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: "temurin"
+          java-version: 25
+
+      - name: Cache the Boost tarball
+        uses: actions/cache@v6
+        with:
+          path: app/src/main/jni/boost-1.92.0.tar.xz
+          key: boost-1.92.0
+
+      - name: Install build deps
+        run: sudo apt-get update && sudo apt-get install -y zlib1g-dev
+
+      - name: Build host librime and deps
+        run: |
+          cmake -S app/src/main/jni/host -B app/src/main/jni/host/build-host -DCMAKE_BUILD_TYPE=Release
+          cmake --build app/src/main/jni/host/build-host -j4
+
+      - name: Build librime_jni.so
+        run: ./desktop/engine/build-bridge.sh desktop/build
+
+      - name: Package the engine core
+        run: |
+          mkdir -p pkg/lib pkg/engine
+          javac -d pkg/engine $(find desktop/engine/java -name '*.java')
+          cp desktop/build/librime_jni.so pkg/lib/
+          cp -R app/src/main/assets/shared pkg/rime
+          cp -R app/src/main/assets/rime/build pkg/rime/build
+          zip -qry jrime-desktop-engine-linux-x64.zip pkg
+
+      - name: Upload engine core artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: jrime-engine-linux-x64
+          path: jrime-desktop-engine-linux-x64.zip
+          retention-days: 90
+
+  # Windows desktop engine core: librime_jni.dll + engine classes + rime assets.
+  # (The future TSF DLL + server pair consumes exactly this package.)
+  windows-engine:
+    runs-on: windows-2025
+    steps:
+      - name: Fetch source code
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: "temurin"
+          java-version: 25
+
+      - name: Cache the Boost tarball
+        uses: actions/cache@v6
+        with:
+          path: app/src/main/jni/boost-1.92.0.tar.xz
+          key: boost-1.92.0
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Build host librime and deps
+        run: |
+          cmake -S app/src/main/jni/host -B app/src/main/jni/host/build-host
+          cmake --build app/src/main/jni/host/build-host --config Release -j4
+
+      - name: Build librime_jni.dll
+        run: pwsh ./desktop/engine/build-bridge.ps1 desktop/build
+
+      - name: Package the engine core
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path pkg/lib, pkg/engine | Out-Null
+          $sources = Get-ChildItem desktop/engine/java -Recurse -Filter *.java | Select-Object -ExpandProperty FullName
+          & "$env:JAVA_HOME/bin/javac" -d pkg/engine @sources
+          if ($LASTEXITCODE -ne 0) { throw "javac failed" }
+          Copy-Item desktop/build/librime_jni.dll pkg/lib/
+          Copy-Item -Recurse app/src/main/assets/shared pkg/rime
+          Copy-Item -Recurse app/src/main/assets/rime/build pkg/rime/build
+          Compress-Archive -Path pkg -DestinationPath jrime-desktop-engine-windows-x64.zip
+
+      - name: Upload engine core artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: jrime-engine-windows-x64
+          path: jrime-desktop-engine-windows-x64.zip
+          retention-days: 90
