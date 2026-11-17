@@ -20,6 +20,15 @@ endif()
 
 set(CMAKE_MODULE_PATH "${JNI_ROOT}/cmake" ${CMAKE_MODULE_PATH})
 
+# librime's src/CMakeLists.txt includes AddRCInfo.cmake from CMAKE_SOURCE_DIR
+# on WIN32; in this host build CMAKE_SOURCE_DIR is jni/host, so shim the file
+# over from the vendored librime tree.
+if(WIN32)
+  file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/cmake")
+  file(COPY "${JNI_ROOT}/librime/cmake/AddRCInfo.cmake"
+       DESTINATION "${CMAKE_SOURCE_DIR}/cmake")
+endif()
+
 option(BUILD_SHARED_LIBS "" OFF)
 option(BUILD_TESTING "" OFF)
 option(ENABLE_LOGGING "Enable logging with spdlog library" ON)

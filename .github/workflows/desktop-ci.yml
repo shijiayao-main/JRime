@@ -81,6 +81,11 @@ jobs:
           distribution: "temurin"
           java-version: 25
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools cmake;4.1.2'
+
       - name: Cache the Boost tarball
         uses: actions/cache@v6
         with:
@@ -91,6 +96,9 @@ jobs:
         run: |
           cmake -S app/src/main/jni/host -B app/src/main/jni/host/build-host -DCMAKE_BUILD_TYPE=Release
           cmake --build app/src/main/jni/host/build-host -j3
+
+      - name: Precompile rime data (generates assets/rime/build, untracked)
+        run: ./gradlew :app:precompileRimeData
 
       - name: Build bridge dylib and run the desktop smoke
         run: JDK="$JAVA_HOME" ./harness/smoke.sh
