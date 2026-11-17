@@ -143,6 +143,7 @@
     <string name="custom_sound_effect_enabled">Use custom key sound</string>
     <string name="enable_landscape_mode">Enable Landscape Mode</string>
     <string name="split_space_percent">Auto Split Keyboard Space Ratio</string>
+    <string name="keyboard_row_height">Keyboard Row Height</string>
     <string name="data_path_permission_revoked">Data folder access was revoked. Please select the folder again.</string>
     <string name="grant_permission">Grant permission</string>
     <string name="notification_permission_title">No Notification Permission</string>

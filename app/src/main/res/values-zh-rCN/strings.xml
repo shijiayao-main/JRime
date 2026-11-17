@@ -142,6 +142,7 @@
     <string name="custom_sound_effect_enabled">使用自定义按键音效</string>
     <string name="enable_landscape_mode">启用横屏模式</string>
     <string name="split_space_percent">自动分割键盘比例</string>
+    <string name="keyboard_row_height">键盘行高</string>
     <string name="data_path_permission_revoked">数据文件夹访问权限已被撤销，请重新选择文件夹。</string>
     <string name="grant_permission">授予权限</string>
     <string name="notification_permission_title">没有通知权限</string>

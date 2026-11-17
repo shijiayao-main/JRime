@@ -5,6 +5,7 @@
 
 package com.jiaoay.jrime.ime.compose
 
+import android.content.SharedPreferences
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,9 +13,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jiaoay.jrime.data.prefs.AppPrefs
 import com.jiaoay.jrime.data.theme.model.KeyActionToken
 import com.jiaoay.jrime.data.theme.model.PresetKey
 import com.jiaoay.jrime.data.theme.model.TextKeyboard
@@ -75,6 +81,23 @@ fun GboardKeyboard(
     isAsciiMode: Boolean = false,
     composingContent: (@Composable () -> Unit)? = null,
 ) {
+    // The row height rides the keyboard_row_height preference (the Trime
+    // parity knob): read once per composition, and a settings change updates
+    // the band live through the preference listener.
+    val keyboardPrefs = remember { AppPrefs.defaultInstance().keyboard }
+    var rowHeightDp by remember { mutableIntStateOf(keyboardPrefs.rowHeight.getValue()) }
+    DisposableEffect(keyboardPrefs) {
+        val listener =
+            SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                if (key == AppPrefs.Keyboard.KEYBOARD_HEIGHT) {
+                    rowHeightDp = keyboardPrefs.rowHeight.getValue()
+                }
+            }
+        keyboardPrefs.rowHeight.sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
+        onDispose {
+            keyboardPrefs.rowHeight.sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }
     val qwerty = remember(board, presetKeys) { isQwertyBoard(board, presetKeys) }
     if (!qwerty) {
         val rowCount = remember(board) {
@@ -85,7 +108,7 @@ fun GboardKeyboard(
             keyAppearance = keyAppearance,
             presetKeys = presetKeys,
             onDispatch = onDispatch,
-            modifier = modifier.height((rowCount * GboardKeyboard.ROW_HEIGHT).dp),
+            modifier = modifier.height((rowCount * rowHeightDp).dp),
         )
         return
     }
@@ -102,7 +125,7 @@ fun GboardKeyboard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(GboardKeyboard.ROW_HEIGHT.dp),
+                    .height(rowHeightDp.dp),
             ) {
                 composingContent()
             }
@@ -115,7 +138,7 @@ fun GboardKeyboard(
                     onDispatch = onDispatch,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(GboardKeyboard.ROW_HEIGHT.dp),
+                        .height(rowHeightDp.dp),
                 )
             }
         }
@@ -127,7 +150,7 @@ fun GboardKeyboard(
                 onDispatch = onDispatch,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(GboardKeyboard.ROW_HEIGHT.dp),
+                    .height(rowHeightDp.dp),
             )
         }
         letterRows.lastOrNull()?.let { letters ->
@@ -139,7 +162,7 @@ fun GboardKeyboard(
                 onDispatch = onDispatch,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(GboardKeyboard.ROW_HEIGHT.dp),
+                    .height(rowHeightDp.dp),
                 isAsciiMode = isAsciiMode,
             )
         }
@@ -150,7 +173,7 @@ fun GboardKeyboard(
             onDispatch = onDispatch,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(GboardKeyboard.ROW_HEIGHT.dp),
+                .height(rowHeightDp.dp),
         )
     }
 }

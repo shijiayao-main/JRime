@@ -119,6 +119,7 @@ class AppPrefs(
         companion object {
             const val LANDSCAPE_MODE = "keyboard_landscape_mode"
             const val SPLIT_SPACE_PERCENT = "keyboard_split_space"
+            const val KEYBOARD_HEIGHT = "keyboard_row_height"
 
             const val USE_SOFT_CURSOR = "use_soft_cursor"
             const val HIDE_INPUT_BAR = "hide_input_bar"
@@ -174,6 +175,15 @@ class AppPrefs(
             0,
             200,
             "%",
+        )
+
+        val rowHeight = int(
+            R.string.keyboard_row_height,
+            KEYBOARD_HEIGHT,
+            52,
+            36,
+            80,
+            "dp",
         )
 
         val useSoftCursor = switch(R.string.use_soft_cursor, USE_SOFT_CURSOR, true)
