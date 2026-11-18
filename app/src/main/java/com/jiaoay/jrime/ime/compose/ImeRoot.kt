@@ -144,7 +144,7 @@ private fun ImeRootContent(
 }
 
 /** The action bar height; the strip's height is constant across both states. */
-private val ActionBarHeight = 44.dp
+private val ActionBarHeight = 40.dp
 
 /**
  * How long the back slot stays blind after a "back to keyboard" tap -- a
@@ -319,7 +319,7 @@ private fun ActionBarButton(
     Box(
         modifier = Modifier
             .padding(horizontal = 3.dp)
-            .height(32.dp)
+            .height(30.dp)
             .widthIn(min = 36.dp)
             .background(colors.functionKey, RoundedCornerShape(6.dp))
             .clickable(enabled = enabled) {
@@ -364,7 +364,7 @@ private fun AsciiSwitchButton(
     Box(
         modifier = Modifier
             .padding(horizontal = 3.dp)
-            .height(32.dp)
+            .height(30.dp)
             .widthIn(min = 36.dp)
             .background(
                 if (en) colors.activeToggle else colors.functionKey,

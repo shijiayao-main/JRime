@@ -180,7 +180,7 @@ class AppPrefs(
         val rowHeight = int(
             R.string.keyboard_row_height,
             KEYBOARD_HEIGHT,
-            52,
+            46,
             36,
             80,
             "dp",

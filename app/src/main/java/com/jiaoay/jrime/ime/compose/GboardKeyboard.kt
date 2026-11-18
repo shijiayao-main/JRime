@@ -45,7 +45,7 @@ import com.jiaoay.jrime.ime.keyboard.KeyAction
  * jumps when the state flips.
  */
 object GboardKeyboard {
-    const val ROW_HEIGHT = 52
+    const val ROW_HEIGHT = 46
 
     /** A full row spans this many units (the FlorisBoard weight grid). */
     internal const val ROW_UNITS = 10f
@@ -422,7 +422,7 @@ private fun ChromeRow(
             board = board,
             token = "Return",
             label = "↵",
-            labelSize = 22f,
+            labelSize = 20f,
             keyAppearance = keyAppearance,
             presetKeys = presetKeys,
             onDispatch = onDispatch,

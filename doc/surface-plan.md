@@ -1,10 +1,18 @@
 # 键盘表面层规划（surface track）
 
-> 版本：2026-11-18 r2。
+> 版本：2026-11-19 r3。
 > 定位：与 `doc/refactor/roadmap.md`（内核/配置/模块化六期主线，kernel 会话推进）划界——本文只管 IME 表面：键盘 UI、交互、候选体验，以及不进主线的小工程项。
-> 节奏：小步快走，每项独立提交独立验收；标 ◆ 的项启动时走 openspec-propose。
+> 节奏：**长任务队列顺序执行**（用户指令）——每项独立提交、双门禁、推送，完成一项再开下一项；标 ◆ 的项含设计决策，实现时先出方案再动手。
 
-## 已完成（2026-11-16 ~ 11-18）
+## 长任务队列（顺序执行，2026-11-19 定稿；来源=用户五点反馈 + 既有行动项）
+
+- **T1 度量收紧**：行高默认 52→46、字母键字 22sp→19sp、ActionBar 44→40、气泡 44dp/24sp→40dp/20sp；数值为提案，真机微调以「键盘行高」偏好兜底
+- **T2 面板高度统一**：liquid/editor/clipboard 面板与数字板等内容带高统一为键盘内容带高（6×行高），随「键盘行高」偏好联动，切换零跳变
+- **T3 键面净化**：字母键手势只留输入类——长按=大写字母（无符号长按的键补齐）/既有正常符号（j/k/l/n/m）/数字（q-p 保留）；select_all、undo/cut/copy/paste、clipboard_window、Date_Lua、Google、History_Lua、Keyboard_editor、Keyboard_symbol、Keyboard_emoji 及 Liquid_fixed_*/ResetCandWeight/HideCandFunc/DelCandFunc 等拓展/面板切换手势全部撤除
+- **T4 功能上收**：T3 撤除入口的承载设计——面板切换类核实现有菜单/面板入口覆盖（📋/☻/123 已在）；编辑操作类（全选/剪切/复制/粘贴/撤销）确认 editor 面板页承载，缺则补；Date_Lua/Google/History_Lua 属 Trime 遗产低频功能，裁除并在 commit 正文记录（可回滚）
+- **T5 收尾**：真机验收清单更新（五点反馈逐项）+ 本计划回写 r4 + 新方向再盘点
+
+## 已完成（2026-11-16 ~ 11-19）
 
 - 数字行 + 菜单栏：组合态编码串回显挪上菜单栏、数字槽位切换候选栏（88076d7）
 - Q 行数字角标摘除，长按数字保留为盲操作（bb778ce）
@@ -12,18 +20,12 @@
 - 顶槽渲染与数字行解耦：`hasLeadingDigitRow` 成为「槽位交换」与「操作栏让位」的共同判据（审查遗留项）
 - 候选长按删词：`deleteCandidate(global)` 直达候选条（长按触觉，Rime 流自动刷新）
 - CI paths-ignore 增补 `desktop/**` / `harness/**` / `macos/**`
-- 组合态回显点击清空编码（Esc 语义，1e 系 commit）
+- 组合态回显点击清空编码（Esc 语义）
 - 键盘行高设置：`keyboard_row_height` 偏好（36-80dp）接入 Compose 键盘，设置变更实时生效（同文对齐项）
-- 长按/连发/滑动阈值走偏好：`LONG_PRESS_TIMEOUT`（0=跟随系统）/ `REPEAT_INTERVAL`（默认 80ms）/ `SWIPE_TRAVEL`（0=禁用滑动）接入 dataKeyGestures 并统一 GboardChromeKey 节奏，设置变更实时生效（72ac5a0；最初记录的 225d61a 为 amend 前哈希，已修正）
+- 长按/连发/滑动阈值走偏好：`LONG_PRESS_TIMEOUT`（0=跟随系统）/ `REPEAT_INTERVAL`（默认 80ms）/ `SWIPE_TRAVEL`（0=禁用滑动）接入 dataKeyGestures 并统一 GboardChromeKey 节奏，设置变更实时生效（72ac5a0；返工 9d400e9 修钳制下限错位）
 - 按键气泡预览：`POPUP_ON_KEY_PRESS`（默认开启）接入 GboardKeyFace——按压浮出键面字符气泡，Popup 浮层避行高裁切，CompositionLocal 单点供值零每键 listener（2220ee7）
-- 剪贴板快捷粘贴 chip：`clipboard_suggestion`/`clipboard_suggestion_timeout` 双键门控的菜单栏预览 chip——最新剪贴文本点击即 Inline commit 直分发粘贴，敏感剪贴不显示、消费即隐、面板打开态让位，预览截断为 24 字符+省略号、timeout 0=不自动隐藏（3aef2bd）
-
-## 行动项（按价值排序）
-
-1. ◆ 候选序号上屏：组合态按数字选首屏候选（需先设计数字入口——数字行此时已是候选栏；备选方案：字母行上滑出数字）
-2. 键盘行高自适应细节：行高变化时字体是否随行高缩放的实测调参
-3. 真机回归清单维护：数字行/菜单栏两态切换、aux 次选、shift 行为、悬浮窗遮挡——随每项改动跑
-4. 工程面：gh auth login 后拉历史失败日志，把 11-15 的 :app:check 失败与 Nightly build 失败逐个定案
+- 剪贴板快捷粘贴 chip：`clipboard_suggestion`/`clipboard_suggestion_timeout` 双键门控的菜单栏预览 chip——最新剪贴文本点击即 Inline commit 直分发粘贴，敏感剪贴不显示、消费即隐、面板打开态让位，预览截断为 24 字符+省略号、timeout 0=不自动隐藏（3aef2bd+6619719）
+- 启动器图标重设计：「快」印章（Noto Sans SC Bold 轮廓 + 应用主色，矢量自适应图标，PNG 密度资产退役）（01e0180）
 
 ## 已排除的伪需求 / 划界
 

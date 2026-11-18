@@ -67,7 +67,7 @@ import kotlin.math.roundToInt
 val LocalPopupOnKeyPress = staticCompositionLocalOf { false }
 
 /** The pressed-key bubble's fixed geometry: height, the gap above the key, min/max width. */
-private val KEY_POPUP_HEIGHT = 44.dp
+private val KEY_POPUP_HEIGHT = 40.dp
 
 private val KEY_POPUP_GAP = 4.dp
 
@@ -101,7 +101,7 @@ fun GboardKeyFace(
     isEnter: Boolean = false,
     dimLabel: Boolean = false,
     highlight: Boolean = false,
-    labelSize: Float = 22f,
+    labelSize: Float = 19f,
     hint: String? = null,
 ) {
     val style = gboardStyle()
@@ -173,7 +173,7 @@ fun GboardKeyFace(
                         text = label,
                         style =
                         TextStyle(
-                            fontSize = 24.sp,
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Center,
                             color = style.text,
