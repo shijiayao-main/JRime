@@ -212,11 +212,15 @@ jobs:
 
       - name: Build host librime and deps
         run: |
-          cmake -S app/src/main/jni/host -B app/src/main/jni/host/build-host -A x64 -T ClangCL
+          # Ninja single-config: the gradle precompile task checks
+          # bin/rime_deployer (no config subdir) and re-runs cmake without -G,
+          # so the generator must be single-config and stay stable.
+          # clang-cl accepts librime's GCC-style flags (-Wno-error etc.).
+          cmake -G Ninja -S app/src/main/jni/host -B app/src/main/jni/host/build-host -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl
           # rime_deployer (the only tool this pipeline needs) pulls in the full
           # static librime + deps; the merged-plugin tools (build_predict etc.)
           # double-link plugin sources against librime.lib and break on lld-link.
-          cmake --build app/src/main/jni/host/build-host --config Release --target rime_deployer -j4
+          cmake --build app/src/main/jni/host/build-host --target rime_deployer -j4
 
       - name: Precompile rime data (generates assets/rime/build, untracked)
         run: ./gradlew :app:precompileRimeData
