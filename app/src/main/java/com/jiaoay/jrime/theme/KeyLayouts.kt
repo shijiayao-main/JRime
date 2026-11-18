@@ -53,14 +53,16 @@ object KeyLayouts {
             key(click = "o", longClick = "9", swipeUp = "/", swipeDown = "/")
             key(click = "p", longClick = "0", swipeUp = "|", swipeDown = "\\")
             spacer(2f)
-            // A/Z 行键面只留字母：低频的编辑/词库/标点功能收进长按与滑动槽作
-            // 盲操作（操作栏已承担功能入口），不再用图标/角标扰乱视线
-            key(click = "a", longClick = "select_all", width = 12f)
-            key(click = "s", longClick = "Keyboard_symbol", swipeDown = "Liquid_fixed_down", width = 11f)
-            key(click = "d", longClick = "Date_Lua", swipeUp = "Date_Lua", swipeDown = "DelCandFunc")
-            key(click = "f", longClick = "Keyboard_editor", swipeUp = "Keyboard_editor", swipeDown = "Keyboard_emoji")
-            key(click = "g", longClick = "Google", swipeUp = "Google", swipeDown = "ResetCandWeight")
-            key(click = "h", longClick = "History_Lua", swipeUp = "History_Lua", swipeDown = "HideCandFunc")
+            // A/Z 行手势只留输入类（2026-11-19 主人裁决）：长按=大写字母或
+            // 正常符号，滑动=符号/形码大写——复制粘贴、面板切换、lua 拓展
+            // 等一律上收菜单栏/面板/系统文本工具条，键面与手势不再承载
+            // 功能入口
+            key(click = "a", longClick = "A", width = 12f)
+            key(click = "s", longClick = "S", width = 11f)
+            key(click = "d", longClick = "D")
+            key(click = "f", longClick = "F")
+            key(click = "g", longClick = "G")
+            key(click = "h", longClick = "H")
             key(click = "j", longClick = ";", swipeDown = ":")
             key(click = "k", longClick = "{", swipeUp = "{", swipeDown = "[", width = 11f)
             key(click = "l", longClick = "}", swipeUp = "}", swipeDown = "]", width = 12f)
@@ -70,11 +72,11 @@ object KeyLayouts {
             // in CJK it does nothing, and in ASCII it stays the plain shift.
             // The comma is back to being just a comma.
             key(composing = "/", ascii = "Shift_L", width = 14f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
-            key(click = "z", longClick = "undo")
-            key(click = "x", longClick = "cut")
-            key(click = "c", longClick = "copy")
-            key(click = "v", longClick = "paste")
-            key(click = "b", longClick = "clipboard_window")
+            key(click = "z", longClick = "Z")
+            key(click = "x", longClick = "X")
+            key(click = "c", longClick = "C")
+            key(click = "v", longClick = "V")
+            key(click = "b", longClick = "B")
             key(click = "n", longClick = "'", swipeDown = "N")
             key(click = "m", longClick = "\"", swipeDown = "M")
             key(click = "BackSpace", swipeDown = "Delete", width = 16f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
@@ -119,14 +121,16 @@ object KeyLayouts {
             key(click = "o", longClick = "9", swipeUp = "/", swipeDown = "/")
             key(click = "p", longClick = "0", swipeUp = "|", swipeDown = "\\")
             spacer(2f)
-            // A/Z 行键面只留字母：低频的编辑/词库/标点功能收进长按与滑动槽作
-            // 盲操作（操作栏已承担功能入口），不再用图标/角标扰乱视线
-            key(click = "a", longClick = "select_all", width = 12f)
-            key(click = "s", longClick = "Keyboard_symbol", swipeDown = "Liquid_fixed_down", width = 11f)
-            key(click = "d", longClick = "Date_Lua", swipeUp = "Date_Lua", swipeDown = "DelCandFunc")
-            key(click = "f", longClick = "Keyboard_editor", swipeUp = "Keyboard_editor", swipeDown = "Keyboard_emoji")
-            key(click = "g", longClick = "Google", swipeUp = "Google", swipeDown = "ResetCandWeight")
-            key(click = "h", longClick = "History_Lua", swipeUp = "History_Lua", swipeDown = "HideCandFunc")
+            // A/Z 行手势只留输入类（2026-11-19 主人裁决）：长按=大写字母或
+            // 正常符号，滑动=符号/形码大写——复制粘贴、面板切换、lua 拓展
+            // 等一律上收菜单栏/面板/系统文本工具条，键面与手势不再承载
+            // 功能入口
+            key(click = "a", longClick = "A", width = 12f)
+            key(click = "s", longClick = "S", width = 11f)
+            key(click = "d", longClick = "D")
+            key(click = "f", longClick = "F")
+            key(click = "g", longClick = "G")
+            key(click = "h", longClick = "H")
             key(click = "j", longClick = ";", swipeDown = ":")
             key(click = "k", longClick = "{", swipeUp = "{", swipeDown = "[", width = 11f)
             key(click = "l", longClick = "}", swipeUp = "}", swipeDown = "]", width = 12f)
@@ -136,11 +140,11 @@ object KeyLayouts {
             // in CJK it does nothing, and in ASCII it stays the plain shift.
             // The comma is back to being just a comma.
             key(composing = "/", ascii = "Shift_L", width = 14f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
-            key(click = "z", longClick = "undo")
-            key(click = "x", longClick = "cut")
-            key(click = "c", longClick = "copy")
-            key(click = "v", longClick = "paste")
-            key(click = "b", longClick = "clipboard_window")
+            key(click = "z", longClick = "Z")
+            key(click = "x", longClick = "X")
+            key(click = "c", longClick = "C")
+            key(click = "v", longClick = "V")
+            key(click = "b", longClick = "B")
             key(click = "n", longClick = "'", swipeDown = "N")
             key(click = "m", longClick = "\"", swipeDown = "M")
             key(click = "BackSpace", swipeDown = "Delete", width = 16f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
