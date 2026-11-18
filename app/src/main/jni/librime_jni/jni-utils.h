@@ -27,8 +27,8 @@ class CString {
 
   ~CString() { env_->ReleaseStringUTFChars(str_, chr_); }
 
-  operator std::string() { return chr_; }
-
+  // Single conversion path (const char*) only: a second operator std::string()
+  // makes CString->std::string ambiguous under MSVC's overload resolution.
   operator const char*() { return chr_; }
 
   const char* operator*() { return chr_; }

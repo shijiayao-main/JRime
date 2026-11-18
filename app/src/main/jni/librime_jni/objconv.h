@@ -36,7 +36,7 @@ inline std::vector<std::string> stringArrayToStringVector(JNIEnv* env,
   for (int i = 0; i < length; ++i) {
     JRef<jstring> element(env, env->GetObjectArrayElement(array, i));
     CString cstr(env, *element);
-    result.emplace_back(cstr);
+    result.emplace_back(*cstr);
   }
   return std::move(result);
 }
