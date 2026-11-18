@@ -98,10 +98,6 @@ jobs:
           cmake --build app/src/main/jni/host/build-host -j3
 
       - name: Precompile rime data (generates assets/rime/build, untracked)
-        env:
-          CMAKE_GENERATOR: Ninja
-          CC: clang-cl
-          CXX: clang-cl
         run: ./gradlew :app:precompileRimeData
 
       - name: Build bridge dylib and run the desktop smoke
@@ -159,10 +155,6 @@ jobs:
           cmake --build app/src/main/jni/host/build-host -j4
 
       - name: Precompile rime data (generates assets/rime/build, untracked)
-        env:
-          CMAKE_GENERATOR: Ninja
-          CC: clang-cl
-          CXX: clang-cl
         run: ./gradlew :app:precompileRimeData
 
       - name: Build librime_jni.so
@@ -219,28 +211,22 @@ jobs:
           packages: 'platform-tools cmake;4.1.2'
 
       - name: Build host librime and deps
-        env:
-          # Ninja single-config: the gradle precompile task checks
-          # bin/rime_deployer (no config subdir) and re-runs cmake without -G,
-          # so the generator must be single-config and stay stable (the env
-          # default applies to both this step and the gradle-driven configure).
-          # clang-cl accepts librime's GCC-style flags (-Wno-error etc.);
-          # RC stays rc.exe (llvm-rc rejects the MSVC-style rc flag set).
-          CMAKE_GENERATOR: Ninja
-          CC: clang-cl
-          CXX: clang-cl
         run: |
-          cmake -S app/src/main/jni/host -B app/src/main/jni/host/build-host -DCMAKE_BUILD_TYPE=Release -DCMAKE_RC_COMPILER=rc
+          cmake -S app/src/main/jni/host -B app/src/main/jni/host/build-host -A x64 -T ClangCL
           # rime_deployer (the only tool this pipeline needs) pulls in the full
           # static librime + deps; the merged-plugin tools (build_predict etc.)
           # double-link plugin sources against librime.lib and break on lld-link.
-          cmake --build app/src/main/jni/host/build-host --target rime_deployer -j4
+          cmake --build app/src/main/jni/host/build-host --config Release --target rime_deployer -j4
+
+      - name: Stage rime_deployer at the gradle task's expected path
+        shell: pwsh
+        run: |
+          # The VS generator is multi-config (bin/Release/...), while the gradle
+          # precompile task checks the single-config path bin/rime_deployer.
+          Copy-Item app/src/main/jni/host/build-host/librime-build/bin/Release/rime_deployer.exe `
+            app/src/main/jni/host/build-host/librime-build/bin/rime_deployer
 
       - name: Precompile rime data (generates assets/rime/build, untracked)
-        env:
-          CMAKE_GENERATOR: Ninja
-          CC: clang-cl
-          CXX: clang-cl
         run: ./gradlew :app:precompileRimeData
 
       - name: Build librime_jni.dll
