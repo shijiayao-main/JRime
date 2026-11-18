@@ -26,6 +26,9 @@
 - 按键气泡预览：`POPUP_ON_KEY_PRESS`（默认开启）接入 GboardKeyFace——按压浮出键面字符气泡，Popup 浮层避行高裁切，CompositionLocal 单点供值零每键 listener（2220ee7）
 - 剪贴板快捷粘贴 chip：`clipboard_suggestion`/`clipboard_suggestion_timeout` 双键门控的菜单栏预览 chip——最新剪贴文本点击即 Inline commit 直分发粘贴，敏感剪贴不显示、消费即隐、面板打开态让位，预览截断为 24 字符+省略号、timeout 0=不自动隐藏（3aef2bd+6619719）
 - 启动器图标重设计：「快」印章（Noto Sans SC Bold 轮廓 + 应用主色，矢量自适应图标，PNG 密度资产退役）（01e0180）
+- T1 度量收紧：行高默认 46dp、字母键字 19sp、ActionBar 40dp/30dp chips、气泡 40dp/20sp（f930edd）
+- T2 面板高度统一：KEYBOARD_CONTENT_ROWS=6×行高成为所有 surface 的统一带高（liquid/clipboard/非 qwerty 板随「键盘行高」联动，切换零跳变）（f35a522）
+- T3+T4 键面净化与功能上收：字母键手势只留输入类（长按=大写/既有符号、滑动=符号/形码），复制粘贴/面板切换/lua 拓展全部撤除——编辑操作由系统文本工具条承载、剪贴板走 chip+面板、面板切换走菜单栏既有入口；候选删词由候选条长按承担（4180280）
 
 ## 已排除的伪需求 / 划界
 
