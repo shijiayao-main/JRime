@@ -55,6 +55,40 @@ object GboardKeyboard {
 
     /** The backspace key never gets narrower than this. */
     internal const val BACKSPACE_MIN_UNITS = 1.5f
+
+    /**
+     * The content band height in rows every keyboard-window surface renders:
+     * digit row + three letter rows + the shift row + the chrome row on the
+     * Gboard-structured boards. Panels and fallback boards render this same
+     * content height (their rows stretch via weight), so switching surfaces
+     * never jumps the band.
+     */
+    const val KEYBOARD_CONTENT_ROWS = 6
+}
+
+/**
+ * The row height rides the keyboard_row_height preference (the Trime parity
+ * knob): read once per composition, and a settings change updates the band
+ * live through the preference listener. Shared by every band surface so the
+ * whole keyboard moves together on one preference.
+ */
+@Composable
+internal fun rememberKeyboardRowHeightDp(): Int {
+    val keyboardPrefs = remember { AppPrefs.defaultInstance().keyboard }
+    var rowHeightDp by remember { mutableIntStateOf(keyboardPrefs.rowHeight.getValue()) }
+    DisposableEffect(keyboardPrefs) {
+        val listener =
+            SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                if (key == AppPrefs.Keyboard.KEYBOARD_HEIGHT) {
+                    rowHeightDp = keyboardPrefs.rowHeight.getValue()
+                }
+            }
+        keyboardPrefs.rowHeight.sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
+        onDispose {
+            keyboardPrefs.rowHeight.sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }
+    return rowHeightDp
 }
 
 /** Centering inset for a letter row shorter than the unit grid (units). */
@@ -84,21 +118,17 @@ fun GboardKeyboard(
     composingContent: (@Composable () -> Unit)? = null,
 ) {
     // The row height rides the keyboard_row_height preference (the Trime
-    // parity knob): read once per composition, and a settings change updates
-    // the band live through the preference listener.
-    val keyboardPrefs = remember { AppPrefs.defaultInstance().keyboard }
-    var rowHeightDp by remember { mutableIntStateOf(keyboardPrefs.rowHeight.getValue()) }
+    // parity knob), shared with every other band surface.
+    val rowHeightDp = rememberKeyboardRowHeightDp()
     // The key-press bubble rides the show_key_popup preference through the
     // same single listener (per-key listeners are the P2 debt the gesture
     // knobs flagged) and flows down through [LocalPopupOnKeyPress] -- the
     // shared face (GboardKeyFace) is the only reader.
+    val keyboardPrefs = remember { AppPrefs.defaultInstance().keyboard }
     var popupOnKeyPress by remember { mutableStateOf(keyboardPrefs.popupOnKeyPress.getValue()) }
     DisposableEffect(keyboardPrefs) {
         val listener =
             SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-                if (key == AppPrefs.Keyboard.KEYBOARD_HEIGHT) {
-                    rowHeightDp = keyboardPrefs.rowHeight.getValue()
-                }
                 if (key == AppPrefs.Keyboard.POPUP_ON_KEY_PRESS) {
                     popupOnKeyPress = keyboardPrefs.popupOnKeyPress.getValue()
                 }
@@ -111,15 +141,15 @@ fun GboardKeyboard(
     CompositionLocalProvider(LocalPopupOnKeyPress provides popupOnKeyPress) {
         val qwerty = remember(board, presetKeys) { isQwertyBoard(board, presetKeys) }
         if (!qwerty) {
-            val rowCount = remember(board) {
-                foldRows(board, board.width.takeIf { it > 0f } ?: 10f).size
-            }
             KeyboardPanel(
                 board = board,
                 keyAppearance = keyAppearance,
                 presetKeys = presetKeys,
                 onDispatch = onDispatch,
-                modifier = modifier.height((rowCount * rowHeightDp).dp),
+                // The fallback board renders the same content band as the
+                // qwerty path (rows stretch via weight) -- switching boards
+                // never jumps the band height.
+                modifier = modifier.height((GboardKeyboard.KEYBOARD_CONTENT_ROWS * rowHeightDp).dp),
             )
         } else {
             val (digitRow, letterRows) =

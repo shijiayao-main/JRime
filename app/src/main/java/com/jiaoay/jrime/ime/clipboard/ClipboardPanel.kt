@@ -38,6 +38,7 @@ import androidx.compose.ui.window.PopupProperties
 import com.jiaoay.jrime.ime.compose.GboardKeyboard
 import com.jiaoay.jrime.ime.compose.ImeColors
 import com.jiaoay.jrime.ime.compose.LocalImeColors
+import com.jiaoay.jrime.ime.compose.rememberKeyboardRowHeightDp
 
 /**
  * The Compose clipboard panel: a tab strip (history / favorites) above a
@@ -53,10 +54,14 @@ fun ClipboardPanel(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalImeColors.current
+    // The clipboard band renders the same content height as the keyboard
+    // (KEYBOARD_CONTENT_ROWS x the row-height preference) so switching
+    // surfaces never jumps the band.
+    val rowHeightDp = rememberKeyboardRowHeightDp()
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .height((4 * GboardKeyboard.ROW_HEIGHT).dp)
+            .height((GboardKeyboard.KEYBOARD_CONTENT_ROWS * rowHeightDp).dp)
             .background(colors.keyboardBackground),
     ) {
         ClipboardTabStrip(window, colors)

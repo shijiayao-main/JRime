@@ -461,13 +461,17 @@ private fun LiquidPanel(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalImeColors.current
+    // The liquid band renders the same content height as the keyboard
+    // (KEYBOARD_CONTENT_ROWS x the row-height preference) so switching
+    // surfaces never jumps the band.
+    val rowHeightDp = rememberKeyboardRowHeightDp()
     Column(
         modifier = modifier
             .fillMaxWidth()
             // Bounded to the keyboard's height: the wrap column must stay the
             // keyboard's size (an unbounded fillMaxSize stretches it to the
             // full window and pushes the action bar off the top of the band).
-            .height((4 * GboardKeyboard.ROW_HEIGHT).dp)
+            .height((GboardKeyboard.KEYBOARD_CONTENT_ROWS * rowHeightDp).dp)
             .background(colors.liquidBackground),
     ) {
         LazyRow(
