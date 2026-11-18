@@ -43,7 +43,10 @@ try {
   }
 
   $whole = $libs | ForEach-Object { "/WHOLEARCHIVE:$_" }
-  & link /DLL /OUT:librime_jni.dll rime_jni.obj config.obj frontend.obj key.obj `
+  # lld-link, not link.exe: the ClangCL toolset's librarian (llvm-ar) produces
+  # archives MSVC link.exe cannot reliably seek into (LNK1106), while the same
+  # librime.lib links fine through lld-link (proven by the tools' own links).
+  & lld-link /DLL /OUT:librime_jni.dll rime_jni.obj config.obj frontend.obj key.obj `
       levers.obj opencc.obj @whole `
       shlwapi.lib ws2_32.lib advapi32.lib user32.lib shell32.lib
   if ($LASTEXITCODE -ne 0) { throw "link failed" }
