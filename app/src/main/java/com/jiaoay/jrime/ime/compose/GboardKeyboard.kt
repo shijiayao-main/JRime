@@ -13,9 +13,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -86,11 +88,19 @@ fun GboardKeyboard(
     // the band live through the preference listener.
     val keyboardPrefs = remember { AppPrefs.defaultInstance().keyboard }
     var rowHeightDp by remember { mutableIntStateOf(keyboardPrefs.rowHeight.getValue()) }
+    // The key-press bubble rides the show_key_popup preference through the
+    // same single listener (per-key listeners are the P2 debt the gesture
+    // knobs flagged) and flows down through [LocalPopupOnKeyPress] -- the
+    // shared face (GboardKeyFace) is the only reader.
+    var popupOnKeyPress by remember { mutableStateOf(keyboardPrefs.popupOnKeyPress.getValue()) }
     DisposableEffect(keyboardPrefs) {
         val listener =
             SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
                 if (key == AppPrefs.Keyboard.KEYBOARD_HEIGHT) {
                     rowHeightDp = keyboardPrefs.rowHeight.getValue()
+                }
+                if (key == AppPrefs.Keyboard.POPUP_ON_KEY_PRESS) {
+                    popupOnKeyPress = keyboardPrefs.popupOnKeyPress.getValue()
                 }
             }
         keyboardPrefs.rowHeight.sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
@@ -98,41 +108,76 @@ fun GboardKeyboard(
             keyboardPrefs.rowHeight.sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
         }
     }
-    val qwerty = remember(board, presetKeys) { isQwertyBoard(board, presetKeys) }
-    if (!qwerty) {
-        val rowCount = remember(board) {
-            foldRows(board, board.width.takeIf { it > 0f } ?: 10f).size
-        }
-        KeyboardPanel(
-            board = board,
-            keyAppearance = keyAppearance,
-            presetKeys = presetKeys,
-            onDispatch = onDispatch,
-            modifier = modifier.height((rowCount * rowHeightDp).dp),
-        )
-        return
-    }
-    val (digitRow, letterRows) =
-        remember(board, presetKeys) { splitDigitRow(gboardLetterRows(board, presetKeys)) }
-    Column(modifier = modifier.fillMaxWidth()) {
-        // The top slot: composing shows the candidate strip the app provides,
-        // idle the data digit row. Both are one pinned row -- the band height
-        // never moves when the state flips (the dataKeyGestures teardown
-        // contract keeps a mid-gesture swap from sticking a key face). The
-        // swap only happens when the board actually leads with digits
-        // (hasLeadingDigitRow): otherwise both states render letter rows only.
-        if (keyAppearance.composing && composingContent != null && digitRow != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(rowHeightDp.dp),
-            ) {
-                composingContent()
+    CompositionLocalProvider(LocalPopupOnKeyPress provides popupOnKeyPress) {
+        val qwerty = remember(board, presetKeys) { isQwertyBoard(board, presetKeys) }
+        if (!qwerty) {
+            val rowCount = remember(board) {
+                foldRows(board, board.width.takeIf { it > 0f } ?: 10f).size
             }
+            KeyboardPanel(
+                board = board,
+                keyAppearance = keyAppearance,
+                presetKeys = presetKeys,
+                onDispatch = onDispatch,
+                modifier = modifier.height((rowCount * rowHeightDp).dp),
+            )
         } else {
-            digitRow?.let { digits ->
-                LetterRow(
-                    keys = digits,
+            val (digitRow, letterRows) =
+                remember(board, presetKeys) { splitDigitRow(gboardLetterRows(board, presetKeys)) }
+            Column(modifier = modifier.fillMaxWidth()) {
+                // The top slot: composing shows the candidate strip the app provides,
+                // idle the data digit row. Both are one pinned row -- the band height
+                // never moves when the state flips (the dataKeyGestures teardown
+                // contract keeps a mid-gesture swap from sticking a key face). The
+                // swap only happens when the board actually leads with digits
+                // (hasLeadingDigitRow): otherwise both states render letter rows only.
+                if (keyAppearance.composing && composingContent != null && digitRow != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(rowHeightDp.dp),
+                    ) {
+                        composingContent()
+                    }
+                } else {
+                    digitRow?.let { digits ->
+                        LetterRow(
+                            keys = digits,
+                            keyAppearance = keyAppearance,
+                            presetKeys = presetKeys,
+                            onDispatch = onDispatch,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(rowHeightDp.dp),
+                        )
+                    }
+                }
+                for (row in letterRows.dropLast(1)) {
+                    LetterRow(
+                        keys = row,
+                        keyAppearance = keyAppearance,
+                        presetKeys = presetKeys,
+                        onDispatch = onDispatch,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(rowHeightDp.dp),
+                    )
+                }
+                letterRows.lastOrNull()?.let { letters ->
+                    ShiftRow(
+                        board = board,
+                        letters = letters,
+                        keyAppearance = keyAppearance,
+                        presetKeys = presetKeys,
+                        onDispatch = onDispatch,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(rowHeightDp.dp),
+                        isAsciiMode = isAsciiMode,
+                    )
+                }
+                ChromeRow(
+                    board = board,
                     keyAppearance = keyAppearance,
                     presetKeys = presetKeys,
                     onDispatch = onDispatch,
@@ -142,39 +187,6 @@ fun GboardKeyboard(
                 )
             }
         }
-        for (row in letterRows.dropLast(1)) {
-            LetterRow(
-                keys = row,
-                keyAppearance = keyAppearance,
-                presetKeys = presetKeys,
-                onDispatch = onDispatch,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(rowHeightDp.dp),
-            )
-        }
-        letterRows.lastOrNull()?.let { letters ->
-            ShiftRow(
-                board = board,
-                letters = letters,
-                keyAppearance = keyAppearance,
-                presetKeys = presetKeys,
-                onDispatch = onDispatch,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(rowHeightDp.dp),
-                isAsciiMode = isAsciiMode,
-            )
-        }
-        ChromeRow(
-            board = board,
-            keyAppearance = keyAppearance,
-            presetKeys = presetKeys,
-            onDispatch = onDispatch,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(rowHeightDp.dp),
-        )
     }
 }
 

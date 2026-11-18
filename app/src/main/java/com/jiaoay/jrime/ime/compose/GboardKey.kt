@@ -11,7 +11,9 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
@@ -21,14 +23,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import com.jiaoay.jrime.data.theme.model.KeyActionToken
 import com.jiaoay.jrime.data.theme.model.PresetKey
 import com.jiaoay.jrime.data.theme.model.TextKeyboard
@@ -37,6 +44,7 @@ import com.jiaoay.jrime.ime.keyboard.KeyAction
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 /*
  * The Gboard key family (spec §2): GboardKeyFace paints one face --
@@ -46,6 +54,34 @@ import kotlinx.coroutines.launch
  * GboardChromeKey fires one fixed action for keys the board data doesn't
  * carry. The old YAML data is a behavior inventory, never a face.
  */
+
+/*
+ * The pressed-key bubble rides the show_key_popup preference, provided once
+ * at the keyboard root (GboardKeyboard) through this local -- one preference
+ * listener for the whole tree, never one per key (the per-key listener
+ * pattern is the P2 debt the gesture-knob wiring already flagged).
+ */
+
+/** Whether the pressed key shows its floating character bubble; provided at GboardKeyboard. */
+val LocalPopupOnKeyPress = staticCompositionLocalOf { false }
+
+/** The pressed-key bubble's fixed geometry: height, the gap above the key, min width. */
+private val KEY_POPUP_HEIGHT = 44.dp
+
+private val KEY_POPUP_GAP = 4.dp
+
+private val KEY_POPUP_MIN_WIDTH = 40.dp
+
+/**
+ * Whether the key-press bubble is visible: the preference gates it, the
+ * press triggers it, and an empty label suppresses it -- nothing to preview,
+ * no empty bubble.
+ */
+internal fun keyPopupVisible(
+    popupOnKeyPress: Boolean,
+    pressed: Boolean,
+    label: String,
+): Boolean = popupOnKeyPress && pressed && label.isNotEmpty()
 
 /** One Gboard key face: surface by class, 8dp corners, centered label, corner hint. */
 @Suppress("FunctionName")
@@ -77,6 +113,10 @@ fun GboardKeyFace(
             dimLabel -> style.textVariant
             else -> style.text
         }
+    // The character bubble is a composition-layer child of the face: it
+    // appears and disappears with the pressed recomposition, and never
+    // touches a pointerInput restart key (the stuck-key contract stays).
+    val popupShown = keyPopupVisible(LocalPopupOnKeyPress.current, pressed, label)
     Box(
         modifier = modifier
             .padding(2.dp)
@@ -102,6 +142,39 @@ fun GboardKeyFace(
                     .align(Alignment.TopEnd)
                     .padding(top = 4.dp, end = 5.dp),
             )
+        }
+        if (popupShown) {
+            // A Popup floats above the face (the ClipboardPanel long-press
+            // menu precedent): an in-face overlay would clip at the keyboard
+            // band's row bound. focusable=false keeps it from stealing the
+            // touch; no animation beyond the simplest appear/disappear.
+            Popup(
+                alignment = Alignment.TopCenter,
+                offset = with(LocalDensity.current) {
+                    IntOffset(0, -(KEY_POPUP_HEIGHT + KEY_POPUP_GAP).toPx().roundToInt())
+                },
+                properties = PopupProperties(focusable = false),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .widthIn(min = KEY_POPUP_MIN_WIDTH)
+                        .height(KEY_POPUP_HEIGHT)
+                        .background(style.pressed, RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    BasicText(
+                        text = label,
+                        style =
+                        TextStyle(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Normal,
+                            textAlign = TextAlign.Center,
+                            color = style.text,
+                        ),
+                        maxLines = 1,
+                    )
+                }
+            }
         }
     }
 }
