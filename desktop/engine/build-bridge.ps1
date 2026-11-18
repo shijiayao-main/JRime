@@ -31,12 +31,14 @@ try {
   }
 
   # The host build is multi-config (MSVC): locate the static libs under Release.
-  $wanted = "librime.lib", "libopencc.lib", "libleveldb.lib", "libmarisa.lib",
-            "libyaml-cpp.lib", "libsnappy.lib", "libspdlog.lib"
-  $libs = foreach ($name in $wanted) {
-    $found = Get-ChildItem -Path $hostBuild -Recurse -Filter $name -File |
+  # MSVC names static libs without the lib prefix (opencc.lib); GCC-style trees
+  # use libX.lib — accept both.
+  $deps = "rime", "opencc", "leveldb", "marisa", "yaml-cpp", "snappy", "spdlog"
+  $libs = foreach ($dep in $deps) {
+    $found = Get-ChildItem -Path $hostBuild -Recurse -File |
+      Where-Object { $_.Name -eq "$dep.lib" -or $_.Name -eq "lib$dep.lib" } |
       Select-Object -First 1 -ExpandProperty FullName
-    if (-not $found) { throw "static lib not found under ${hostBuild}: $name" }
+    if (-not $found) { throw "static lib not found under ${hostBuild}: $dep" }
     $found
   }
 
