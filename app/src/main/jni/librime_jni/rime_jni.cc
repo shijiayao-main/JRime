@@ -368,7 +368,7 @@ extern "C" JNIEXPORT jboolean JNICALL
 Java_com_jiaoay_jrime_core_Rime_simulateRimeKeySequence(JNIEnv* env,
                                                         jclass /* thiz */,
                                                         jstring key_sequence) {
-  return Rime::Instance().simulateKeySequence(CString(env, key_sequence));
+  return Rime::Instance().simulateKeySequence(*CString(env, key_sequence));
 }
 
 extern "C" JNIEXPORT jstring JNICALL
