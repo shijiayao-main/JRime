@@ -46,7 +46,24 @@ try {
   # lld-link, not link.exe: the ClangCL toolset's librarian (llvm-ar) produces
   # archives MSVC link.exe cannot reliably seek into (LNK1106), while the same
   # librime.lib links fine through lld-link (proven by the tools' own links).
-  & lld-link /DLL /OUT:librime_jni.dll rime_jni.obj config.obj frontend.obj key.obj `
+  # lld-link is not guaranteed on PATH under msvc-dev-cmd: locate it explicitly.
+  $lld = (Get-Command lld-link.exe -ErrorAction SilentlyContinue).Source
+  if (-not $lld) {
+    $candidates = @(
+      "$env:VCToolsInstallDir/bin/Hostx64/x64/lld-link.exe",
+      "$env:VCINSTALLDIR/Tools/Llvm/x64/bin/lld-link.exe"
+    )
+    foreach ($candidate in $candidates) {
+      if ($candidate -and (Test-Path $candidate)) { $lld = $candidate; break }
+    }
+  }
+  if (-not $lld) {
+    $lld = Get-ChildItem "C:/Program Files/Microsoft Visual Studio" -Recurse -Filter lld-link.exe `
+      -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+  }
+  if (-not $lld) { throw "lld-link.exe not found on PATH or under the VS installation" }
+  Write-Host "linking with: $lld"
+  & $lld /DLL /OUT:librime_jni.dll rime_jni.obj config.obj frontend.obj key.obj `
       levers.obj opencc.obj @whole `
       shlwapi.lib ws2_32.lib advapi32.lib user32.lib shell32.lib
   if ($LASTEXITCODE -ne 0) { throw "link failed" }
