@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,12 +66,18 @@ import kotlin.math.roundToInt
 /** Whether the pressed key shows its floating character bubble; provided at GboardKeyboard. */
 val LocalPopupOnKeyPress = staticCompositionLocalOf { false }
 
-/** The pressed-key bubble's fixed geometry: height, the gap above the key, min width. */
+/** The pressed-key bubble's fixed geometry: height, the gap above the key, min/max width. */
 private val KEY_POPUP_HEIGHT = 44.dp
 
 private val KEY_POPUP_GAP = 4.dp
 
 private val KEY_POPUP_MIN_WIDTH = 40.dp
+
+// The width ceiling: room for the rare multi-char label ("www", "ESC") at
+// 24sp, never a strip across the keyboard band (a third of a 360dp screen;
+// the ClipboardChip's 200dp ceiling is sized for a 24-char preview, too wide
+// for a momentary flash above one key).
+private val KEY_POPUP_MAX_WIDTH = 120.dp
 
 /**
  * Whether the key-press bubble is visible: the preference gates it, the
@@ -157,7 +164,7 @@ fun GboardKeyFace(
             ) {
                 Box(
                     modifier = Modifier
-                        .widthIn(min = KEY_POPUP_MIN_WIDTH)
+                        .widthIn(min = KEY_POPUP_MIN_WIDTH, max = KEY_POPUP_MAX_WIDTH)
                         .height(KEY_POPUP_HEIGHT)
                         .background(style.pressed, RoundedCornerShape(8.dp)),
                     contentAlignment = Alignment.Center,
@@ -172,6 +179,7 @@ fun GboardKeyFace(
                             color = style.text,
                         ),
                         maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
