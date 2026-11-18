@@ -98,6 +98,10 @@ jobs:
           cmake --build app/src/main/jni/host/build-host -j3
 
       - name: Precompile rime data (generates assets/rime/build, untracked)
+        env:
+          CMAKE_GENERATOR: Ninja
+          CC: clang-cl
+          CXX: clang-cl
         run: ./gradlew :app:precompileRimeData
 
       - name: Build bridge dylib and run the desktop smoke
@@ -155,6 +159,10 @@ jobs:
           cmake --build app/src/main/jni/host/build-host -j4
 
       - name: Precompile rime data (generates assets/rime/build, untracked)
+        env:
+          CMAKE_GENERATOR: Ninja
+          CC: clang-cl
+          CXX: clang-cl
         run: ./gradlew :app:precompileRimeData
 
       - name: Build librime_jni.so
@@ -211,18 +219,28 @@ jobs:
           packages: 'platform-tools cmake;4.1.2'
 
       - name: Build host librime and deps
-        run: |
+        env:
           # Ninja single-config: the gradle precompile task checks
           # bin/rime_deployer (no config subdir) and re-runs cmake without -G,
-          # so the generator must be single-config and stay stable.
-          # clang-cl accepts librime's GCC-style flags (-Wno-error etc.).
-          cmake -G Ninja -S app/src/main/jni/host -B app/src/main/jni/host/build-host -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl
+          # so the generator must be single-config and stay stable (the env
+          # default applies to both this step and the gradle-driven configure).
+          # clang-cl accepts librime's GCC-style flags (-Wno-error etc.);
+          # RC stays rc.exe (llvm-rc rejects the MSVC-style rc flag set).
+          CMAKE_GENERATOR: Ninja
+          CC: clang-cl
+          CXX: clang-cl
+        run: |
+          cmake -S app/src/main/jni/host -B app/src/main/jni/host/build-host -DCMAKE_BUILD_TYPE=Release -DCMAKE_RC_COMPILER=rc
           # rime_deployer (the only tool this pipeline needs) pulls in the full
           # static librime + deps; the merged-plugin tools (build_predict etc.)
           # double-link plugin sources against librime.lib and break on lld-link.
           cmake --build app/src/main/jni/host/build-host --target rime_deployer -j4
 
       - name: Precompile rime data (generates assets/rime/build, untracked)
+        env:
+          CMAKE_GENERATOR: Ninja
+          CC: clang-cl
+          CXX: clang-cl
         run: ./gradlew :app:precompileRimeData
 
       - name: Build librime_jni.dll
