@@ -249,10 +249,17 @@ extern "C" JNIEXPORT void JNICALL Java_com_jiaoay_jrime_core_Rime_startupRime(
     JNIEnv* env, jclass clazz, jstring shared_dir, jstring user_dir,
     jstring version_name) {
   // for rime shared data dir
+#if defined(_WIN32)
+  // MSVC has no setenv; _putenv_s is its documented equivalent.
+  _putenv_s("RIME_SHARED_DATA_DIR", CString(env, shared_dir));
+  _putenv_s("RIME_USER_DATA_DIR", CString(env, user_dir));
+  _putenv_s("RIME_DISTRIBUTION_VERSION", CString(env, version_name));
+#else
   setenv("RIME_SHARED_DATA_DIR", CString(env, shared_dir), 1);
   // for rime user data dir
   setenv("RIME_USER_DATA_DIR", CString(env, user_dir), 1);
   setenv("RIME_DISTRIBUTION_VERSION", CString(env, version_name), 1);
+#endif
 
   auto notificationHandler = [](void* context_object, RimeSessionId session_id,
                                 const char* message_type,

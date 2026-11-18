@@ -15,7 +15,7 @@ try {
   $defines = @(
     "/std:c++17", "/O2", "/EHsc", "/MD",
     "-DRIME_VERSION=`"1.17.0`"",
-    "`"-DRIME_EXTRA_MODULES=(lua)(octagram)(predict)`"",
+    '-DRIME_EXTRA_MODULES=(lua)(octagram)(predict)',
     "-DOpencc_BUILT_AS_STATIC", "-DSPDLOG_COMPILED_LIB", "-DYAML_CPP_STATIC_DEFINE",
     "-I$jni/librime/include", "-I$jni/librime/src",
     "-I$hostBuild/librime-build/src", "-I$hostBuild/include"
