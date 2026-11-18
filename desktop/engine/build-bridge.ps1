@@ -63,6 +63,12 @@ try {
   }
   if (-not $lld) { throw "lld-link.exe not found on PATH or under the VS installation" }
   Write-Host "linking with: $lld"
+  # Diagnostic: inventory every static lib the host build produced, so a
+  # failed link can be diagnosed from the CI artifact alone.
+  Write-Host "--- static libs under $hostBuild ---"
+  Get-ChildItem -Path $hostBuild -Recurse -Filter *.lib -File |
+    ForEach-Object { Write-Host ("  {0}  ({1} bytes)" -f $_.FullName, $_.Length) }
+  Write-Host "--- end static lib inventory ---"
   & $lld /DLL /OUT:librime_jni.dll rime_jni.obj config.obj frontend.obj key.obj `
       levers.obj opencc.obj @whole `
       shlwapi.lib ws2_32.lib advapi32.lib user32.lib shell32.lib

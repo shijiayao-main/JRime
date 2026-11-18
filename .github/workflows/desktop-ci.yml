@@ -214,7 +214,19 @@ jobs:
           cmake --build app/src/main/jni/host/build-host --config Release --target rime_deployer -j4
 
       - name: Build librime_jni.dll
-        run: pwsh ./desktop/engine/build-bridge.ps1 desktop/build
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path desktop/build | Out-Null
+          ./desktop/engine/build-bridge.ps1 desktop/build *> desktop/build/build-bridge.log
+          if ($LASTEXITCODE -ne 0) { Get-Content desktop/build/build-bridge.log; exit 1 }
+
+      - name: Upload bridge build log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-bridge-log
+          path: desktop/build/build-bridge.log
+          if-no-files-found: warn
 
       - name: Package the engine core
         shell: pwsh
