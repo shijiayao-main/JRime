@@ -201,8 +201,8 @@ internal const val SWIPE_TRAVEL_MAX_DP = 400
  */
 internal fun effectiveSwipeTravelDp(value: Int): Int? = if (value <= 0) null else value.coerceIn(SWIPE_TRAVEL_MIN_DP, SWIPE_TRAVEL_MAX_DP)
 
-/** The smallest long-press timeout the slider can reach. */
-internal const val LONG_PRESS_TIMEOUT_MIN_MS = 100
+/** The smallest positive long-press timeout the slider can reach (the step floor). */
+internal const val LONG_PRESS_TIMEOUT_MIN_MS = 10
 
 internal const val LONG_PRESS_TIMEOUT_MAX_MS = 1000
 

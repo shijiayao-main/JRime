@@ -41,8 +41,11 @@ class GestureThresholdsTest :
             effectiveLongPressTimeoutMs(300) shouldBe 300
             effectiveLongPressTimeoutMs(100) shouldBe 100
             effectiveLongPressTimeoutMs(1000) shouldBe 1000
-            effectiveLongPressTimeoutMs(50) shouldBe 100
+            effectiveLongPressTimeoutMs(50) shouldBe 50
             effectiveLongPressTimeoutMs(2000) shouldBe 1000
+            effectiveLongPressTimeoutMs(10) shouldBe 10
+            effectiveLongPressTimeoutMs(5) shouldBe 10
+            effectiveLongPressTimeoutMs(1) shouldBe 10
         }
 
         "repeat interval clamps into the configured range" {
