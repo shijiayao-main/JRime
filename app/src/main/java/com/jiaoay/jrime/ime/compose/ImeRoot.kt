@@ -196,6 +196,18 @@ private fun ActionBar(
             // board lives one tap away on the menu row.
             ActionBarButton("123", actions.number, onDispatch)
             ActionBarButton("📋", actions.clipboard, onDispatch)
+            // The clipboard quick-paste chip: the latest clip as a one-tap
+            // paste (the Gboard toolbar form). It owns its gating (the
+            // clipboard_suggestion pair) and composes to nothing when there
+            // is nothing to offer; while a full-data panel owns the idle row
+            // it yields -- the panel keeps its 📋 entrance. It flexes over
+            // the idle gap so a narrow band shrinks the chip instead of
+            // clipping the right cluster.
+            ClipboardChip(
+                onDispatch = onDispatch,
+                modifier = Modifier.weight(2f, fill = false),
+                panelOpen = state.currentWindow != null && state.currentWindow !is KeyboardWindow,
+            )
             // The same slot is the emoji entrance on the keyboard and the way
             // back from any non-keyboard panel (the liquid pages, the
             // clipboard); the keyboard itself never shows it. A quick second

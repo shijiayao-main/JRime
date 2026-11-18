@@ -15,15 +15,15 @@
 - 组合态回显点击清空编码（Esc 语义，1e 系 commit）
 - 键盘行高设置：`keyboard_row_height` 偏好（36-80dp）接入 Compose 键盘，设置变更实时生效（同文对齐项）
 - 长按/连发/滑动阈值走偏好：`LONG_PRESS_TIMEOUT`（0=跟随系统）/ `REPEAT_INTERVAL`（默认 80ms）/ `SWIPE_TRAVEL`（0=禁用滑动）接入 dataKeyGestures 并统一 GboardChromeKey 节奏，设置变更实时生效（72ac5a0；最初记录的 225d61a 为 amend 前哈希，已修正）
-- 按键气泡预览：`POPUP_ON_KEY_PRESS`（默认开启）接入 GboardKeyFace——按压浮出键面字符气泡，Popup 浮层避行高裁切，CompositionLocal 单点供值零每键 listener（9bc45b3）
+- 按键气泡预览：`POPUP_ON_KEY_PRESS`（默认开启）接入 GboardKeyFace——按压浮出键面字符气泡，Popup 浮层避行高裁切，CompositionLocal 单点供值零每键 listener（2220ee7）
+- 剪贴板快捷粘贴 chip：`clipboard_suggestion`/`clipboard_suggestion_timeout` 双键门控的菜单栏预览 chip——最新剪贴文本点击即 Inline commit 直分发粘贴，敏感剪贴不显示、消费即隐、面板打开态让位
 
 ## 行动项（按价值排序）
 
 1. ◆ 候选序号上屏：组合态按数字选首屏候选（需先设计数字入口——数字行此时已是候选栏；备选方案：字母行上滑出数字）
-2. 剪贴板快捷粘贴 chip：菜单栏在有新剪贴板文本时出预览 chip（Gboard 形态）
-3. 键盘行高自适应细节：行高变化时字体是否随行高缩放的实测调参
-4. 真机回归清单维护：数字行/菜单栏两态切换、aux 次选、shift 行为、悬浮窗遮挡——随每项改动跑
-5. 工程面：gh auth login 后拉历史失败日志，把 11-15 的 :app:check 失败与 Nightly build 失败逐个定案
+2. 键盘行高自适应细节：行高变化时字体是否随行高缩放的实测调参
+3. 真机回归清单维护：数字行/菜单栏两态切换、aux 次选、shift 行为、悬浮窗遮挡——随每项改动跑
+4. 工程面：gh auth login 后拉历史失败日志，把 11-15 的 :app:check 失败与 Nightly build 失败逐个定案
 
 ## 已排除的伪需求 / 划界
 
