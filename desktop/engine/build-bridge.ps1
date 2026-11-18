@@ -42,10 +42,12 @@ try {
     $found
   }
 
-  $whole = $libs | ForEach-Object { "/WHOLEARCHIVE:$_" }
+  # Plain linking (no /WHOLEARCHIVE): the merged-plugin static lib contains
+  # .res resource members that lld-link cannot parse, and WHOLEARCHIVE forces
+  # them to load. Normal symbol-driven pulling is proven sufficient by the
+  # Android device build (same merged lib, no whole-archive, plugins work).
   # lld-link, not link.exe: the ClangCL toolset's librarian (llvm-ar) produces
-  # archives MSVC link.exe cannot reliably seek into (LNK1106), while the same
-  # librime.lib links fine through lld-link (proven by the tools' own links).
+  # archives MSVC link.exe cannot reliably seek into (LNK1106).
   # lld-link is not guaranteed on PATH under msvc-dev-cmd: locate it explicitly.
   $lld = (Get-Command lld-link.exe -ErrorAction SilentlyContinue).Source
   if (-not $lld) {
@@ -70,7 +72,7 @@ try {
     ForEach-Object { Write-Host ("  {0}  ({1} bytes)" -f $_.FullName, $_.Length) }
   Write-Host "--- end static lib inventory ---"
   & $lld /DLL /OUT:librime_jni.dll rime_jni.obj config.obj frontend.obj key.obj `
-      levers.obj opencc.obj @whole `
+      levers.obj opencc.obj @libs `
       shlwapi.lib ws2_32.lib advapi32.lib user32.lib shell32.lib
   if ($LASTEXITCODE -ne 0) { throw "link failed" }
 
