@@ -35,9 +35,12 @@ try {
   # use libX.lib — accept both.
   $deps = "rime", "opencc", "leveldb", "marisa", "yaml-cpp", "snappy", "spdlog"
   $libs = foreach ($dep in $deps) {
+    # The VS generator produces Debug and Release variants; the Debug runtime
+    # (_ITERATOR_DEBUG_LEVEL=2) is ABI-incompatible with the /MD bridge, so
+    # only Release-tree libs may be linked.
     $found = Get-ChildItem -Path $hostBuild -Recurse -File |
-      Where-Object { $_.Name -eq "$dep.lib" -or $_.Name -eq "lib$dep.lib" } |
-      Select-Object -First 1 -ExpandProperty FullName
+      Where-Object { ($_.Name -eq "$dep.lib" -or $_.Name -eq "lib$dep.lib") -and $_.FullName -notmatch '\\Debug\\' } |
+      Sort-Object FullName | Select-Object -First 1 -ExpandProperty FullName
     if (-not $found) { throw "static lib not found under ${hostBuild}: $dep" }
     $found
   }
