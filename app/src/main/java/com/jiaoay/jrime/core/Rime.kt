@@ -8,9 +8,6 @@ package com.jiaoay.jrime.core
 import com.jiaoay.jrime.BuildConfig
 import com.jiaoay.jrime.core.data.DataManager
 import com.jiaoay.jrime.core.data.UserDataManager
-import com.jiaoay.jrime.data.opencc.OpenCCDictManager
-import com.jiaoay.jrime.data.prefs.AppPrefs
-import com.jiaoay.jrime.ime.core.InlinePreeditMode
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -32,8 +29,11 @@ import kotlin.time.Duration.Companion.minutes
  *
  * @see [librime](https://github.com/rime/librime)
  */
-class Rime :
-    RimeApi,
+class Rime(
+    private val inlinePreeditFormatter: RimeInlinePreeditFormatter,
+    private val showAsciiSwitchTips: () -> Boolean,
+    private val openCCBridge: RimeOpenCCBridge,
+) : RimeApi,
     RimeLifecycleOwner {
     private val lifecycleRegistry = RimeLifecycleRegistry()
     override val lifecycle get() = lifecycleRegistry
@@ -73,9 +73,6 @@ class Rime :
         )
 
     private val lock = Mutex()
-
-    private val inlinePreeditMode by AppPrefs.defaultInstance().general.inlinePreeditMode
-    private val showAsciiSwitchTips by AppPrefs.defaultInstance().general.asciiSwitchTips
 
     private var asciiSwitchTipsJob: Job? = null
     private var isNullInputType = true
@@ -319,21 +316,10 @@ class Rime :
     }
 
     private fun handlePreedit(composition: CompositionProto) {
-        val mode = if (isNullInputType) {
-            InlinePreeditMode.DISABLE
-        } else {
-            inlinePreeditMode
-        }
-        val inlinePreedit = when (mode) {
-            InlinePreeditMode.DISABLE -> ""
-
-            // The aux separator stays "/" in the engine (the cand_selector
-            // contract) and in the composition broadcast (the aux-state
-            // detector matches it); only the field-facing copy is re-spelled.
-            InlinePreeditMode.COMPOSING_TEXT -> composition.preedit?.replace(AUX_SEPARATOR, AUX_SEPARATOR_DISPLAY) ?: ""
-
-            InlinePreeditMode.COMMIT_TEXT_PREVIEW -> composition.commitTextPreview ?: ""
-        }
+        // The engine hands the raw composition to the injected formatter:
+        // the field-facing spelling (inline preedit mode, display separator)
+        // is the IME side's decision, not the engine's.
+        val inlinePreedit = inlinePreeditFormatter.formatInlinePreedit(composition, isNullInputType)
         // The raw composition always rides to the UI (never blanked): the
         // aux-code state detector reads the input tail off the preedit, and
         // the app's field renders only the inline preedit above.
@@ -360,7 +346,7 @@ class Rime :
 
             is RimeMessage.DeployMessage -> {
                 if (it.data == RimeMessage.DeployMessage.State.Start) {
-                    OpenCCDictManager.buildOpenCCDict()
+                    openCCBridge.buildOpenCCDict()
                 }
             }
 
@@ -403,7 +389,7 @@ class Rime :
     }
 
     private fun showAsciiSwitchTips(status: StatusProto) {
-        if (!showAsciiSwitchTips) return
+        if (!showAsciiSwitchTips()) return
         val tipsText = asciiTipsText(status)
         if (tipsText.isEmpty()) return
 
@@ -454,12 +440,6 @@ class Rime :
     }
 
     companion object {
-        /** The aux-code separator the engine parses (the cand_selector contract). */
-        private const val AUX_SEPARATOR = "/"
-
-        /** What the app's field shows in its place -- a raw slash reads as a typo. */
-        private const val AUX_SEPARATOR_DISPLAY = "·"
-
         private val messageFlow_ =
             MutableSharedFlow<RimeMessage<*>>(
                 extraBufferCapacity = 15,

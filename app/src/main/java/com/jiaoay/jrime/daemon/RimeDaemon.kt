@@ -13,9 +13,13 @@ import com.jiaoay.jrime.core.Rime
 import com.jiaoay.jrime.core.RimeApi
 import com.jiaoay.jrime.core.RimeLifecycle
 import com.jiaoay.jrime.core.RimeMessage
+import com.jiaoay.jrime.core.RimeOpenCCBridge
 import com.jiaoay.jrime.core.data.UserDataManager
 import com.jiaoay.jrime.core.lifecycleScope
 import com.jiaoay.jrime.core.whenReady
+import com.jiaoay.jrime.data.opencc.OpenCCDictManager
+import com.jiaoay.jrime.data.prefs.AppPrefs
+import com.jiaoay.jrime.ime.core.InlinePreeditFormatter
 import com.jiaoay.jrime.ui.main.LogActivity
 import com.jiaoay.jrime.util.DeployNotification
 import com.jiaoay.jrime.util.appContext
@@ -46,7 +50,13 @@ import kotlin.concurrent.withLock
  * Adapted from [fcitx5-android/FcitxDaemon.kt](https://github.com/fcitx5-android/fcitx5-android/blob/364afb44dcf0d9e3db3d43a21a32601b2190cbdf/app/src/main/java/org/fcitx/fcitx5/android/daemon/FcitxDaemon.kt)
  */
 object RimeDaemon {
-    private val realRime by lazy { Rime() }
+    private val realRime by lazy {
+        Rime(
+            inlinePreeditFormatter = InlinePreeditFormatter(),
+            showAsciiSwitchTips = { AppPrefs.defaultInstance().general.asciiSwitchTips.getValue() },
+            openCCBridge = RimeOpenCCBridge { OpenCCDictManager.buildOpenCCDict() },
+        )
+    }
 
     private val rimeImpl by lazy { object : RimeApi by realRime {} }
 
