@@ -6,7 +6,6 @@
 package com.jiaoay.jrime.ime.compose
 
 import io.kotest.core.spec.style.StringSpec
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 
 /**
@@ -24,11 +23,11 @@ class CandidateBadgeTest :
         }
 
         "candidates past nine have no select key" {
-            candidateBadgeNumber(9) shouldBeNull()
-            candidateBadgeNumber(20) shouldBeNull()
+            candidateBadgeNumber(9) shouldBe null
+            candidateBadgeNumber(20) shouldBe null
         }
 
         "out-of-range indices never badge" {
-            candidateBadgeNumber(-1) shouldBeNull()
+            candidateBadgeNumber(-1) shouldBe null
         }
     })
