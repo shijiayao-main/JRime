@@ -20,6 +20,11 @@
 - W4/S5(reviewer):在飞,任务单要点:全仓整体架构评审,落盘 doc/architecture-review.md(唯一可写文件);七维:分层与边界/KMP 化路径(core DTO+行协议编解码候选 commonMain)/重复逻辑(DesktopServer vs Replay 采样)/协议演进性/构建打包一致性(五处编译入口收敛)/已知风险(NewStringUTF 4 字节、stub 错位,与 Path B 关系)/命名一致性;用户战略指令(去 YAML 化)为方向输入,不把 librime 冻结当终态;P0/P1/P2 逐条 file:line+可执行建议;SUMMARY: P0=<x> P1=<y> P2=<z>;验收看证据链完整性,计数不触发返工。
 
 ## 3. 累计验收结论
+- W2/T3:通过。证据指针:desktop/protocol-common/com/jiaoay/jrime/protocol/{JsonLineCodec,EngineSnapshotSampler,SchemaReadyProbe}.kt 三件套;import 面仅 Rime×2+零平台 import(orchestrator 独立 grep);golden 12/12 IDENTICAL+git status golden 空(coder);test_server/smoke/build.sh 6/6 实跑过;重复体计数消费方=0;commit 5124958 恰 9 文件(3A+6M)零卷入。已知登记:protocol-common→Rime 门面直调=Step 2 依赖倒置前置项(设计文档 §1.3)。
+- W2/T4:通过。doc/multiplatform-design.md 342 行八节全在(orchestrator 独立 grep 标题核验);待裁决三件集中 §6.3;§1.4 roadmap 口径修订显式;未 commit 待 R-doc。
+- W4/T5(主对话代执行,执行背景=orchestrator 第三次 provider 饱和停滞):通过。证据指针:test_server.py 新增握手断言(proto==1/engine=="1.0.0-desktop")实跑 PASS;EngineSnapshotSampler.kt 增 optional proto/engine 参数(null=不发射,Replay 调用点零变化);DesktopServer.kt ready 分支传 PROTOCOL_VERSION/VERSION+P2-2 注释一行收编("minus the step field")+PROTOCOL_VERSION 常量;EngineClient.swift ServerReply 增 proto/engine 字段+start() 握手断言 proto>1 拒绝(只增不改义,低版本容忍);desktop-ci.yml windows 哈希比较 expected 侧 ToLower(R1-P2-3 收编)。闸门:test_server PASS(含新断言)/golden diff IDENTICAL(**无需重录实证**:T5 只动 ready 响应、共享采样器默认参数下 Replay 输出零变化,任务单预期的"重录窗口"经实证免除)/smoke PASS/spotless PASS/macos build.sh 全流程 PASS(含 Swift 握手断言编译+codesign)。commit c571d1c(恰 5 文件,未 push)。
+- W1 commit 闭环:T1=e7d8a29(恰 5 文件:Rime.kt M/RimeDaemon.kt M/RimeInlinePreeditFormatter.kt A/RimeOpenCCBridge.kt A/InlinePreeditFormatter.kt A)、T2=19d91fe(恰 5 文件:toolchain.properties A/smoke.sh M/test_server.py M/build.sh M/desktop-ci.yml M),均 show 复核零卷入未 push;执行方=主对话;台账增量随 cadcb3b 落库。T1/T2 verify 证据=主对话降级取证(合并树四闸全过);终树 verify 由 W3 合并 V 覆盖。
+- W2/R1:通过。证据指针:git show e7d8a29/19d91fe 独立对照+javap/哈希实测;Rime( 构造点全仓唯一(RimeDaemon.kt:54);core 三越层引用零残余;五消费方属性读取失败模式全部响亮(set -e/KeyError/bash -e/Get-FileHash throw);properties 纯 LF;注释 URL 与四下载点逐字一致;SHA 复核闭环(properties:7-8→四下载点)。P0=0 P1=0 P2=4(①BuildConfig 残余期 4 收编 ②RimeDaemon 形态备案 ③windows 哈希大小写归一缺口 ④SHA 校验不含缓存命中路径,随 P2-6)。预存反向依赖 AppPrefs.kt:14→ime.core.InlinePreeditMode 备案期 4。
 - W1/S1:通过。证据指针:jni-utils.h:176-239(桥依赖面=12 FindClass+12 签名,无 GetFieldID);kotlinc 实证三类样本;rime_jni.cc:115-123(证伪 status 缓存假设,真因=stub 字段错位);5 处 javac 调用点。
 - W2/S2:自查通过,待独立取证。SUMMARY: files=13/13/5,四件套自查 PASS(test_server PASS/golden 双录 IDENTICAL 12:12/smoke PASS/单测 176 全绿),javap 实证 12 个桥依赖签名与 jni-utils.h:176-239 逐字节一致。范围裁定:macos/JRimeIME/build.sh 改动属允许集("不改 macos/"条款系起草缺陷,与 stdlib 解包自决冲突;该文件为 S1 清单内 javac 点 build.sh:22-24);S4 复核其 diff 最小性与 jlink 行未动。
 - 基线漂移::app:testDebugUnitTest 175→176(并发会话新增 1),后续验收按 176 全绿。
@@ -75,14 +80,16 @@ test_server exit 0 / golden 12:12 IDENTICAL(cmp 复核)/ smoke PASS / 单测快�
 ## 1. 任务分解总表
 | # | 目标 | 专家 | 依赖 | 状态 |
 |---|------|------|------|------|
-| T0 | Path B 数据面/schema 常量化输入/KMP 抽取面/平台壳约束/机器闸门清单调查(只读) | researcher | 无 | 进行中(W1) |
-| T1 | P1-5 core 层解依赖(Rime.kt 零 ime/data import,三步注入化) | coder | 无 | 完成(W1 验收 ①-④ 通过;commit e7d8a29) |
-| T2 | P1-6 工具链单一事实源(script/toolchain.properties + SHA256 校验,五处字面量归一) | coder | 无 | 完成(W1 验收 ①-⑤ 通过;commit 19d91fe) |
-| V1+R1 | T1+T2 机器闸门实跑取证 + diff 三维评审 | verifier+reviewer | T1,T2 | 待派(W2) |
-| T3 | P1-3 采样器/JSON 编码器/就绪探测三段抽共享源集 desktop/protocol-common/ | coder | T2(同脚本文件串行) | 待派(W2) |
-| T4 | 设计方案文档 doc/multiplatform-design.md(输入=T0 结论+架构评审+战略指令) | coder | T0 | 待派(W2) |
-| V2+R2+R-doc | T3 闸门实跑+评审;T4 设计文档对照原始需求评审 | verifier+reviewer | T3,T4 | 待派(W3) |
-| T5 | P1-4 行协议版本握手(ready 响应加 proto/engine 字段+Swift 壳断言,含 golden 重录窗口) | coder | T3,T4 | 待派(W4) |
+| T0 | Path B 数据面/schema 常量化输入/KMP 抽取面/平台壳约束/机器闸门清单调查(只读) | researcher | 无 | 完成(W2 验收通过,抽验 3/3 命中;48 facts 已随 T4 转交) |
+| T1 | P1-5 core 层解依赖(Rime.kt 零 ime/data import,三步注入化) | coder | 无 | 完成(W1 验收 ①-④ 通过;commit e7d8a29,已闭环) |
+| T2 | P1-6 工具链单一事实源(script/toolchain.properties + SHA256 校验,五处字面量归一) | coder | 无 | 完成(W1 验收 ①-⑤ 通过;commit 19d91fe,已闭环) |
+| R1 | T1+T2 两 commit 三维评审(e7d8a29+19d91fe) | reviewer | 无(基于 commit) | 完成(W2 验收:P0=0 P1=0 P2=4,焦点 (a)(b)(c) 全过) |
+| T3 | P1-3 采样器/JSON 编码器/就绪探测三段抽共享源集 desktop/protocol-common/ | coder | T2 commit(同脚本文件串行) | 完成(W2 验收:硬闸 golden 12/12 IDENTICAL+零改动,commit 5124958 恰 9 文件) |
+| T4 | 设计方案文档 doc/multiplatform-design.md(输入=T0 结论+架构评审+战略指令) | coder | T0 | 完成(342 行落盘未提交,R-doc 后白名单提交) |
+| R2 | T3(commit 5124958)三维评审 | reviewer | T3 | 进行中(W3) |
+| R-doc | 设计文档 doc/multiplatform-design.md 六维评审 | reviewer | T4 | 进行中(W3) |
+| V合并 | T1+T2+T3 三 commit 合并闸门实跑取证 | verifier | T1,T2,T3 | 进行中(W3) |
+| T5 | P1-4 行协议版本握手(ready 响应加 proto/engine 字段+Swift 壳断言) | coder | T3,T4,V合并 | 完成(W4 主对话代执行:commit c571d1c;五闸全过+golden 无需重录实证) |
 | V3+R3 | T5 闸门实跑+评审 | verifier+reviewer | T5 | 待派(W5) |
 - 本期不执行(设计文档裁决后处置): P1-1 stub 错位 / P1-2 NewStringUTF(按 Path B 排期裁决)、Path B PoC 实施、平台壳动工、CI 矩阵扩展实施(待用户批准设计文档)、P2×9(未立项)
 
@@ -125,7 +132,7 @@ test_server exit 0 / golden 12:12 IDENTICAL(cmp 复核)/ smoke PASS / 单测快�
 
 ## 5. 需裁决项
 1. P1-1 stub 错位 / P1-2 NewStringUTF 修与不修 | 候选 A 现修(各需 golden 重录窗口,P1-1 是 macOS ascii 显示正确性的产品化前置;P1-2 需真机复核"Android 不受影响"判定,证伪则转 Android 项存续) B 不修(Path B 排期先于桌面线对外可用,随桥作废零成本关闭) | 阻塞: 本期无子任务(T4 设计文档出排期建议后提请用户裁决) | 默认: 不修,等设计文档排期建议。
-2. 设计文档批准(设计→批准→实施节奏) | doc/multiplatform-design.md 完成并评审后交用户批准 | 阻塞: Path B PoC 实施、平台壳动工、CI 矩阵扩展实施(期三候选) | 默认: 无(必须用户决策)。
+2. 设计文档批准 | doc/multiplatform-design.md 已落盘(342 行),裁决集中=§6.3 三件(opencc 数据面/词汇表二选一/P1-1 P1-2 排期)+§1.4(Step 2 jvm() target 对 roadmap 决策 6 的修订属性)+§2.7(D2-D4);R-doc 通过后升级为正式提请 | 阻塞: 期三实施波次 | 默认: 见文档各默认路径。
 
 ## 6. 战略指令衔接(本期)
 - 期一 §6 继续有效: 舍弃 YAML 运行时;按键路径不碰 YAML;真包袱=部署机器+session-open 快照解析;短期=Android fastpath+config 常量化;中期=Path B(运行时只读 prism/table/reverse bin + schema 生成 Kotlin 常量,yaml-cpp/config_compiler/Lua 退出运行时,librime 降级构建期工具链)。
