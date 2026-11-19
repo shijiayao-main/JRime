@@ -45,11 +45,14 @@ clang++ -dynamiclib -o librime_jni.dylib \
   -Wl,-undefined,error
 
 echo "== compiling Kotlin stubs + drivers"
-KOTLIN_VERSION=2.4.21
+# Toolchain single source of truth: script/toolchain.properties
+KOTLIN_VERSION=$(sed -n 's/^KOTLIN_VERSION=//p' "$REPO/script/toolchain.properties")
+KOTLIN_SHA256=$(sed -n 's/^KOTLIN_COMPILER_SHA256=//p' "$REPO/script/toolchain.properties")
 KOTLINC=$OUT/kotlinc-$KOTLIN_VERSION
 if [ ! -x "$KOTLINC/bin/kotlinc" ]; then
   curl -fL -o "$OUT/kotlin-compiler.zip" \
     "https://github.com/JetBrains/kotlin/releases/download/v$KOTLIN_VERSION/kotlin-compiler-$KOTLIN_VERSION.zip"
+  echo "$KOTLIN_SHA256  $OUT/kotlin-compiler.zip" | shasum -a 256 -c
   rm -rf "$OUT/kotlinc"
   unzip -q "$OUT/kotlin-compiler.zip" -d "$OUT"
   mv "$OUT/kotlinc" "$KOTLINC"

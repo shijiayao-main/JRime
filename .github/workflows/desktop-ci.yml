@@ -163,7 +163,11 @@ jobs:
       - name: Package the engine core
         run: |
           mkdir -p pkg/lib pkg/engine
-          curl -fL -o kotlinc.zip https://github.com/JetBrains/kotlin/releases/download/v2.4.21/kotlin-compiler-2.4.21.zip
+          # Toolchain single source of truth: script/toolchain.properties
+          KOTLIN_VERSION=$(sed -n 's/^KOTLIN_VERSION=//p' script/toolchain.properties)
+          KOTLIN_SHA256=$(sed -n 's/^KOTLIN_COMPILER_SHA256=//p' script/toolchain.properties)
+          curl -fL -o kotlinc.zip "https://github.com/JetBrains/kotlin/releases/download/v$KOTLIN_VERSION/kotlin-compiler-$KOTLIN_VERSION.zip"
+          echo "$KOTLIN_SHA256  kotlinc.zip" | sha256sum -c
           unzip -q kotlinc.zip -d kotlinc
           ./kotlinc/kotlinc/bin/kotlinc -d pkg/engine $(find desktop/engine/java -name '*.kt')
           unzip -qo kotlinc/kotlinc/lib/kotlin-stdlib.jar -d pkg/engine
@@ -248,7 +252,19 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path pkg/lib, pkg/engine | Out-Null
-          curl.exe -fL -o kotlinc.zip https://github.com/JetBrains/kotlin/releases/download/v2.4.21/kotlin-compiler-2.4.21.zip
+          # Toolchain single source of truth: script/toolchain.properties
+          $props = @{}
+          Get-Content script/toolchain.properties | Where-Object {
+            $_ -match '^\s*[A-Za-z_][A-Za-z0-9_]*\s*='
+          } | ForEach-Object {
+            $key, $value = $_ -split '=', 2
+            $props[$key.Trim()] = $value.Trim()
+          }
+          $kotlinVersion = $props['KOTLIN_VERSION']
+          $kotlinSha256 = $props['KOTLIN_COMPILER_SHA256']
+          curl.exe -fL -o kotlinc.zip "https://github.com/JetBrains/kotlin/releases/download/v$kotlinVersion/kotlin-compiler-$kotlinVersion.zip"
+          $zipHash = (Get-FileHash -Algorithm SHA256 kotlinc.zip).Hash.ToLower()
+          if ($zipHash -ne $kotlinSha256) { throw "kotlinc.zip SHA256 mismatch: expected $kotlinSha256, got $zipHash" }
           Expand-Archive kotlinc.zip -DestinationPath kotlinc
           $sources = Get-ChildItem desktop/engine/java -Recurse -Filter *.kt | Select-Object -ExpandProperty FullName
           & kotlinc/kotlinc/bin/kotlinc.bat -d pkg/engine $sources

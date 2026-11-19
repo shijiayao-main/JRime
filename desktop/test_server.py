@@ -7,6 +7,7 @@ ready -> n i h c -> first candidate 你好 -> sel 0 -> commit 你好.
 
 Prereq: harness/build/librime_jni.dylib exists (run ./harness/smoke.sh once).
 """
+import hashlib
 import json
 import os
 import shutil
@@ -20,7 +21,23 @@ ASSETS = ROOT / "app/src/main/assets"
 DYLIB = ROOT / "harness/build/librime_jni.dylib"
 JAVA = Path(subprocess.run(["/usr/libexec/java_home"], capture_output=True,
                            text=True).stdout.strip())
-KOTLIN_VERSION = "2.4.21"
+
+
+def _load_toolchain_properties() -> dict:
+    """Parse script/toolchain.properties (toolchain single source of truth)."""
+    props = {}
+    for line in (ROOT / "script/toolchain.properties").read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        props[key.strip()] = value.strip()
+    return props
+
+
+_TOOLCHAIN = _load_toolchain_properties()
+KOTLIN_VERSION = _TOOLCHAIN["KOTLIN_VERSION"]
+KOTLIN_COMPILER_SHA256 = _TOOLCHAIN["KOTLIN_COMPILER_SHA256"]
 
 
 def ensure_kotlinc() -> Path:
@@ -37,6 +54,13 @@ def ensure_kotlinc() -> Path:
     url = (f"https://github.com/JetBrains/kotlin/releases/download/"
            f"v{KOTLIN_VERSION}/kotlin-compiler-{KOTLIN_VERSION}.zip")
     subprocess.run(["curl", "-fL", "-o", str(archive), url], check=True)
+    digest = hashlib.sha256()
+    with archive.open("rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            digest.update(chunk)
+    if digest.hexdigest() != KOTLIN_COMPILER_SHA256:
+        sys.exit(f"kotlin-compiler.zip SHA256 mismatch: expected "
+                 f"{KOTLIN_COMPILER_SHA256}, got {digest.hexdigest()}")
     shutil.rmtree(build / "kotlinc", ignore_errors=True)
     with zipfile.ZipFile(archive) as z:
         z.extractall(build)

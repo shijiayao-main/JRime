@@ -19,7 +19,8 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/lib" \
          "$APP/Contents/Resources/engine" "$B/classes"
 
 echo "== [2/6] engine classes"
-KOTLIN_VERSION=2.4.21
+# Toolchain single source of truth: script/toolchain.properties
+KOTLIN_VERSION=$(sed -n 's/^KOTLIN_VERSION=//p' "$REPO/script/toolchain.properties")
 KOTLINC="$REPO/harness/build/kotlinc-$KOTLIN_VERSION"
 find "$REPO/desktop/engine/java" -name '*.kt' > "$B/sources.txt"
 JAVA_HOME="$JAVA_HOME" "$KOTLINC/bin/kotlinc" -d "$B/classes" @"$B/sources.txt"
