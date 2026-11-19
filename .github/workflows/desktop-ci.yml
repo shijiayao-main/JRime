@@ -169,7 +169,7 @@ jobs:
           curl -fL -o kotlinc.zip "https://github.com/JetBrains/kotlin/releases/download/v$KOTLIN_VERSION/kotlin-compiler-$KOTLIN_VERSION.zip"
           echo "$KOTLIN_SHA256  kotlinc.zip" | sha256sum -c
           unzip -q kotlinc.zip -d kotlinc
-          ./kotlinc/kotlinc/bin/kotlinc -d pkg/engine $(find desktop/engine/java -name '*.kt')
+          ./kotlinc/kotlinc/bin/kotlinc -d pkg/engine $(find desktop/protocol-common desktop/engine/java -name '*.kt')
           unzip -qo kotlinc/kotlinc/lib/kotlin-stdlib.jar -d pkg/engine
           cp desktop/build/librime_jni.so pkg/lib/
           cp -R app/src/main/assets/shared pkg/rime
@@ -266,7 +266,7 @@ jobs:
           $zipHash = (Get-FileHash -Algorithm SHA256 kotlinc.zip).Hash.ToLower()
           if ($zipHash -ne $kotlinSha256) { throw "kotlinc.zip SHA256 mismatch: expected $kotlinSha256, got $zipHash" }
           Expand-Archive kotlinc.zip -DestinationPath kotlinc
-          $sources = Get-ChildItem desktop/engine/java -Recurse -Filter *.kt | Select-Object -ExpandProperty FullName
+          $sources = Get-ChildItem desktop/protocol-common, desktop/engine/java -Recurse -Filter *.kt | Select-Object -ExpandProperty FullName
           & kotlinc/kotlinc/bin/kotlinc.bat -d pkg/engine $sources
           if ($LASTEXITCODE -ne 0) { throw "kotlinc failed" }
           Expand-Archive kotlinc/kotlinc/lib/kotlin-stdlib.jar -DestinationPath pkg/engine -Force

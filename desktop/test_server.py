@@ -77,7 +77,8 @@ def compile_engine() -> Path:
     shutil.rmtree(classes, ignore_errors=True)
     classes.mkdir(parents=True)
     kotlinc = ensure_kotlinc()
-    sources = [str(p) for p in (ROOT / "desktop/engine/java").rglob("*.kt")]
+    sources = [str(p) for p in (ROOT / "desktop/protocol-common").rglob("*.kt")]
+    sources += [str(p) for p in (ROOT / "desktop/engine/java").rglob("*.kt")]
     env = {**os.environ, "JAVA_HOME": str(JAVA)}
     subprocess.run([str(kotlinc / "bin/kotlinc"), "-d", str(classes), *sources],
                    check=True, env=env)

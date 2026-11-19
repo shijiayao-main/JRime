@@ -2,6 +2,8 @@
 
 import com.jiaoay.jrime.core.Rime
 import com.jiaoay.jrime.core.RimeKeyEvent
+import com.jiaoay.jrime.protocol.EngineSnapshotSampler
+import com.jiaoay.jrime.protocol.SchemaReadyProbe
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
@@ -51,17 +53,7 @@ fun main(args: Array<String>) {
 
     // Ready probe: the session must have mounted the expected schema before
     // the first key goes in, or the trace would sample a dead engine.
-    var ready = false
-    var probe = 0
-    while (probe < 150 && !ready) {
-        val st = Rime.getRimeStatus()
-        if (schema == st.schemaId) {
-            ready = true
-        } else {
-            Thread.sleep(200)
-        }
-        probe++
-    }
+    val ready = SchemaReadyProbe.awaitSchemaReady(schema)
     if (!ready) {
         System.err.println(
             "engine never mounted schema " + schema +
@@ -71,14 +63,14 @@ fun main(args: Array<String>) {
     }
 
     PrintWriter(OutputStreamWriter(FileOutputStream(out), StandardCharsets.UTF_8)).use { w ->
-        sample(w, 0, "start", true)
+        w.println(EngineSnapshotSampler.sampleLine("start", true, 0))
         var n = 1
         for (op in steps) {
             val handled = apply(op.trim())
-            sample(w, n, op.trim(), handled)
+            w.println(EngineSnapshotSampler.sampleLine(op.trim(), handled, n))
             n++
         }
-        sample(w, n, "end", true)
+        w.println(EngineSnapshotSampler.sampleLine("end", true, n))
     }
     Rime.exitRime()
     System.out.println("REPLAY OK")
@@ -109,61 +101,4 @@ private fun apply(op: String): Boolean {
         return true
     }
     throw IllegalArgumentException("unknown op: " + op)
-}
-
-private fun sample(w: PrintWriter, step: Int, op: String, handled: Boolean) {
-    val ctx = Rime.getRimeContext()
-    val st = Rime.getRimeStatus()
-    val commit = Rime.getRimeCommit() // drains the commit buffer
-    val comp = ctx.composition
-    val preedit = comp?.preedit
-    val sb = StringBuilder()
-    sb.append("{\"step\":").append(step)
-        .append(",\"op\":\"").append(json(op)).append('"')
-        .append(",\"handled\":").append(handled)
-        .append(",\"raw\":\"").append(json(Rime.getRimeRawInput())).append('"')
-        .append(",\"preedit\":\"").append(json(preedit)).append('"')
-        .append(",\"commit\":")
-        .append(
-            if (commit == null || commit.text == null) {
-                "null"
-            } else {
-                "\"" + json(commit.text) + "\""
-            },
-        )
-        .append(",\"ascii\":").append(st.isAsciiMode)
-        .append(",\"composing\":").append(st.isComposing)
-        .append(",\"schema\":\"").append(json(st.schemaId)).append('"')
-        .append(",\"cands\":[")
-    val cands = Rime.getRimeCandidates(0, 48)
-    for (i in cands.indices) {
-        if (i > 0) sb.append(',')
-        sb.append("[\"").append(json(cands[i].text)).append("\",\"")
-            .append(json(cands[i].comment)).append("\"]")
-    }
-    sb.append("]}")
-    w.println(sb.toString())
-}
-
-private fun json(s: String?): String {
-    if (s == null) return ""
-    val b = StringBuilder()
-    for (c in s.toCharArray()) {
-        when (c) {
-            '"' -> b.append("\\\"")
-
-            '\\' -> b.append("\\\\")
-
-            '\n' -> b.append("\\n")
-
-            '\r' -> b.append("\\r")
-
-            '\t' -> b.append("\\t")
-
-            else -> {
-                if (c.code < 0x20) b.append(String.format("\\u%04x", c.code)) else b.append(c)
-            }
-        }
-    }
-    return b.toString()
 }

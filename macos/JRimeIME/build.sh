@@ -22,7 +22,7 @@ echo "== [2/6] engine classes"
 # Toolchain single source of truth: script/toolchain.properties
 KOTLIN_VERSION=$(sed -n 's/^KOTLIN_VERSION=//p' "$REPO/script/toolchain.properties")
 KOTLINC="$REPO/harness/build/kotlinc-$KOTLIN_VERSION"
-find "$REPO/desktop/engine/java" -name '*.kt' > "$B/sources.txt"
+find "$REPO/desktop/protocol-common" "$REPO/desktop/engine/java" -name '*.kt' > "$B/sources.txt"
 JAVA_HOME="$JAVA_HOME" "$KOTLINC/bin/kotlinc" -d "$B/classes" @"$B/sources.txt"
 unzip -qo "$KOTLINC/lib/kotlin-stdlib.jar" -d "$B/classes"
 cp -R "$B/classes/" "$APP/Contents/Resources/engine/"

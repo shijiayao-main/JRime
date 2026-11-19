@@ -4,6 +4,9 @@ package com.jiaoay.jrime.desktop
 
 import com.jiaoay.jrime.core.Rime
 import com.jiaoay.jrime.core.RimeKeyEvent
+import com.jiaoay.jrime.protocol.EngineSnapshotSampler
+import com.jiaoay.jrime.protocol.JsonLineCodec
+import com.jiaoay.jrime.protocol.SchemaReadyProbe
 import java.io.BufferedReader
 import java.io.FileDescriptor
 import java.io.FileOutputStream
@@ -54,25 +57,15 @@ fun main(args: Array<String>) {
 
     // Ready probe: the session must have mounted the expected schema before
     // the shell sends its first key, or responses would sample a dead engine.
-    var ready = false
-    var probe = 0
-    while (probe < 150 && !ready) {
-        val st = Rime.getRimeStatus()
-        if (schema == st.schemaId) {
-            ready = true
-        } else {
-            Thread.sleep(200)
-        }
-        probe++
-    }
+    val ready = SchemaReadyProbe.awaitSchemaReady(schema)
 
     val out = PrintStream(FileOutputStream(FileDescriptor.out), true, StandardCharsets.UTF_8)
     val inp = BufferedReader(InputStreamReader(System.`in`, StandardCharsets.UTF_8))
 
     if (!ready) {
         out.println(
-            "{\"error\":\"engine never mounted schema " + json(schema) +
-                "\",\"messages\":" + json(java.lang.String.join(", ", Rime.messages)) + "}",
+            "{\"error\":\"engine never mounted schema " + JsonLineCodec.encode(schema) +
+                "\",\"messages\":" + JsonLineCodec.encode(java.lang.String.join(", ", Rime.messages)) + "}",
         )
         return
     }
@@ -106,100 +99,43 @@ fun main(args: Array<String>) {
         try {
             when {
                 line == "exit" -> {
-                    out.println(sample(line, true))
+                    out.println(EngineSnapshotSampler.sampleLine(line, true))
                     break
                 }
 
-                line == "ready" -> out.println(sample(line, true))
+                line == "ready" -> out.println(EngineSnapshotSampler.sampleLine(line, true))
 
                 line.startsWith("k ") -> {
                     val ev = RimeKeyEvent.parse(line.substring(2).trim())
                     val handled = Rime.processRimeKey(ev.keycode, ev.modifier)
-                    out.println(sample(line, handled))
+                    out.println(EngineSnapshotSampler.sampleLine(line, handled))
                 }
 
                 line.startsWith("sel ") -> {
                     val handled = Rime.selectRimeCandidate(Integer.parseInt(line.substring(4).trim()), false)
-                    out.println(sample(line, handled))
+                    out.println(EngineSnapshotSampler.sampleLine(line, handled))
                 }
 
                 line == "commit" -> {
                     val handled = Rime.commitRimeComposition()
-                    out.println(sample(line, handled))
+                    out.println(EngineSnapshotSampler.sampleLine(line, handled))
                 }
 
-                line == "pg next" -> out.println(sample(line, Rime.changeRimeCandidatePage(false)))
+                line == "pg next" -> out.println(EngineSnapshotSampler.sampleLine(line, Rime.changeRimeCandidatePage(false)))
 
-                line == "pg prev" -> out.println(sample(line, Rime.changeRimeCandidatePage(true)))
+                line == "pg prev" -> out.println(EngineSnapshotSampler.sampleLine(line, Rime.changeRimeCandidatePage(true)))
 
                 line.startsWith("opt ") -> {
                     val parts = line.split(" +".toRegex()).toTypedArray()
                     Rime.setRimeOption(parts[1], java.lang.Boolean.parseBoolean(parts[2]))
-                    out.println(sample(line, true))
+                    out.println(EngineSnapshotSampler.sampleLine(line, true))
                 }
 
-                else -> out.println("{\"error\":\"unknown request: " + json(line) + "\"}")
+                else -> out.println("{\"error\":\"unknown request: " + JsonLineCodec.encode(line) + "\"}")
             }
         } catch (e: Exception) {
-            out.println("{\"error\":\"" + json(java.lang.String.valueOf(e)) + "\"}")
+            out.println("{\"error\":\"" + JsonLineCodec.encode(java.lang.String.valueOf(e)) + "\"}")
         }
     }
     Rime.exitRime()
-}
-
-/** Samples the engine state; identical shape to the harness trace minus step. */
-private fun sample(op: String, handled: Boolean): String {
-    val ctx = Rime.getRimeContext()
-    val st = Rime.getRimeStatus()
-    val commit = Rime.getRimeCommit() // drains the commit buffer
-    val comp = ctx.composition
-    val preedit = comp?.preedit
-    val sb = StringBuilder()
-    sb.append("{\"op\":\"").append(json(op)).append('"')
-        .append(",\"handled\":").append(handled)
-        .append(",\"raw\":\"").append(json(Rime.getRimeRawInput())).append('"')
-        .append(",\"preedit\":\"").append(json(preedit)).append('"')
-        .append(",\"commit\":")
-        .append(
-            if (commit == null || commit.text == null) {
-                "null"
-            } else {
-                "\"" + json(commit.text) + "\""
-            },
-        )
-        .append(",\"ascii\":").append(st.isAsciiMode)
-        .append(",\"composing\":").append(st.isComposing)
-        .append(",\"schema\":\"").append(json(st.schemaId)).append('"')
-        .append(",\"cands\":[")
-    val cands = Rime.getRimeCandidates(0, 48)
-    for (i in cands.indices) {
-        if (i > 0) sb.append(',')
-        sb.append("[\"").append(json(cands[i].text)).append("\",\"")
-            .append(json(cands[i].comment)).append("\"]")
-    }
-    sb.append("]}")
-    return sb.toString()
-}
-
-private fun json(s: String?): String {
-    if (s == null) return ""
-    val b = StringBuilder()
-    for (c in s.toCharArray()) {
-        when (c) {
-            '"' -> b.append("\\\"")
-
-            '\\' -> b.append("\\\\")
-
-            '\n' -> b.append("\\n")
-
-            '\r' -> b.append("\\r")
-
-            '\t' -> b.append("\\t")
-
-            else -> {
-                if (c.code < 0x20) b.append(String.format("\\u%04x", c.code)) else b.append(c)
-            }
-        }
-    }
-    return b.toString()
 }

@@ -58,7 +58,7 @@ if [ ! -x "$KOTLINC/bin/kotlinc" ]; then
   mv "$OUT/kotlinc" "$KOTLINC"
 fi
 JAVA_HOME="$JDK" "$KOTLINC/bin/kotlinc" -d classes \
-  $(find "$REPO/harness/java" "$REPO/desktop/engine/java" -name '*.kt')
+  $(find "$REPO/harness/java" "$REPO/desktop/protocol-common" "$REPO/desktop/engine/java" -name '*.kt')
 unzip -qo "$KOTLINC/lib/kotlin-stdlib.jar" -d classes
 
 echo "== running smoke"

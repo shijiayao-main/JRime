@@ -1,0 +1,46 @@
+package com.jiaoay.jrime.protocol
+
+import com.jiaoay.jrime.core.Rime
+
+/**
+ * Samples one engine snapshot as the canonical protocol JSON line
+ * (doc/harness-design.md §4). Single source of truth shared by the engine
+ * server (no step field) and the harness replay driver (step-prefixed trace),
+ * so the golden trace and live responses keep the same shape minus step.
+ */
+object EngineSnapshotSampler {
+    fun sampleLine(op: String, handled: Boolean, step: Int? = null): String {
+        val ctx = Rime.getRimeContext()
+        val st = Rime.getRimeStatus()
+        val commit = Rime.getRimeCommit() // drains the commit buffer
+        val comp = ctx.composition
+        val preedit = comp?.preedit
+        val sb = StringBuilder()
+        sb.append("{")
+        if (step != null) sb.append("\"step\":").append(step).append(',')
+        sb.append("\"op\":\"").append(JsonLineCodec.encode(op)).append('"')
+            .append(",\"handled\":").append(handled)
+            .append(",\"raw\":\"").append(JsonLineCodec.encode(Rime.getRimeRawInput())).append('"')
+            .append(",\"preedit\":\"").append(JsonLineCodec.encode(preedit)).append('"')
+            .append(",\"commit\":")
+            .append(
+                if (commit == null || commit.text == null) {
+                    "null"
+                } else {
+                    "\"" + JsonLineCodec.encode(commit.text) + "\""
+                },
+            )
+            .append(",\"ascii\":").append(st.isAsciiMode)
+            .append(",\"composing\":").append(st.isComposing)
+            .append(",\"schema\":\"").append(JsonLineCodec.encode(st.schemaId)).append('"')
+            .append(",\"cands\":[")
+        val cands = Rime.getRimeCandidates(0, 48)
+        for (i in cands.indices) {
+            if (i > 0) sb.append(',')
+            sb.append("[\"").append(JsonLineCodec.encode(cands[i].text)).append("\",\"")
+                .append(JsonLineCodec.encode(cands[i].comment)).append("\"]")
+        }
+        sb.append("]}")
+        return sb.toString()
+    }
+}
