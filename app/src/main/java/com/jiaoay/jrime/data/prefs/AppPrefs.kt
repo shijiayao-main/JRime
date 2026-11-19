@@ -120,6 +120,7 @@ class AppPrefs(
             const val LANDSCAPE_MODE = "keyboard_landscape_mode"
             const val SPLIT_SPACE_PERCENT = "keyboard_split_space"
             const val KEYBOARD_HEIGHT = "keyboard_row_height"
+            const val DOUBLE_SPACE_PERIOD = "double_space_period"
 
             const val USE_SOFT_CURSOR = "use_soft_cursor"
             const val HIDE_INPUT_BAR = "hide_input_bar"
@@ -185,6 +186,8 @@ class AppPrefs(
             80,
             "dp",
         )
+
+        val doubleSpacePeriod = switch(R.string.double_space_period, DOUBLE_SPACE_PERIOD, true)
 
         val useSoftCursor = switch(R.string.use_soft_cursor, USE_SOFT_CURSOR, true)
 

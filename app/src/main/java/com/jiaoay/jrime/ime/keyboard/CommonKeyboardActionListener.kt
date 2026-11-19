@@ -7,6 +7,7 @@ package com.jiaoay.jrime.ime.keyboard
 
 import android.app.Dialog
 import android.content.Intent
+import android.os.SystemClock
 import android.view.ContextThemeWrapper
 import android.view.KeyEvent
 import android.widget.Toast
@@ -43,6 +44,15 @@ import splitties.systemservices.clipboardManager
 import splitties.systemservices.inputMethodManager
 import timber.log.Timber
 
+/** The double-space window: a human second tap lands in this gap (the 80ms repeat cadence never does). */
+internal const val DOUBLE_SPACE_WINDOW_MS = 350L
+
+/** The minimum gap counted as a deliberate second tap (below it is the key-repeat cadence). */
+internal const val DOUBLE_SPACE_MIN_GAP_MS = 120L
+
+/** Whether an idle space tap this long after the previous one counts as the double-space second tap. */
+internal fun isDoubleSpaceTap(gapMs: Long): Boolean = gapMs in DOUBLE_SPACE_MIN_GAP_MS..DOUBLE_SPACE_WINDOW_MS
+
 class CommonKeyboardActionListener(override val di: DI) : DIAware {
 
     private val context: ContextThemeWrapper by instance()
@@ -54,6 +64,9 @@ class CommonKeyboardActionListener(override val di: DI) : DIAware {
     private val liquidWindow: LiquidWindow by instance()
 
     private val prefs = AppPrefs.defaultInstance()
+
+    // The previous idle-space tap's timestamp, for the double-space rule.
+    private var lastIdleSpaceAt = 0L
 
     private fun showDialog(dialog: suspend (RimeApi) -> Dialog) {
         rime.launchOnReady { api ->
@@ -293,6 +306,29 @@ class CommonKeyboardActionListener(override val di: DI) : DIAware {
             }
 
             private fun handleDefaultKeyAction(action: KeyAction) {
+                // The double-space rule (Trime/mainstream CN-IME parity): a
+                // second idle space tap inside the window turns the field's
+                // trailing space into a full stop. Observation-based (tap gap
+                // + the field's trailing char), so the key-repeat cadence can
+                // never trigger it; composing space is untouched.
+                if (action.code == KeyEvent.KEYCODE_SPACE &&
+                    action.modifier == 0 &&
+                    prefs.keyboard.doubleSpacePeriod.getValue() &&
+                    !rime.run { statusCached }.isComposing
+                ) {
+                    val now = SystemClock.uptimeMillis()
+                    val gap = now - lastIdleSpaceAt
+                    lastIdleSpaceAt = now
+                    if (isDoubleSpaceTap(gap)) {
+                        service.currentInputConnection?.let { ic ->
+                            if (ic.getTextBeforeCursor(1, 0) == " ") {
+                                ic.deleteSurroundingText(1, 0)
+                                service.commitText("。")
+                                return
+                            }
+                        }
+                    }
+                }
                 val shouldHookShiftKey = when {
                     prefs.keyboard.hookShiftSpace.getValue() && action.code == KeyEvent.KEYCODE_SPACE -> true
                     prefs.keyboard.hookShiftNum.getValue() && action.code in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9 -> true
