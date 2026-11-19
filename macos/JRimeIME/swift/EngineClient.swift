@@ -16,6 +16,10 @@ struct ServerReply {
     var composing: Bool { obj["composing"] as? Bool ?? false }
     var commit: String? { obj["commit"] as? String }
     var schemaId: String { obj["schema"] as? String ?? "" }
+    /// Protocol version asserted by the shell: the shell supports protocol 1
+    /// and accepts any lower value (versions only ever increment).
+    var proto: Int { obj["proto"] as? Int ?? 0 }
+    var engineVersion: String { obj["engine"] as? String ?? "" }
     var candidates: [EngineCandidate] {
         (obj["cands"] as? [[Any]])?.compactMap { pair in
             guard let texts = pair as? [String], texts.count == 2 else { return nil }
@@ -70,10 +74,15 @@ final class EngineClient {
         buffer = []
 
         // Warm the engine before the first key: block until the schema mounts.
+        // Handshake: the shell supports protocol versions <= 1; a server
+        // advertising a higher version is incompatible (reject, do not type).
         let deadline = Date().addingTimeInterval(30)
         while Date() < deadline {
             if !p.isRunning { return false }
-            if let r = exchange("ready"), !r.schemaId.isEmpty { return true }
+            if let r = exchange("ready"), !r.schemaId.isEmpty {
+                if r.proto > 1 { return false }
+                return true
+            }
             Thread.sleep(forTimeInterval: 0.1)
         }
         return false

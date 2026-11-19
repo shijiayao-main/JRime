@@ -261,7 +261,7 @@ jobs:
             $props[$key.Trim()] = $value.Trim()
           }
           $kotlinVersion = $props['KOTLIN_VERSION']
-          $kotlinSha256 = $props['KOTLIN_COMPILER_SHA256']
+          $kotlinSha256 = "$($props['KOTLIN_COMPILER_SHA256'])".ToLower()
           curl.exe -fL -o kotlinc.zip "https://github.com/JetBrains/kotlin/releases/download/v$kotlinVersion/kotlin-compiler-$kotlinVersion.zip"
           $zipHash = (Get-FileHash -Algorithm SHA256 kotlinc.zip).Hash.ToLower()
           if ($zipHash -ne $kotlinSha256) { throw "kotlinc.zip SHA256 mismatch: expected $kotlinSha256, got $zipHash" }

@@ -128,6 +128,8 @@ def main() -> None:
     try:
         ready = exchange(proc, "ready")
         assert ready["schema"] == "flypy_xhfast", f"ready: {ready}"
+        assert ready["proto"] == 1, f"protocol handshake: {ready}"
+        assert ready["engine"] == "1.0.0-desktop", f"engine version: {ready}"
 
         r = None
         for ch in "nihc":

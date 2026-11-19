@@ -9,7 +9,13 @@ import com.jiaoay.jrime.core.Rime
  * so the golden trace and live responses keep the same shape minus step.
  */
 object EngineSnapshotSampler {
-    fun sampleLine(op: String, handled: Boolean, step: Int? = null): String {
+    fun sampleLine(
+        op: String,
+        handled: Boolean,
+        step: Int? = null,
+        proto: Int? = null,
+        engine: String? = null,
+    ): String {
         val ctx = Rime.getRimeContext()
         val st = Rime.getRimeStatus()
         val commit = Rime.getRimeCommit() // drains the commit buffer
@@ -33,7 +39,9 @@ object EngineSnapshotSampler {
             .append(",\"ascii\":").append(st.isAsciiMode)
             .append(",\"composing\":").append(st.isComposing)
             .append(",\"schema\":\"").append(JsonLineCodec.encode(st.schemaId)).append('"')
-            .append(",\"cands\":[")
+        if (proto != null) sb.append(",\"proto\":").append(proto)
+        if (engine != null) sb.append(",\"engine\":\"").append(JsonLineCodec.encode(engine)).append('"')
+        sb.append(",\"cands\":[")
         val cands = Rime.getRimeCandidates(0, 48)
         for (i in cands.indices) {
             if (i > 0) sb.append(',')

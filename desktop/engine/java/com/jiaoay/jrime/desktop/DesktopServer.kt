@@ -23,10 +23,13 @@ import java.nio.charset.StandardCharsets
  *   ready | k <repr> | sel <index> | commit | pg next | pg prev |
  *   opt <name> <bool> | exit
  * Responses: one JSON line per request on stdout, the same shape as the
- * harness trace (doc/harness-design.md §4) plus "handled". librime logs go to
+ * harness trace minus the step field, plus "handled". The "ready" response
+ * additionally carries the handshake fields "proto" (protocol version, only
+ * ever incremented) and "engine" (server version). librime logs go to
  * stderr; stdout carries protocol lines only.
  */
 private const val VERSION = "1.0.0-desktop"
+private const val PROTOCOL_VERSION = 1
 
 fun main(args: Array<String>) {
     var shared: String? = null
@@ -103,7 +106,9 @@ fun main(args: Array<String>) {
                     break
                 }
 
-                line == "ready" -> out.println(EngineSnapshotSampler.sampleLine(line, true))
+                line == "ready" -> out.println(
+                    EngineSnapshotSampler.sampleLine(line, true, proto = PROTOCOL_VERSION, engine = VERSION),
+                )
 
                 line.startsWith("k ") -> {
                     val ev = RimeKeyEvent.parse(line.substring(2).trim())
