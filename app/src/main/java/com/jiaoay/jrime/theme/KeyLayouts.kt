@@ -41,42 +41,43 @@ object KeyLayouts {
             key(click = "8", longClick = "*", swipeUp = "*", swipeDown = "+")
             key(click = "9", longClick = "(", swipeUp = "(", swipeDown = "<")
             key(click = "0", longClick = ")", swipeUp = ")", swipeDown = ">")
-            // Q 行长按=数字（盲操作保留，键面不带角标：数字行已承担数字输入）
-            key(click = "q", longClick = "1", swipeDown = "~")
-            key(click = "w", longClick = "2", swipeDown = "BackToPreviousSyllable")
-            key(click = "e", longClick = "3", swipeDown = "Liquid_fixed_left")
-            key(click = "r", longClick = "4", swipeDown = "Liquid_fixed_right")
-            key(click = "t", longClick = "5", swipeDown = "Liquid_fixed_tab")
-            key(click = "y", longClick = "6")
-            key(click = "u", longClick = "7", swipeUp = "_", swipeDown = "U")
-            key(click = "i", longClick = "8", swipeUp = "=", swipeDown = "I")
-            key(click = "o", longClick = "9", swipeUp = "/", swipeDown = "/")
-            key(click = "p", longClick = "0", swipeUp = "|", swipeDown = "\\")
+            // Q 行长按=数字（角标上显，2026-11-19 主人裁决：盲按取消，长按
+            // 能力可见——滑动的光标/音节键保持无角标，属高频手势不需提示）
+            key(click = "q", longClick = "1", hint = "1", swipeDown = "~")
+            key(click = "w", longClick = "2", hint = "2", swipeDown = "BackToPreviousSyllable")
+            key(click = "e", longClick = "3", hint = "3", swipeDown = "Liquid_fixed_left")
+            key(click = "r", longClick = "4", hint = "4", swipeDown = "Liquid_fixed_right")
+            key(click = "t", longClick = "5", hint = "5", swipeDown = "Liquid_fixed_tab")
+            key(click = "y", longClick = "6", hint = "6")
+            key(click = "u", longClick = "7", hint = "7", swipeUp = "_", swipeDown = "U")
+            key(click = "i", longClick = "8", hint = "8", swipeUp = "=", swipeDown = "I")
+            key(click = "o", longClick = "9", hint = "9", swipeUp = "/", swipeDown = "/")
+            key(click = "p", longClick = "0", hint = "0", swipeUp = "|", swipeDown = "\\")
             spacer(2f)
             // A/Z 行手势只留输入类（2026-11-19 主人裁决）：长按=大写字母或
-            // 正常符号，滑动=符号/形码大写——复制粘贴、面板切换、lua 拓展
-            // 等一律上收菜单栏/面板/系统文本工具条，键面与手势不再承载
-            // 功能入口
-            key(click = "a", longClick = "A", width = 12f)
-            key(click = "s", longClick = "S", width = 11f)
-            key(click = "d", longClick = "D")
-            key(click = "f", longClick = "F")
-            key(click = "g", longClick = "G")
-            key(click = "h", longClick = "H")
-            key(click = "j", longClick = ";", swipeDown = ":")
-            key(click = "k", longClick = "{", swipeUp = "{", swipeDown = "[", width = 11f)
-            key(click = "l", longClick = "}", swipeUp = "}", swipeDown = "]", width = 12f)
+            // 正常符号（角标上显），滑动=符号/形码大写——复制粘贴、面板切换、
+            // lua 拓展等一律上收菜单栏/面板/系统文本工具条，键面与手势不再
+            // 承载功能入口
+            key(click = "a", longClick = "A", hint = "A", width = 12f)
+            key(click = "s", longClick = "S", hint = "S", width = 11f)
+            key(click = "d", longClick = "D", hint = "D")
+            key(click = "f", longClick = "F", hint = "F")
+            key(click = "g", longClick = "G", hint = "G")
+            key(click = "h", longClick = "H", hint = "H")
+            key(click = "j", longClick = ";", hint = ";", swipeDown = ":")
+            key(click = "k", longClick = "{", hint = "{", swipeUp = "{", swipeDown = "[", width = 11f)
+            key(click = "l", longClick = "}", hint = "}", swipeUp = "}", swipeDown = "]", width = 12f)
             spacer(2f)
             // The dedicated aux-code key (the master's call): while composing
             // it sends the separator the cand_selector contract parses; idle
             // in CJK it does nothing, and in ASCII it stays the plain shift.
             // The comma is back to being just a comma.
             key(composing = "/", ascii = "Shift_L", width = 14f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
-            key(click = "z", longClick = "Z")
-            key(click = "x", longClick = "X")
-            key(click = "c", longClick = "C")
-            key(click = "v", longClick = "V")
-            key(click = "b", longClick = "B")
+            key(click = "z", longClick = "Z", hint = "Z")
+            key(click = "x", longClick = "X", hint = "X")
+            key(click = "c", longClick = "C", hint = "C")
+            key(click = "v", longClick = "V", hint = "V")
+            key(click = "b", longClick = "B", hint = "B")
             key(click = "n", longClick = "'", swipeDown = "N")
             key(click = "m", longClick = "\"", swipeDown = "M")
             key(click = "BackSpace", swipeDown = "Delete", width = 16f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
@@ -109,42 +110,43 @@ object KeyLayouts {
             key(click = "8", longClick = "*", swipeUp = "*", swipeDown = "+", keySymbolOffsetX = 5f)
             key(click = "9", longClick = "(", swipeUp = "(", swipeDown = "<", keySymbolOffsetX = 5f)
             key(click = "0", longClick = ")", swipeUp = ")", swipeDown = ">", keySymbolOffsetX = 5f)
-            // Q 行长按=数字（盲操作保留，键面不带角标：数字行已承担数字输入）
-            key(click = "q", longClick = "1", swipeDown = "~")
-            key(click = "w", longClick = "2", swipeDown = "BackToPreviousSyllable")
-            key(click = "e", longClick = "3", swipeDown = "Liquid_fixed_left")
-            key(click = "r", longClick = "4", swipeDown = "Liquid_fixed_right")
-            key(click = "t", longClick = "5", swipeDown = "Liquid_fixed_tab")
-            key(click = "y", longClick = "6")
-            key(click = "u", longClick = "7", swipeUp = "_", swipeDown = "U")
-            key(click = "i", longClick = "8", swipeUp = "=", swipeDown = "I")
-            key(click = "o", longClick = "9", swipeUp = "/", swipeDown = "/")
-            key(click = "p", longClick = "0", swipeUp = "|", swipeDown = "\\")
+            // Q 行长按=数字（角标上显，2026-11-19 主人裁决：盲按取消，长按
+            // 能力可见——滑动的光标/音节键保持无角标，属高频手势不需提示）
+            key(click = "q", longClick = "1", hint = "1", swipeDown = "~")
+            key(click = "w", longClick = "2", hint = "2", swipeDown = "BackToPreviousSyllable")
+            key(click = "e", longClick = "3", hint = "3", swipeDown = "Liquid_fixed_left")
+            key(click = "r", longClick = "4", hint = "4", swipeDown = "Liquid_fixed_right")
+            key(click = "t", longClick = "5", hint = "5", swipeDown = "Liquid_fixed_tab")
+            key(click = "y", longClick = "6", hint = "6")
+            key(click = "u", longClick = "7", hint = "7", swipeUp = "_", swipeDown = "U")
+            key(click = "i", longClick = "8", hint = "8", swipeUp = "=", swipeDown = "I")
+            key(click = "o", longClick = "9", hint = "9", swipeUp = "/", swipeDown = "/")
+            key(click = "p", longClick = "0", hint = "0", swipeUp = "|", swipeDown = "\\")
             spacer(2f)
             // A/Z 行手势只留输入类（2026-11-19 主人裁决）：长按=大写字母或
-            // 正常符号，滑动=符号/形码大写——复制粘贴、面板切换、lua 拓展
-            // 等一律上收菜单栏/面板/系统文本工具条，键面与手势不再承载
-            // 功能入口
-            key(click = "a", longClick = "A", width = 12f)
-            key(click = "s", longClick = "S", width = 11f)
-            key(click = "d", longClick = "D")
-            key(click = "f", longClick = "F")
-            key(click = "g", longClick = "G")
-            key(click = "h", longClick = "H")
-            key(click = "j", longClick = ";", swipeDown = ":")
-            key(click = "k", longClick = "{", swipeUp = "{", swipeDown = "[", width = 11f)
-            key(click = "l", longClick = "}", swipeUp = "}", swipeDown = "]", width = 12f)
+            // 正常符号（角标上显），滑动=符号/形码大写——复制粘贴、面板切换、
+            // lua 拓展等一律上收菜单栏/面板/系统文本工具条，键面与手势不再
+            // 承载功能入口
+            key(click = "a", longClick = "A", hint = "A", width = 12f)
+            key(click = "s", longClick = "S", hint = "S", width = 11f)
+            key(click = "d", longClick = "D", hint = "D")
+            key(click = "f", longClick = "F", hint = "F")
+            key(click = "g", longClick = "G", hint = "G")
+            key(click = "h", longClick = "H", hint = "H")
+            key(click = "j", longClick = ";", hint = ";", swipeDown = ":")
+            key(click = "k", longClick = "{", hint = "{", swipeUp = "{", swipeDown = "[", width = 11f)
+            key(click = "l", longClick = "}", hint = "}", swipeUp = "}", swipeDown = "]", width = 12f)
             spacer(2f)
             // The dedicated aux-code key (the master's call): while composing
             // it sends the separator the cand_selector contract parses; idle
             // in CJK it does nothing, and in ASCII it stays the plain shift.
             // The comma is back to being just a comma.
             key(composing = "/", ascii = "Shift_L", width = 14f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
-            key(click = "z", longClick = "Z")
-            key(click = "x", longClick = "X")
-            key(click = "c", longClick = "C")
-            key(click = "v", longClick = "V")
-            key(click = "b", longClick = "B")
+            key(click = "z", longClick = "Z", hint = "Z")
+            key(click = "x", longClick = "X", hint = "X")
+            key(click = "c", longClick = "C", hint = "C")
+            key(click = "v", longClick = "V", hint = "V")
+            key(click = "b", longClick = "B", hint = "B")
             key(click = "n", longClick = "'", swipeDown = "N")
             key(click = "m", longClick = "\"", swipeDown = "M")
             key(click = "BackSpace", swipeDown = "Delete", width = 16f, keyBackColor = "off_key_back_color", keyTextColor = "off_key_text_color", hilitedKeyBackColor = "hilited_off_key_back_color", hilitedKeyTextColor = "hilited_off_key_text_color")
