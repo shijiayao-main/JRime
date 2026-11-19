@@ -1,16 +1,16 @@
 # 键盘表面层规划（surface track）
 
-> 版本：2026-11-19 r3。
+> 版本：2026-11-19 r4（长任务队列 T1-T4 执行完毕，待真机验收）。
 > 定位：与 `doc/refactor/roadmap.md`（内核/配置/模块化六期主线，kernel 会话推进）划界——本文只管 IME 表面：键盘 UI、交互、候选体验，以及不进主线的小工程项。
 > 节奏：**长任务队列顺序执行**（用户指令）——每项独立提交、双门禁、推送，完成一项再开下一项；标 ◆ 的项含设计决策，实现时先出方案再动手。
 
-## 长任务队列（顺序执行，2026-11-19 定稿；来源=用户五点反馈 + 既有行动项）
+## 长任务队列（顺序执行，2026-11-19 定稿并执行完毕）
 
-- **T1 度量收紧**：行高默认 52→46、字母键字 22sp→19sp、ActionBar 44→40、气泡 44dp/24sp→40dp/20sp；数值为提案，真机微调以「键盘行高」偏好兜底
-- **T2 面板高度统一**：liquid/editor/clipboard 面板与数字板等内容带高统一为键盘内容带高（6×行高），随「键盘行高」偏好联动，切换零跳变
-- **T3 键面净化**：字母键手势只留输入类——长按=大写字母（无符号长按的键补齐）/既有正常符号（j/k/l/n/m）/数字（q-p 保留）；select_all、undo/cut/copy/paste、clipboard_window、Date_Lua、Google、History_Lua、Keyboard_editor、Keyboard_symbol、Keyboard_emoji 及 Liquid_fixed_*/ResetCandWeight/HideCandFunc/DelCandFunc 等拓展/面板切换手势全部撤除
-- **T4 功能上收**：T3 撤除入口的承载设计——面板切换类核实现有菜单/面板入口覆盖（📋/☻/123 已在）；编辑操作类（全选/剪切/复制/粘贴/撤销）确认 editor 面板页承载，缺则补；Date_Lua/Google/History_Lua 属 Trime 遗产低频功能，裁除并在 commit 正文记录（可回滚）
-- **T5 收尾**：真机验收清单更新（五点反馈逐项）+ 本计划回写 r4 + 新方向再盘点
+- **T1 ✅ 度量收紧**：行高默认 52→46、字母键字 22sp→19sp、ActionBar 44→40、气泡 44dp/24sp→40dp/20sp（f930edd）；真机微调以「键盘行高」偏好兜底
+- **T2 ✅ 面板高度统一**：liquid/editor/clipboard 面板与数字板等内容带高统一为键盘内容带高（6×行高），随「键盘行高」偏好联动，切换零跳变（f35a522）
+- **T3 ✅ 键面净化**：字母键手势只留输入类——长按=大写字母（无符号长按的键补齐）/既有正常符号（j/k/l/n/m）/数字（q-p 保留）；select_all、undo/cut/copy/paste、clipboard_window、Date_Lua、Google、History_Lua、Keyboard_editor、Keyboard_symbol、Keyboard_emoji 及 Liquid_fixed_*/ResetCandWeight/HideCandFunc/DelCandFunc 等拓展/面板切换手势全部撤除（4180280）
+- **T4 ✅ 功能上收**：承载核实——面板切换类已有菜单/面板入口（📋/☻/123）覆盖；编辑操作类由系统文本选择工具条承载；候选删词由候选条长按承担；Date_Lua/Google/History_Lua 遗产入口裁除并记录（可回滚）（4180280）
+- **T5 ⏳ 真机验收**（待主人装机）：①新度量手感（46dp/19sp 或行高滑杆现场调）②面板切换零跳变 ③字母键长按=大写/符号生效 ④菜单栏与系统文本工具条功能可用 ⑤回归（数字行/菜单栏两态、aux 次选、shift、剪贴板 chip、气泡）
 
 ## 已完成（2026-11-16 ~ 11-19）
 
