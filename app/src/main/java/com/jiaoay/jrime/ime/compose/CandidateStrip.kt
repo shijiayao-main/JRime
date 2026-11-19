@@ -75,6 +75,13 @@ internal fun CandidateStrip(
     }
 }
 
+/**
+ * The select-order badge on a candidate: 1-9 mirror the engine's select keys
+ * (a long-press on q-p sends the digit, which selects the same candidate);
+ * candidates past nine have no select key, so no badge.
+ */
+internal fun candidateBadgeNumber(index: Int): String? = if (index in 0..8) (index + 1).toString() else null
+
 @OptIn(ExperimentalFoundationApi::class)
 @Suppress("FunctionName")
 @Composable
@@ -101,6 +108,13 @@ internal fun CandidateWord(
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        candidateBadgeNumber(index)?.let { badge ->
+            BasicText(
+                text = badge,
+                style = style.candidateCommentStyle,
+                modifier = Modifier.padding(end = 3.dp),
+            )
+        }
         BasicText(
             text = candidate.text,
             style = if (highlighted) style.candidateHighlightedStyle else style.candidateStyle,
