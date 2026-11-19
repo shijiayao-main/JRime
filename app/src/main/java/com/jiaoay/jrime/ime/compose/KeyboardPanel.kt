@@ -8,6 +8,7 @@ package com.jiaoay.jrime.ime.compose
 import android.content.SharedPreferences
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,8 +23,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.jiaoay.jrime.data.prefs.AppPrefs
 import com.jiaoay.jrime.data.theme.model.KeyActionToken
@@ -260,6 +263,12 @@ internal fun rememberGestureThresholds(): GestureThresholds {
     return thresholds
 }
 
+/** The horizontal drag distance that steps the field cursor one character (slide-cursor mode). */
+private val CURSOR_STEP_DP = 22.dp
+
+/** The vertical drag distance that steps the field cursor one line -- larger so line jumps stay deliberate. */
+private val CURSOR_ROW_STEP_DP = 56.dp
+
 /**
  * The gesture handler every data key rides on (the behavior contract):
  * press visuals on down, tap resolves the state-aware click slot, long-press
@@ -268,6 +277,11 @@ internal fun rememberGestureThresholds(): GestureThresholds {
  * held. The thresholds ride the keyboard preferences (swipe travel, long-press
  * timeout, repeat interval). Shared by the Gboard data keys and this panel's
  * own [KeyButton] so the two renderers can never drift apart behaviorally.
+ *
+ * Slide-cursor keys (a repeatable key flagged `slideCursor`, i.e. the space
+ * bar) trade the hold-repeat for the cursor drag: a press-hold past the
+ * long-press timeout hands the gesture to the drag detector, whose deltas
+ * step the field's cursor through the normal dispatch channel.
  */
 @Composable
 internal fun Modifier.dataKeyGestures(
@@ -279,6 +293,7 @@ internal fun Modifier.dataKeyGestures(
 ): Modifier {
     val scope = rememberCoroutineScope()
     val thresholds = rememberGestureThresholds()
+    val haptics = LocalHapticFeedback.current
     // The swipe threshold rides the swipe-travel preference; the disabled
     // value (0) maps to an infinite threshold no displacement can pass --
     // never a 0dp threshold, which would judge every touch a swipe.
@@ -298,7 +313,12 @@ internal fun Modifier.dataKeyGestures(
     val currentPressed by rememberUpdatedState(onPressed)
     val currentThresholds by rememberUpdatedState(thresholds)
     val currentSwipeThresholdPx by rememberUpdatedState(swipeThresholdPx)
-    return this.pointerInput(key) {
+    // Slide-cursor keys (the space bar) hand the held gesture to the drag
+    // detector below -- their click slot is flagged slideCursor in the theme
+    // data (the Trime heritage mechanism, wired through KeyAction).
+    val slideCursor = key.resolveToken(KeyBehavior.CLICK, keyAppearance)
+        ?.let { KeyAction(it, presetKeys).isSlideCursor } == true
+    var gestures = this.pointerInput(key) {
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false)
             currentPressed(true)
@@ -322,13 +342,19 @@ internal fun Modifier.dataKeyGestures(
                     effectiveLongPressTimeoutMs(currentThresholds.longPressTimeoutMs)
                         ?: viewConfiguration.longPressTimeoutMillis
                 delay(longPressTimeoutMs.toLong())
+                val clickAction = key.resolveToken(KeyBehavior.CLICK, currentAppearance)
+                    ?.let { KeyAction(it, currentPresetKeys) }
                 val token = key.resolveToken(KeyBehavior.LONG_CLICK, currentAppearance)
                 if (token != null) {
                     longFired = true
                     currentDispatch(KeyAction(token, currentPresetKeys))
-                } else if (key.resolveToken(KeyBehavior.CLICK, currentAppearance)
-                        ?.let { KeyAction(it, currentPresetKeys).isRepeatable } == true
-                ) {
+                } else if (clickAction?.isSlideCursor == true) {
+                    // Slide-cursor keys hand the held gesture to the drag
+                    // detector (below) -- no space repeat, and the consumed
+                    // drags cancel the wait, so no click/swipe fires on
+                    // release either.
+                    longFired = true
+                } else if (clickAction?.isRepeatable == true) {
                     longFired = true
                     while (!released) {
                         val clickToken = key.resolveToken(KeyBehavior.CLICK, currentAppearance)
@@ -371,6 +397,47 @@ internal fun Modifier.dataKeyGestures(
             }
         }
     }
+    if (slideCursor) {
+        // The cursor drag: press-hold past the long-press timeout (the drag
+        // detector's own view-config timeout), then the horizontal deltas
+        // step the field's cursor and the vertical deltas step lines --
+        // dispatched as Left/Right/Up/Down through the same channel the
+        // space swipes ride. A haptic marks the mode entry.
+        val cursorStepPx = with(LocalDensity.current) { CURSOR_STEP_DP.toPx() }
+        val cursorRowStepPx = with(LocalDensity.current) { CURSOR_ROW_STEP_DP.toPx() }
+        var accX = 0f
+        var accY = 0f
+        gestures = gestures.pointerInput(key) {
+            detectDragGesturesAfterLongPress(
+                onDragStart = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    accX = 0f
+                    accY = 0f
+                },
+                onDrag = { change, dragAmount ->
+                    accX += dragAmount.x
+                    accY += dragAmount.y
+                    while (accX <= -cursorStepPx) {
+                        currentDispatch(KeyAction(KeyActionToken.Plain("Left"), currentPresetKeys))
+                        accX += cursorStepPx
+                    }
+                    while (accX >= cursorStepPx) {
+                        currentDispatch(KeyAction(KeyActionToken.Plain("Right"), currentPresetKeys))
+                        accX -= cursorStepPx
+                    }
+                    while (accY <= -cursorRowStepPx) {
+                        currentDispatch(KeyAction(KeyActionToken.Plain("Up"), currentPresetKeys))
+                        accY += cursorRowStepPx
+                    }
+                    while (accY >= cursorRowStepPx) {
+                        currentDispatch(KeyAction(KeyActionToken.Plain("Down"), currentPresetKeys))
+                        accY -= cursorRowStepPx
+                    }
+                },
+            )
+        }
+    }
+    return gestures
 }
 
 @Suppress("FunctionName")

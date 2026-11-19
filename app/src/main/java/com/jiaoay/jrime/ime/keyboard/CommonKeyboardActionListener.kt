@@ -396,6 +396,22 @@ class CommonKeyboardActionListener(override val di: DI) : DIAware {
                         Timber.d("handleKey: openCategory")
                         return@postRimeJob
                     }
+                    // Navigation keys drive the FIELD cursor when Rime isn't
+                    // composing (rime returns false for them when idle):
+                    // route to the input connection, which the system moves
+                    // the editor cursor with. The slide-cursor drag and the
+                    // space swipes ride this fallthrough.
+                    if (keyEventCode in KeyEvent.KEYCODE_DPAD_UP..KeyEvent.KEYCODE_DPAD_RIGHT ||
+                        keyEventCode == KeyEvent.KEYCODE_MOVE_HOME ||
+                        keyEventCode == KeyEvent.KEYCODE_MOVE_END
+                    ) {
+                        val downTime = SystemClock.uptimeMillis()
+                        service.currentInputConnection?.let { ic ->
+                            ic.sendKeyEvent(KeyEvent(downTime, downTime, KeyEvent.ACTION_DOWN, keyEventCode, 0, m))
+                            ic.sendKeyEvent(KeyEvent(downTime, downTime + 50, KeyEvent.ACTION_UP, keyEventCode, 0, m))
+                        }
+                        return@postRimeJob
+                    }
                     // other special cases
                     if (keyEventCode == KeyEvent.KEYCODE_BACK) {
                         service.requestHideSelf(0)

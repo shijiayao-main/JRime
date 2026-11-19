@@ -427,7 +427,7 @@ object KeyLayouts {
         "punct_switch" to PresetKey(toggle = "ascii_punct", states = listOf("，。", ". ,"), send = "SWITCH_CHARSET"),
         "redo" to PresetKey(label = "重做", send = "Control+y"),
         "select_all" to PresetKey(label = "全选", send = "Control+a"),
-        "space" to PresetKey(preview = "{schema}", repeatable = true, send = "space"),
+        "space" to PresetKey(preview = "{schema}", repeatable = true, slideCursor = true, send = "space"),
         "undo" to PresetKey(label = "撤销", send = "Control+z"),
     )
 }
