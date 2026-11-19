@@ -10,7 +10,7 @@
 - **T2 ✅ 面板高度统一**：liquid/editor/clipboard 面板与数字板等内容带高统一为键盘内容带高（6×行高），随「键盘行高」偏好联动，切换零跳变（f35a522）
 - **T3 ✅ 键面净化**：字母键手势只留输入类——长按=大写字母（无符号长按的键补齐）/既有正常符号（j/k/l/n/m）/数字（q-p 保留）；select_all、undo/cut/copy/paste、clipboard_window、Date_Lua、Google、History_Lua、Keyboard_editor、Keyboard_symbol、Keyboard_emoji 及 Liquid_fixed_*/ResetCandWeight/HideCandFunc/DelCandFunc 等拓展/面板切换手势全部撤除（4180280）
 - **T4 ✅ 功能上收**：承载核实——面板切换类已有菜单/面板入口（📋/☻/123）覆盖；编辑操作类由系统文本选择工具条承载；候选删词由候选条长按承担；Date_Lua/Google/History_Lua 遗产入口裁除并记录（可回滚）（4180280）
-- **T5 ⏳ 真机验收**（待主人装机）：①新度量手感（46dp/19sp 或行高滑杆现场调）②面板切换零跳变 ③字母键长按=大写/符号生效 ④菜单栏与系统文本工具条功能可用 ⑤回归（数字行/菜单栏两态、aux 次选、shift、剪贴板 chip、气泡）
+- **T5 ⏳ 真机验收**（待主人装机）：①新度量手感（行高默认 50dp——46 真机偏低已回调，滑杆 36-80 可现场调；字母 19sp）②面板切换零跳变 ③字母键长按=大写/符号生效 ④菜单栏与系统文本工具条功能可用 ⑤回归（数字行/菜单栏两态、aux 次选、shift、剪贴板 chip、气泡）
 
 ## 已完成（2026-11-16 ~ 11-19）
 

@@ -45,7 +45,7 @@ import com.jiaoay.jrime.ime.keyboard.KeyAction
  * jumps when the state flips.
  */
 object GboardKeyboard {
-    const val ROW_HEIGHT = 46
+    const val ROW_HEIGHT = 50
 
     /** A full row spans this many units (the FlorisBoard weight grid). */
     internal const val ROW_UNITS = 10f
