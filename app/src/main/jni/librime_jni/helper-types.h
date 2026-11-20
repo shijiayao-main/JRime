@@ -84,7 +84,8 @@ class ContextProto {
 
   ContextProto(const RimeContext* context, std::string_view input, int caretPos,
                bool includeMenu = true) {
-    this->input = std::string(input); // explicit: MSVC rejects the implicit view conversion
+    this->input = std::string(
+        input);  // explicit: MSVC rejects the implicit view conversion
     this->caretPos = caretPos;
     if (context->composition.length > 0) {
       auto& c = context->composition;
