@@ -146,6 +146,12 @@ test_server exit 0 / golden 12:12 IDENTICAL(cmp 复核)/ smoke PASS / 单测快�
 
 ## 8. 待主人操作项
 - 期一 4 项均已闭环(push 完成/doc/architecture-review.md 已提交 438d5e2/P1×6 立项已批"1可以"/GboardKey.kt spotless 收口归并发会话)。
+
+### 【期二终态补丁】(orchestrator 编排职责终结确认,2026-11-20)
+- §2 波次记录追加:主对话收尾补丁轮 dcffee9(harness-design §4 词汇表+示例,R3-P1+R2-P2-3 收编)、85402e6(windows ClangCL ABI Release-only 根治,期外修复)——均非专家团派单。
+- §3 验收要点修正:R3(降级)P0=0 P1=1(协议词汇表文档缺失)→已闭环(dcffee9,harness-design.md:51-54 抽验属实);R2-P2-3 随之收编关闭。
+- §6 剩余风险清单改写:删"harness-design §4 示例"项;③改为"Step 2 前置=protocol-common→Rime 直调+String.format JVM-only(R2-P2-1 仍开放,期三文档小修轮唯一遗留)";⑤改为"CI 韧性=gradle cache 缺失(期三必含项);windows leg ClangCL ABI 已由 85402e6 根治(连续三轮绿)"。
+- §7 待主人操作项追加第 6 项:"windows dll 真机加载冒烟(TSF 壳前置)——关闭条件=真机加载成功"。
 - 【2026-11-19 更新】T2+T1 两笔白名单 commit 已由主对话执行完毕(e7d8a29=T1 五路径、19d91fe=T2 五路径,各自 show 复核恰 5、排除清单零卷入、未 push——push 节奏由用户掌握)。
 - 基线漂移:app 单测基线 181→193(并发会话 +12),W1 后续取证按 193 全绿口径。
 - windows leg PowerShell 校验段 CI 实跑验证在案(本地 pwsh 不可用),随下轮 CI 验证。
