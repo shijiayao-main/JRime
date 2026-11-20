@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -192,6 +193,17 @@ internal data class GestureThresholds(
     val repeatIntervalMs: Int,
 )
 
+/**
+ * The gesture thresholds provided ONCE at the composition root (ImeRoot) --
+ * every data key reads this local instead of registering its own preference
+ * listener (a per-key listener was the accepted P2 debt: ~35 listeners per
+ * board). The fallback values mirror the preference defaults for the
+ * impossible out-of-tree read.
+ */
+internal val LocalGestureThresholds = staticCompositionLocalOf {
+    GestureThresholds(swipeTravelDp = 40, longPressTimeoutMs = 0, repeatIntervalMs = 80)
+}
+
 /** The smallest positive swipe travel the slider can reach (the step floor). */
 internal const val SWIPE_TRAVEL_MIN_DP = 10
 
@@ -292,7 +304,9 @@ internal fun Modifier.dataKeyGestures(
     onPressed: (Boolean) -> Unit,
 ): Modifier {
     val scope = rememberCoroutineScope()
-    val thresholds = rememberGestureThresholds()
+    // The thresholds ride the root-provided local -- one preference listener
+    // for the whole tree, never one per key.
+    val thresholds = LocalGestureThresholds.current
     val haptics = LocalHapticFeedback.current
     // The swipe threshold rides the swipe-travel preference; the disabled
     // value (0) maps to an infinite threshold no displacement can pass --

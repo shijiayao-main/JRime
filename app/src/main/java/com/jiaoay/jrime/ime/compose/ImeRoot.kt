@@ -74,7 +74,12 @@ fun ImeRoot(
     onDispatch: (KeyAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    CompositionLocalProvider(LocalImeColors provides rememberImeColors(state)) {
+    CompositionLocalProvider(
+        LocalImeColors provides rememberImeColors(state),
+        // One preference listener feeds the whole tree's gesture thresholds
+        // (the per-key-listener P2 debt's retirement).
+        LocalGestureThresholds provides rememberGestureThresholds(),
+    ) {
         ImeRootContent(state, keyboardWindow, onDispatch, modifier)
     }
 }
