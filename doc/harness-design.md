@@ -38,9 +38,22 @@ harness/
 
 ## 4. 轨迹格式(traces / golden,每键一行)
 
+实际实现形状(protocol-common `EngineSnapshotSampler` 为单一事实源,T3 合入后本节示例已按实现更新):
+
 ```json
-{"step":3,"rawInput":"nih","preedit":"nih","candidates":[{"text":"你好","type":"phrase","comment":"~ni hao"}],"commit":null,"status":{"asciiMode":false}}
+{"step":3,"op":"k h","handled":true,"raw":"nih","preedit":"nih","commit":null,"ascii":false,"composing":true,"schema":"flypy_xhfast","cands":[["你好",""]]}
 ```
+
+- `step`:start=0、按键 1..N、end=末值;DesktopServer 行协议响应**无 step 字段**(harness 侧专属)。
+- `handled`:引擎是否消费该键;false = 应用层上屏(协议语义,架构评审 P1-3)。
+- `cands`:二元组 `[text, comment]`。
+
+### 协议版本词汇表(P1-4 握手,R3 交付)
+
+- `ready` 响应在轨迹形状之上附加两个字段:`"proto":1`(协议版本,**整数只增不改义**)与 `"engine":"1.0.0-desktop"`(引擎实现版本,DesktopServer.kt:32)。
+- 壳侧断言(EngineClient.swift):`proto <= 1` 接受;响应缺 proto = 握手前旧引擎,按 0 接受(兼容);`proto > 1` = 版本不兼容,拒绝启动(不 type)。
+- 服务端常量:PROTOCOL_VERSION = 1 与 VERSION = "1.0.0-desktop" 同文件相邻(DesktopServer.kt:31-32)。
+- 扩展规则:版本只增不改义;负载扩展(hl/cursor 等,§4.2 方向)随版本递增窗口执行,golden 重录与协议变更同窗(期二台账固定决策 1)。
 
 ## 5. diff 语义
 
