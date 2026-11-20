@@ -152,6 +152,7 @@ test_server exit 0 / golden 12:12 IDENTICAL(cmp 复核)/ smoke PASS / 单测快�
 - §3 验收要点修正:R3(降级)P0=0 P1=1(协议词汇表文档缺失)→已闭环(dcffee9,harness-design.md:51-54 抽验属实);R2-P2-3 随之收编关闭。
 - §6 剩余风险清单改写:删"harness-design §4 示例"项;③改为"Step 2 前置=protocol-common→Rime 直调+String.format JVM-only(R2-P2-1 仍开放,期三文档小修轮唯一遗留)";⑤改为"CI 韧性=gradle cache 缺失(期三必含项);windows leg ClangCL ABI 已由 85402e6 根治(连续三轮绿)"。
 - §7 待主人操作项追加第 6 项:"windows dll 真机加载冒烟(TSF 壳前置)——关闭条件=真机加载成功"。
+- 【发布物级验证,2026-11-20】R21 重跑后五件产物全齐,并做了发布物级抽验:①CI 产出的 JRimeIME.app(自带 runtime/engine/dylib/资产)跑协议握手端到端 PASS——ready 含 **proto=1(T5 握手字段在发布物里实测在线)**/schema=flypy_xhfast→nihc→你好→sel commit=你好;②linux .so=ELF x86-64、windows .dll=PE32+ x86-64(MZ 头)、APK 含 4 ABI .so+17 资产文件+protocol 三件套 class——发布物内容物全部核验。macos leg 曾因 runner 容量取消一次,job 级重跑后绿(非代码)。
 - 【2026-11-19 更新】T2+T1 两笔白名单 commit 已由主对话执行完毕(e7d8a29=T1 五路径、19d91fe=T2 五路径,各自 show 复核恰 5、排除清单零卷入、未 push——push 节奏由用户掌握)。
 - 基线漂移:app 单测基线 181→193(并发会话 +12),W1 后续取证按 193 全绿口径。
 - windows leg PowerShell 校验段 CI 实跑验证在案(本地 pwsh 不可用),随下轮 CI 验证。
