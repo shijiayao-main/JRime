@@ -16,6 +16,7 @@
 - **F3 ✅ 候选序号角标**：前九个候选带灰色序号（镜像引擎选词键——字母键长按数字即选同序候选），九个之后无选键不上标；`candidateBadgeNumber` 纯函数+边界测试（2aade07+测试修复 f1b7b28）
 - **P2 ✅ 气泡边缘回拉**：屏幕边缘键的气泡按窗口宽度回拉，不再贴边裁切；估算以 120dp 上限为准，窄标签近似居中（75c74d4）
 - **P2 ✅ 每键 listener 收编**：手势阈值改为 ImeRoot 单点提供的 CompositionLocal——全树一个偏好 listener（~35/板 → 1），dataKeyGestures 改读 local（c4c545f）
+- **工程面 ✅ CI 历史失败全归因**（gh 登录后拉日志定案）：①11-15 :app:check 连败 = `buildRimeDeployer`（vendor 化前 librime submodule 在 CI 空树，data/minimal 缺失，CMake COPY 失败——vendor 化后此因消失）；②11-17 起 style 红 = jni `helper-types.h:87`（8c085c2 引入，已修复 01df9d1，**Commit CI 首次全绿**）；③clang-format.sh .cc 盲区修复（7cfce20，全 11 文件必扫）；④Nightly `packageRelease` 失败 = **仓库 Actions secrets（SIGNING_KEY/KEY_STORE_PASSWORD/ALIAS/KEY_PASSWORD）为空**，release 签名必败——待主人在仓库 Settings→Secrets 补齐（仅主人可做）
 
 ## 已完成（2026-11-16 ~ 11-19）
 
