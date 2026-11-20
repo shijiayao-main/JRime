@@ -31,11 +31,16 @@ native_path=(
 	"app/src/main/jni/librime_jni/*.cc"
 )
 
-# iterate over all files in current entry
+# iterate over all files in current entry: scan every glob before failing,
+# so one violation never blinds the report to the rest of the surface
+fail=0
 for entry in "${native_path[@]}"; do
 	clang-format --verbose ${method} -style='file' ${entry}
 	if [ "$?" -ne 0 ]; then
-		echo "please format the code: make style-apply"
-		exit 1
+		fail=1
 	fi
 done
+if [ "$fail" -ne 0 ]; then
+	echo "please format the code: make style-apply"
+	exit 1
+fi
