@@ -26,7 +26,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -124,10 +128,15 @@ fun GboardKeyFace(
     // appears and disappears with the pressed recomposition, and never
     // touches a pointerInput restart key (the stuck-key contract stays).
     val popupShown = keyPopupVisible(LocalPopupOnKeyPress.current, pressed, label)
+    // The face's window bounds drive the bubble's horizontal edge pull-back:
+    // a screen-edge key's bubble (up to KEY_POPUP_MAX_WIDTH wide) would clip
+    // outside the window without the shift.
+    var faceBoundsInWindow by remember { mutableStateOf(Rect.Zero) }
     Box(
         modifier = modifier
             .padding(2.dp)
             .fillMaxSize()
+            .onGloballyPositioned { faceBoundsInWindow = it.boundsInWindow() }
             .background(background, RoundedCornerShape(8.dp)),
     ) {
         BasicText(
@@ -155,10 +164,19 @@ fun GboardKeyFace(
             // menu precedent): an in-face overlay would clip at the keyboard
             // band's row bound. focusable=false keeps it from stealing the
             // touch; no animation beyond the simplest appear/disappear.
+            // The horizontal offset pulls the bubble back inside the window
+            // when an edge key's centered bubble would clip (estimated with
+            // the max width -- narrow labels just end up roughly centered).
+            val density = LocalDensity.current
+            val popupMaxPx = with(density) { KEY_POPUP_MAX_WIDTH.toPx() }
+            val windowWidthPx = with(density) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
+            val centeredLeft = faceBoundsInWindow.center.x - popupMaxPx / 2
+            val offsetX = (centeredLeft.coerceIn(0f, windowWidthPx - popupMaxPx) - centeredLeft)
+                .roundToInt()
             Popup(
                 alignment = Alignment.TopCenter,
-                offset = with(LocalDensity.current) {
-                    IntOffset(0, -(KEY_POPUP_HEIGHT + KEY_POPUP_GAP).toPx().roundToInt())
+                offset = with(density) {
+                    IntOffset(offsetX, -(KEY_POPUP_HEIGHT + KEY_POPUP_GAP).toPx().roundToInt())
                 },
                 properties = PopupProperties(focusable = false),
             ) {
