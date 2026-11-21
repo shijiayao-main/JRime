@@ -18,10 +18,13 @@ class EngineSnapshotSampler(
         step: Int? = null,
         proto: Int? = null,
         engine: String? = null,
+        commitOverride: com.jiaoay.jrime.core.CommitProto? = null,
     ): String {
         val ctx = access.context()
         val st = access.status()
-        val commit = access.commit() // drains the commit buffer
+        // Without an override this drains the commit buffer; the desktop app
+        // reads it first and passes it here so it can also forward the text.
+        val commit = commitOverride ?: access.commit()
         val comp = ctx?.composition
         val preedit = comp?.preedit
         val sb = StringBuilder()

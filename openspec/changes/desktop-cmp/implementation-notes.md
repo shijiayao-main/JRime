@@ -25,3 +25,18 @@
   D0 的非激活窗断言（focusOwner 不抢占）继续成立。
 - 下一批：`:desktop:ui` 接行协议（EngineClient）+ 候选点击回传 + 光标矩形；
   macOS Swift 壳改为「IMK 接管 + 向 CMP UI 进程转发」；随后 Linux ibus / Windows TSF。
+
+## 2026-11-21 · D2 第二批：desktop:app（引擎+协议+CMP 候选窗一体）
+
+- 协议处理抽出 `DesktopEngineSession`（`:desktop:engine`）：headless `DesktopServer` 与
+  `:desktop:app` 共用同一份请求处理；`EngineSnapshotSampler` 支持 commit override
+  （app 先读 commit 再交给采样器，从而同时把 commit 文本推给壳）。
+- 新增 `:desktop:app`（Kotlin JVM + CMP）：`java -cp` 单进程内启动 librime + 行协议
+  （stdin/stdout）+ 无边框置顶 `focusableWindowState=false` 的候选窗（`DesktopCandidateSurface`）。
+  - 协议新增：`rect x y w h` 把候选窗移到光标附近并回 `{"ok":true}`；
+  - App 内候选点击：选中后异步输出 `{"event":"update","preedit":...,"composing":...,"commit":...}`，
+    由壳负责上屏/刷新 marked text（Swift 接入下一批）。
+- 冒烟：`printf 'ready\nk n\nk i\n' | ./gradlew :desktop:app:run --args="--shared ... --user ... --dylib harness/build/librime_jni.dylib"`
+  → ready 含 proto/engine，`k n`/`k i` 返回组合态与候选，stdin EOF 后干净退出（BUILD SUCCESSFUL）。
+  （rime 日志中的 predict.db / gram 缺失为此前已知的可选件缺失，不影响输入。）
+- 未做：Swift 壳接入、真实窗口定位/多屏、Linux ibus、Windows TSF。

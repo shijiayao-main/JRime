@@ -3,11 +3,7 @@
 package com.jiaoay.jrime.desktop
 
 import com.jiaoay.jrime.core.Rime
-import com.jiaoay.jrime.core.RimeDataAccess
-import com.jiaoay.jrime.core.RimeKeyEvent
-import com.jiaoay.jrime.protocol.EngineSnapshotSampler
 import com.jiaoay.jrime.protocol.JsonLineCodec
-import com.jiaoay.jrime.protocol.SchemaReadyProbe
 import java.io.BufferedReader
 import java.io.FileDescriptor
 import java.io.FileOutputStream
@@ -61,9 +57,8 @@ fun main(args: Array<String>) {
 
     // Ready probe: the session must have mounted the expected schema before
     // the shell sends its first key, or responses would sample a dead engine.
-    val sampler = EngineSnapshotSampler(RimeDataAccess)
-    val probe = SchemaReadyProbe(RimeDataAccess)
-    val ready = probe.awaitSchemaReady(schema)
+    val session = DesktopEngineSession(VERSION, PROTOCOL_VERSION, schema)
+    val ready = session.awaitReady()
 
     val out = PrintStream(FileOutputStream(FileDescriptor.out), true, StandardCharsets.UTF_8)
     val inp = BufferedReader(InputStreamReader(System.`in`, StandardCharsets.UTF_8))
@@ -71,7 +66,7 @@ fun main(args: Array<String>) {
     if (!ready) {
         out.println(
             "{\"error\":\"engine never mounted schema " + JsonLineCodec.encode(schema) +
-                "\",\"messages\":" + JsonLineCodec.encode(java.lang.String.join(", ", Rime.messages)) + "}",
+                "\",\"messages\":" + JsonLineCodec.encode(session.lastMessages()) + "}",
         )
         return
     }
@@ -103,43 +98,13 @@ fun main(args: Array<String>) {
             continue
         }
         try {
-            when {
-                line == "exit" -> {
-                    out.println(sampler.sampleLine(line, true))
-                    break
-                }
-
-                line == "ready" -> out.println(
-                    sampler.sampleLine(line, true, proto = PROTOCOL_VERSION, engine = VERSION),
-                )
-
-                line.startsWith("k ") -> {
-                    val ev = RimeKeyEvent.parse(line.substring(2).trim())
-                    val handled = Rime.processRimeKey(ev.keycode, ev.modifier)
-                    out.println(sampler.sampleLine(line, handled))
-                }
-
-                line.startsWith("sel ") -> {
-                    val handled = Rime.selectRimeCandidate(Integer.parseInt(line.substring(4).trim()), false)
-                    out.println(sampler.sampleLine(line, handled))
-                }
-
-                line == "commit" -> {
-                    val handled = Rime.commitRimeComposition()
-                    out.println(sampler.sampleLine(line, handled))
-                }
-
-                line == "pg next" -> out.println(sampler.sampleLine(line, Rime.changeRimeCandidatePage(false)))
-
-                line == "pg prev" -> out.println(sampler.sampleLine(line, Rime.changeRimeCandidatePage(true)))
-
-                line.startsWith("opt ") -> {
-                    val parts = line.split(" +".toRegex()).toTypedArray()
-                    Rime.setRimeOption(parts[1], java.lang.Boolean.parseBoolean(parts[2]))
-                    out.println(sampler.sampleLine(line, true))
-                }
-
-                else -> out.println("{\"error\":\"unknown request: " + JsonLineCodec.encode(line) + "\"}")
+            val reply = session.handle(line)
+            if (reply == null) {
+                break
+            }
+            out.println(reply.json)
+            if (line == "exit") {
+                break
             }
         } catch (e: Exception) {
             out.println("{\"error\":\"" + JsonLineCodec.encode(java.lang.String.valueOf(e)) + "\"}")
