@@ -33,6 +33,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.fragment.NavHostFragment
+import androidx.preference.PreferenceManager
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
 import com.jiaoay.jrime.BuildConfig
@@ -55,10 +56,22 @@ import timber.log.Timber
 
 private const val STARTUP_WAIT_MS = 8_000L
 
+private fun MainActivity.applyNightMode() {
+    val mode =
+        when (AppPrefs.defaultInstance().appearance.paletteMode.getValue()) {
+            AppPrefs.PaletteModePref.LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
+            AppPrefs.PaletteModePref.DARK -> AppCompatDelegate.MODE_NIGHT_YES
+            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        }
+    AppCompatDelegate.setDefaultNightMode(mode)
+}
+
 class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
 
-    private val uiMode by AppPrefs.defaultInstance().advanced.uiMode
+    // One dark-mode concept: the appearance palette mode drives both the app
+    // shell and the keyboard (the old Advanced/ui_mode duplicate is gone).
+    private val paletteMode by AppPrefs.defaultInstance().appearance.paletteMode
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
@@ -94,13 +107,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val uiMode =
-            when (uiMode) {
-                AppPrefs.Advanced.UiMode.AUTO -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                AppPrefs.Advanced.UiMode.LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
-                AppPrefs.Advanced.UiMode.DARK -> AppCompatDelegate.MODE_NIGHT_YES
+        applyNightMode()
+        PreferenceManager.getDefaultSharedPreferences(this)
+            .registerOnSharedPreferenceChangeListener { _, key ->
+                if (key == AppPrefs.Appearance.PALETTE_MODE) applyNightMode()
             }
-        AppCompatDelegate.setDefaultNightMode(uiMode)
         super.onCreate(savedInstanceState)
         prewarmImeService()
         enableEdgeToEdge()
