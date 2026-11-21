@@ -77,6 +77,13 @@ sealed interface ImeCommand {
 
 **迁移策略（strangler）**：先建 `ImeSessionState` 与命令，双写一段时间（新状态从旧广播推导，UI 读新状态）→ 切换 UI 读新状态 → 删除旧 `ImeUiState`。双写期不得超过本变更生命周期。
 
+**M1 实现口径（2026-11-21，实施期自决并记录）**：为了把行为回归风险压到最低，M1 的 UI 与行为之间加了一层 `KeyBinding`：
+
+- UI 从 `KeyBinding`（label/hint/flags + 原始 `KeyActionToken`）渲染键面与手势，不再读 app 侧 `KeyAction`；
+- 输入仍由 `ImeCommand.Key(legacyToken)` → app 的 `ImeCommandExecutor` → 既有 `KeyAction`/`CommonKeyboardActionListener` 管线执行，行为零改动；
+- 类型安全的 `KeyActionToken` 模型（`KeyboardModel.kt`）保留为 M2 的目标形态，M1 的布局数据仍是已迁入 `:core:engine` 的 `TextKeyboard` + `KeyLayouts`，逐键迁移到 `KeySpec/KeyLayout` 随 `surface-p0` 做；
+- 内容带高不再固定 6 行：qwerty 结构 5 行、fallback 板按折行数，面板与之同高（消掉旧实现键盘 5 行 / 面板 6 行的潜在跳变）。
+
 ## 4. 布局模型
 
 ```kotlin

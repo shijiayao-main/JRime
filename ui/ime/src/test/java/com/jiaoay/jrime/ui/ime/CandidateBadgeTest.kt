@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-package com.jiaoay.jrime.ime.compose
+package com.jiaoay.jrime.ui.ime
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe

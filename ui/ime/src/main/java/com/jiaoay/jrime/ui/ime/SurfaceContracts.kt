@@ -4,10 +4,15 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-package com.jiaoay.jrime.engine
+package com.jiaoay.jrime.ui.ime
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.jiaoay.jrime.engine.ImeCommand
+import com.jiaoay.jrime.engine.ImeMetrics
+import com.jiaoay.jrime.engine.KeyBinding
+import com.jiaoay.jrime.engine.KeyGesture
+import com.jiaoay.jrime.engine.PanelId
 
 /**
  * The platform seam of the IME surface: everything the shared UI needs to ask
@@ -45,6 +50,7 @@ data class ToolbarAction(
     val id: String,
     val label: String,
     val command: ImeCommand,
+    val binding: KeyBinding? = null,
     val highlighted: Boolean = false,
     val visible: Boolean = true,
 )
@@ -58,4 +64,9 @@ data class ImeSurfaceConfig(
     val enterLabel: String = "",
     val toolbarActions: List<ToolbarAction> = emptyList(),
     val panelSlots: List<PanelSlot> = emptyList(),
+    /** App-provided quick-paste chip rendered in the idle top bar. */
+    val clipboardChip: (@Composable () -> Unit)? = null,
 )
+
+/** The Gboard-structured keyboard's fixed row count (digit + 2 letters + shift + chrome). */
+const val GBOARD_CONTENT_ROWS: Int = 5

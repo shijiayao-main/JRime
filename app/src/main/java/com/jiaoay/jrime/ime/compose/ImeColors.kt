@@ -16,19 +16,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
-import com.jiaoay.jrime.data.theme.ColorManager
 import com.jiaoay.jrime.data.theme.ImeFonts
 import com.jiaoay.jrime.data.theme.ThemeColors
 
 /**
- * The Compose IME's palette: one [ImeColors] instance built from the active
- * color scheme the moment the composition reads it. Both renderers -- this
- * Compose tree and the legacy tree it replaces -- draw from the same
- * [ColorManager] scheme, so day/night flips restyle both identically.
- *
- * The instance is provided through [LocalImeColors] at [ImeRoot]; a scheme
- * switch bumps [ImeUiState.colorsRevision] and the next composition reads the
- * new table.
+ * The legacy Compose palette still consumed by the M1 panel slot content
+ * (clipboard chip/panel, liquid pages) until those panels move to the shared
+ * [com.jiaoay.jrime.ui.design.ImePalette]. The new surface never reads it.
  */
 @Immutable
 class ImeColors
@@ -70,20 +64,8 @@ internal constructor(
     )
 }
 
-/** The palette the Compose tree reads; provided by [ImeRoot]. */
+/** The palette the legacy panel content reads; provided by the host slot. */
 val LocalImeColors = staticCompositionLocalOf<ImeColors> { error("ImeColors not provided") }
-
-/**
- * Reads the active scheme as Compose state. The revision read is the
- * recomposition trigger; the scope itself is guaranteed to exist by the time
- * this runs (the input view is only created after the theme attached, so the
- * scheme chain has resolved).
- */
-@Composable
-fun rememberImeColors(state: ImeUiState): ImeColors {
-    val revision = state.colorsRevision
-    return remember(revision) { ImeColors(ColorManager.currentScope()!!.colors) }
-}
 
 /** The Gboard key-face styles derived from the active palette. */
 @Immutable

@@ -80,6 +80,13 @@ sealed interface EngineEvent {
         val schemaLabel: String = "",
     ) : EngineEvent
 
+    /** The engine's composing/menu/paging flags (the keyboard appearance stream). */
+    data class Appearance(
+        val composing: Boolean,
+        val hasMenu: Boolean = false,
+        val paging: Boolean = false,
+    ) : EngineEvent
+
     data class Commit(val text: String) : EngineEvent
 
     data class Option(val option: String, val value: Boolean) : EngineEvent
@@ -148,6 +155,8 @@ object ImeStateReducer {
                 simplified = event.simplified,
                 schemaLabel = event.schemaLabel.ifEmpty { state.schemaLabel },
             )
+
+        is EngineEvent.Appearance -> state.copy(composing = event.composing)
 
         is EngineEvent.Commit -> state
 
