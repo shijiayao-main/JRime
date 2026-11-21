@@ -53,6 +53,12 @@ object ImeDimens {
     /** Minimum touch target. */
     val MinTouchTarget: Dp = 40.dp
 
+    /** Icon size in the top bar / candidate arrows (single-line iconography). */
+    val IconSmall: Dp = 18.dp
+
+    /** Category icon size on the settings landing cards. */
+    val IconCategory: Dp = 22.dp
+
     /** Row height bounds and default; user preference may override within bounds. */
     val RowHeightMin: Dp = ImeMetrics.ROW_HEIGHT_MIN_DP.dp
     val RowHeightMax: Dp = ImeMetrics.ROW_HEIGHT_MAX_DP.dp

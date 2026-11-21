@@ -12,6 +12,7 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
 /**
@@ -86,9 +87,10 @@ class SettingsSpecsFactoryTest :
             }
         }
 
-        "every settings group carries a landing-page summary" {
+        "every settings group carries a landing-page summary and icon" {
             groups.forEach { group ->
                 group.summary.isNotEmpty() shouldBe true
+                group.icon.shouldNotBeNull()
             }
         }
 

@@ -6,6 +6,7 @@
 
 package com.jiaoay.jrime.ui.settings
 
+import com.jiaoay.jrime.ui.design.ImeIcon
 import kotlinx.coroutines.flow.StateFlow
 
 /** One selectable value of a [SettingControl.Choice]. */
@@ -129,4 +130,6 @@ data class SettingGroup(
     val specs: List<SettingSpec>,
     /** One line shown on the category landing page. */
     val summary: String = "",
+    /** Semantic icon for the category landing card. */
+    val icon: ImeIcon? = null,
 )

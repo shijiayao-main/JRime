@@ -57,6 +57,7 @@ import com.jiaoay.jrime.ime.phrase.PhraseWindow
 import com.jiaoay.jrime.ime.symbol.LiquidWindow
 import com.jiaoay.jrime.ime.window.BoardWindow
 import com.jiaoay.jrime.ime.window.BoardWindowManager
+import com.jiaoay.jrime.ui.design.ImeIcon
 import com.jiaoay.jrime.ui.ime.ImeSurface
 import com.jiaoay.jrime.ui.ime.ImeSurfaceConfig
 import com.jiaoay.jrime.ui.ime.ImeSurfaceHost
@@ -269,15 +270,15 @@ class ComposeInputView(
     )
 
     private fun toolbarActions(state: ImeSessionState): List<ToolbarAction> = listOf(
-        toolbar("settings", "⚙", "Settings"),
+        toolbar("settings", "Settings", "Settings", ImeIcon.Settings),
         toolbar(
             id = "punct",
             label = if (state.asciiPunctuation) ". ," else "，。",
             token = "punct_switch",
         ),
-        toolbar("number", "123", "Keyboard_number"),
-        toolbar("clipboard", "📋", "clipboard_window"),
-        toolbar("emoji", "☻", "liquid_keyboard_emoji"),
+        toolbar("number", "123", "Keyboard_number", ImeIcon.NumberPad),
+        toolbar("clipboard", "剪贴板", "clipboard_window", ImeIcon.Clipboard),
+        toolbar("emoji", "表情", "liquid_keyboard_emoji", ImeIcon.Emoji),
         // Engine-option toggles (the old surface only reached these through
         // /so or a hardware shortcut).
         ToolbarAction(
@@ -294,7 +295,8 @@ class ComposeInputView(
         ),
         ToolbarAction(
             id = "phrase",
-            label = "语",
+            label = "常用语",
+            icon = ImeIcon.Phrase,
             command = ImeCommand.OpenPanel(PanelId.Phrase),
         ),
     )
@@ -303,11 +305,13 @@ class ComposeInputView(
         id: String,
         label: String,
         token: String,
+        icon: ImeIcon? = null,
     ): ToolbarAction {
         val keyToken = com.jiaoay.jrime.data.theme.model.KeyActionToken.Plain(token)
         return ToolbarAction(
             id = id,
             label = label,
+            icon = icon,
             command = ImeCommand.Key(keyToken),
             binding = KeyBinding.resolve(keyToken, catalog.presetKeys),
         )
@@ -317,7 +321,7 @@ class ComposeInputView(
         PanelSlot(
             id = PanelId.Clipboard,
             title = "剪贴板",
-            icon = "📋",
+            icon = ImeIcon.Clipboard,
         ) { modifier ->
             (window as? ClipboardWindow)?.let {
                 legacyImeColors { ClipboardPanel(it, modifier) }
@@ -326,7 +330,7 @@ class ComposeInputView(
         PanelSlot(
             id = PanelId.Phrase,
             title = "常用语",
-            icon = "语",
+            icon = ImeIcon.Phrase,
         ) { modifier ->
             PhrasePanel(modifier = modifier) { text ->
                 controller.onCommand(ImeCommand.ClosePanel)
@@ -336,7 +340,7 @@ class ComposeInputView(
         PanelSlot(
             id = PanelId.Symbols,
             title = "符号",
-            icon = "☻",
+            icon = ImeIcon.Emoji,
         ) { modifier ->
             (window as? LiquidWindow)?.let {
                 legacyImeColors { LiquidPanel(it, modifier) }

@@ -1,5 +1,6 @@
 package com.jiaoay.jrime.desktop.settings
 
+import com.jiaoay.jrime.ui.design.ImeIcon
 import com.jiaoay.jrime.ui.settings.ChoiceOption
 import com.jiaoay.jrime.ui.settings.SettingControl
 import com.jiaoay.jrime.ui.settings.SettingGroup
@@ -94,6 +95,7 @@ object DesktopSettingSpecs {
                 order = 0,
                 specs = specs,
                 summary = "Light/dark, accent color, candidate text size and hints",
+                icon = ImeIcon.Appearance,
             ),
         )
     }

@@ -15,21 +15,25 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.jiaoay.jrime.data.theme.model.KeyActionToken
 import com.jiaoay.jrime.engine.ImeCommand
 import com.jiaoay.jrime.engine.ImeSessionState
 import com.jiaoay.jrime.ui.design.ImeDimens
+import com.jiaoay.jrime.ui.design.ImeIcon
 import com.jiaoay.jrime.ui.design.ImeShapes
 import com.jiaoay.jrime.ui.design.ImeTypography
 import com.jiaoay.jrime.ui.design.LocalImePalette
@@ -136,6 +140,7 @@ private fun RowScope.IdleTopBar(
         items(actions, key = { it.id }) { action ->
             TopBarChip(
                 label = action.label,
+                icon = action.icon,
                 highlighted = action.highlighted,
                 onClick = { host.dispatch(action.command) },
             )
@@ -210,6 +215,7 @@ private fun RowScope.PanelTopBar(
 ) {
     TopBarChip(
         label = BACK_TO_KEYBOARD_GLYPH,
+        icon = ImeIcon.Back,
         onClick = { host.dispatch(ImeCommand.ClosePanel) },
     )
     Spacer(modifier = Modifier.weight(1f))
@@ -233,6 +239,7 @@ private fun TopBarLanguageAndHide(
     }
     TopBarChip(
         label = HIDE_GLYPH,
+        icon = ImeIcon.Hide,
         onClick = { host.dispatch(ImeCommand.HideKeyboard) },
     )
 }
@@ -242,6 +249,7 @@ private fun TopBarLanguageAndHide(
 @Composable
 private fun TopBarChip(
     label: String,
+    icon: ImeIcon? = null,
     highlighted: Boolean = false,
     onClick: () -> Unit,
 ) {
@@ -257,11 +265,20 @@ private fun TopBarChip(
             .padding(horizontal = ImeDimens.KeyGap),
         contentAlignment = Alignment.Center,
     ) {
-        BasicText(
-            text = label,
-            style = ImeTypography.topBarStyle(color = if (highlighted) palette.accentText else palette.keyText),
-            maxLines = 1,
-        )
+        if (icon != null) {
+            Icon(
+                imageVector = icon.vector,
+                contentDescription = label,
+                tint = if (highlighted) palette.accentText else palette.keyText,
+                modifier = Modifier.size(ImeDimens.IconSmall),
+            )
+        } else {
+            BasicText(
+                text = label,
+                style = ImeTypography.topBarStyle(color = if (highlighted) palette.accentText else palette.keyText),
+                maxLines = 1,
+            )
+        }
     }
 }
 

@@ -33,6 +33,9 @@
 | [keyboard group](../openspec/changes/settings-v2/screenshots/emulator-2026-11-21-six-groups-keyboard.png) | 键盘组 |
 | [appearance page](../openspec/changes/settings-v2/screenshots/emulator-2026-11-21-appearance-page.png) | 外观（深浅/强调色/候选字号等） |
 | [green accent keyboard](../openspec/changes/settings-v2/screenshots/emulator-2026-11-21-green-accent-keyboard.png) | 强调色生效示例 |
+| [toolbar icons](../openspec/changes/ui-icon-system/screenshots/2026-11-21-toolbar-icons.png) | 顶栏语义图标（settings/标点/123/剪贴/表情/简/半/短语 + 中/收起） |
+| [candidate chevrons](../openspec/changes/ui-icon-system/screenshots/2026-11-21-candidate-chevrons.png) | 候选翻页 chevron + 页码 |
+| [settings category icons](../openspec/changes/ui-icon-system/screenshots/2026-11-21-settings-category-icons.png) | 设置分类卡图标 |
 | [input rules](../openspec/changes/input-rules/screenshots/emulator-2026-11-21-input-rules.png) | 输入规则切换（旧默认） |
 | [rule defaults 1](../openspec/changes/rule-defaults/screenshots/2026-11-21-input-rules-default-1.png) | 新默认：英文标点关/通用字集等（上） |
 | [rule defaults 2](../openspec/changes/rule-defaults/screenshots/2026-11-21-input-rules-default-2.png) | 新默认（下：增广字集关） |

@@ -13,6 +13,7 @@ import com.jiaoay.jrime.engine.ImeMetrics
 import com.jiaoay.jrime.engine.KeyBinding
 import com.jiaoay.jrime.engine.KeyGesture
 import com.jiaoay.jrime.engine.PanelId
+import com.jiaoay.jrime.ui.design.ImeIcon
 
 /**
  * The platform seam of the IME surface: everything the shared UI needs to ask
@@ -41,7 +42,7 @@ interface ImeSurfaceHost {
 data class PanelSlot(
     val id: PanelId,
     val title: String,
-    val icon: String,
+    val icon: ImeIcon,
     val content: @Composable (Modifier) -> Unit,
 )
 
@@ -49,6 +50,8 @@ data class PanelSlot(
 data class ToolbarAction(
     val id: String,
     val label: String,
+    /** Primary icon; text labels remain for value chips (简/繁, 全/半, 中/EN). */
+    val icon: ImeIcon? = null,
     val command: ImeCommand,
     val binding: KeyBinding? = null,
     val highlighted: Boolean = false,

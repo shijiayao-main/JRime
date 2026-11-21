@@ -54,6 +54,8 @@ contributors.
 | Compose Foundation | 1.12.1 | Apache-2.0 | https://developer.android.com/jetpack/androidx/releases/compose-foundation#1.12.1 |
 | Compose Layouts | 1.12.1 | Apache-2.0 | https://developer.android.com/jetpack/androidx/releases/compose-foundation#1.12.1 |
 | Compose Material3 Components | 1.4.0 | Apache-2.0 | https://developer.android.com/jetpack/androidx/releases/compose-material3#1.4.0 |
+| Compose Material Icons Core | 1.7.8 | Apache-2.0 | https://developer.android.com/jetpack/androidx/releases/compose-material#1.7.8 |
+| Compose Material Icons Extended | 1.7.8 | Apache-2.0 | https://developer.android.com/jetpack/androidx/releases/compose-material#1.7.8 |
 | Compose Material Ripple | 1.12.1 | Apache-2.0 | https://developer.android.com/jetpack/androidx/releases/compose-material#1.12.1 |
 | Compose Runtime | 1.12.1 | Apache-2.0 | https://developer.android.com/jetpack/androidx/releases/compose-runtime#1.12.1 |
 | Compose Runtime Annotation | 1.12.1 | Apache-2.0 | https://developer.android.com/jetpack/androidx/releases/compose-runtime#1.12.1 |
@@ -169,6 +171,8 @@ contributors.
 | Compose Foundation | 1.12.2 | Apache-2.0 | https://github.com/JetBrains/compose-multiplatform |
 | Compose Layouts | 1.12.2 | Apache-2.0 | https://github.com/JetBrains/compose-multiplatform |
 | Compose Material3 Components | 1.9.0 | Apache-2.0 | https://github.com/JetBrains/compose-jb |
+| Compose Material Icons Core | 1.7.3 | Apache-2.0 | https://github.com/JetBrains/compose-jb |
+| Compose Material Icons Extended | 1.7.3 | Apache-2.0 | https://github.com/JetBrains/compose-jb |
 | Compose Material Ripple | 1.9.1 | Apache-2.0 | https://github.com/JetBrains/compose-jb |
 | Compose Runtime | 1.12.2 | Apache-2.0 | https://github.com/JetBrains/compose-multiplatform |
 | Compose Saveable | 1.12.2 | Apache-2.0 | https://github.com/JetBrains/compose-multiplatform |

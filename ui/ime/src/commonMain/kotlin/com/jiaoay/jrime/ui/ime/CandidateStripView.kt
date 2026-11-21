@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
@@ -40,6 +43,7 @@ import com.jiaoay.jrime.engine.ImeCommand
 import com.jiaoay.jrime.engine.ImeMetrics
 import com.jiaoay.jrime.engine.ImeSessionState
 import com.jiaoay.jrime.ui.design.ImeDimens
+import com.jiaoay.jrime.ui.design.ImeIcon
 import com.jiaoay.jrime.ui.design.ImeShapes
 import com.jiaoay.jrime.ui.design.ImeTypography
 import com.jiaoay.jrime.ui.design.LocalImePalette
@@ -101,7 +105,7 @@ fun CandidateStripView(
             ) {
                 if (page > 0) {
                     PageArrow(
-                        label = "‹",
+                        icon = ImeIcon.ChevronLeft,
                         onClick = { host.dispatch(ImeCommand.ChangeCandidatePage(forward = false)) },
                     )
                 }
@@ -125,7 +129,7 @@ fun CandidateStripView(
                 }
                 if (page < pageCount - 1) {
                     PageArrow(
-                        label = "›",
+                        icon = ImeIcon.ChevronRight,
                         onClick = { host.dispatch(ImeCommand.ChangeCandidatePage(forward = true)) },
                     )
                 }
@@ -213,7 +217,7 @@ private fun MenuItem(
 @Suppress("FunctionName")
 @Composable
 private fun PageArrow(
-    label: String,
+    icon: ImeIcon,
     onClick: () -> Unit,
 ) {
     val palette = LocalImePalette.current
@@ -226,10 +230,11 @@ private fun PageArrow(
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        BasicText(
-            text = label,
-            style = ImeTypography.candidateStyle(palette.candidateHighlighted),
-            maxLines = 1,
+        Icon(
+            imageVector = icon.vector,
+            contentDescription = null,
+            tint = palette.candidateHighlighted,
+            modifier = Modifier.size(ImeDimens.IconSmall),
         )
     }
 }

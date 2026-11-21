@@ -11,6 +11,7 @@ import com.jiaoay.jrime.R
 import com.jiaoay.jrime.data.prefs.AppPrefs
 import com.jiaoay.jrime.data.prefs.PreferenceDelegateOwner
 import com.jiaoay.jrime.data.prefs.PreferenceDelegateUi
+import com.jiaoay.jrime.ui.design.ImeIcon
 import com.jiaoay.jrime.ui.settings.ChoiceOption
 import com.jiaoay.jrime.ui.settings.SettingControl
 import com.jiaoay.jrime.ui.settings.SettingGroup
@@ -54,6 +55,7 @@ class SettingsSpecsFactory(
                         order = def.order,
                         specs = specs,
                         summary = labeler(def.summaryRes),
+                        icon = def.icon,
                     )
                 }
             }.toMutableList()
@@ -76,6 +78,7 @@ class SettingsSpecsFactory(
                 title = labeler(GROUP_SYSTEM.titleRes),
                 order = GROUP_SYSTEM.order,
                 summary = labeler(GROUP_SYSTEM.summaryRes),
+                icon = GROUP_SYSTEM.icon,
                 specs =
                 listOf(
                     actionSpec(ACTION_IMPORT_FONT, R.string.import_font_title, 0),
@@ -201,6 +204,7 @@ class SettingsSpecsFactory(
         val titleRes: Int,
         val order: Int,
         val summaryRes: Int,
+        val icon: ImeIcon,
     )
 
     companion object {
@@ -211,12 +215,12 @@ class SettingsSpecsFactory(
         const val ACTION_COPY_DIAGNOSTICS = "__action_copy_diagnostics"
         const val ACTION_OPEN_USERDICT_BROWSER = "__action_userdict_browser"
 
-        private val GROUP_INPUT = GroupDef("input", R.string.group_input, 0, R.string.group_input_summary)
-        private val GROUP_KEYBOARD = GroupDef("keyboard", R.string.group_keyboard, 1, R.string.group_keyboard_summary)
-        private val GROUP_CANDIDATES = GroupDef("candidates", R.string.group_candidates, 2, R.string.group_candidates_summary)
-        private val GROUP_APPEARANCE = GroupDef("appearance", R.string.group_appearance, 3, R.string.group_appearance_summary)
-        private val GROUP_CLIPBOARD = GroupDef("clipboard", R.string.group_clipboard, 4, R.string.group_clipboard_summary)
-        private val GROUP_SYSTEM = GroupDef("system", R.string.group_system, 5, R.string.group_system_summary)
+        private val GROUP_INPUT = GroupDef("input", R.string.group_input, 0, R.string.group_input_summary, ImeIcon.InputRules)
+        private val GROUP_KEYBOARD = GroupDef("keyboard", R.string.group_keyboard, 1, R.string.group_keyboard_summary, ImeIcon.Keyboard)
+        private val GROUP_CANDIDATES = GroupDef("candidates", R.string.group_candidates, 2, R.string.group_candidates_summary, ImeIcon.Candidates)
+        private val GROUP_APPEARANCE = GroupDef("appearance", R.string.group_appearance, 3, R.string.group_appearance_summary, ImeIcon.Appearance)
+        private val GROUP_CLIPBOARD = GroupDef("clipboard", R.string.group_clipboard, 4, R.string.group_clipboard_summary, ImeIcon.Clipboard)
+        private val GROUP_SYSTEM = GroupDef("system", R.string.group_system, 5, R.string.group_system_summary, ImeIcon.Settings)
 
         private val GROUP_DEFS =
             listOf(GROUP_INPUT, GROUP_KEYBOARD, GROUP_CANDIDATES, GROUP_APPEARANCE, GROUP_CLIPBOARD, GROUP_SYSTEM)

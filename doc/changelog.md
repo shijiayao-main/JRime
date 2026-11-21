@@ -65,6 +65,15 @@
   inputRules），冲突显式报错。
 - 架构与 P1–P5 路线见 `doc/model-first.md`；本批只加模型与测试，运行时 UI 暂不变。
 
+## UI 图标系统（2026-11-21）
+
+- 语义图标 `ImeIcon`（26 个 key，方案中立，outlined 风格）落地到顶栏工具、面板返回/收起、候选翻页与
+  设置分类卡；emoji/文字混搭的旧图标（⚙/📋/☻/语）退场。
+- 设计系统文档 `doc/ui-design-system.md`：品牌命名口径（飞鹤快拼=默认方案数据，AI 优化/改名不牵动
+  图标与品牌）、token、图标表与组件规格。
+- 测试：`ImeIconSetTest`（唯一/方案中立）、分类图标断言、SurfaceGuard；模拟器截图见
+  `openspec/changes/ui-icon-system/screenshots/`。
+
 ## 复现命令
 
 ```sh
