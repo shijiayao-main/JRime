@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -119,16 +120,23 @@ fun SettingsScreen(
                         )
                     }
                     items(group.specs, key = { "spec-${it.key}" }) { spec ->
-                        SettingRow(
-                            spec = spec,
-                            store = store,
-                            strings = strings,
-                            options = options,
-                            onAction = onAction,
-                            onEditChoice = { editingChoice = spec },
-                            onEditText = { editingText = spec },
-                        )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        // A choice/text edit happens in a dialog; the row must
+                        // re-read the store on the revision bump or LazyColumn
+                        // keeps the stale label (item stability skips it).
+                        key(revision) {
+                            Column {
+                                SettingRow(
+                                    spec = spec,
+                                    store = store,
+                                    strings = strings,
+                                    options = options,
+                                    onAction = onAction,
+                                    onEditChoice = { editingChoice = spec },
+                                    onEditText = { editingText = spec },
+                                )
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            }
+                        }
                     }
                 }
             }
