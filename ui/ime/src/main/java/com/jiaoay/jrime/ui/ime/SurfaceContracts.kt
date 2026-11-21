@@ -1,0 +1,61 @@
+/*
+ * SPDX-FileCopyrightText: 2015 - 2026 Rime community
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+package com.jiaoay.jrime.engine
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+
+/**
+ * The platform seam of the IME surface: everything the shared UI needs to ask
+ * the app to do. Implemented by the Android host (and later by the desktop
+ * host); the shared surface never touches the engine or the platform directly.
+ */
+interface ImeSurfaceHost {
+    /** Executes a UI intent. */
+    fun dispatch(command: ImeCommand)
+
+    /** Reports the visible band's top offset in window pixels (IME insets). */
+    fun reportBandTop(topPx: Int)
+
+    /** Key feedback (sound/haptic/TTS); the surface calls it at finger-down. */
+    fun onKeyFeedback(binding: KeyBinding, gesture: KeyGesture)
+
+    /** The composing-code text the host wants shown in the top bar (may be empty). */
+    fun compositionEcho(): String
+}
+
+/**
+ * App-provided panel content. The host supplies the composable; the shared
+ * surface owns the host frame, animation and height, so adding a panel never
+ * changes the surface code.
+ */
+data class PanelSlot(
+    val id: PanelId,
+    val title: String,
+    val icon: String,
+    val content: @Composable (Modifier) -> Unit,
+)
+
+/** One top-bar button. */
+data class ToolbarAction(
+    val id: String,
+    val label: String,
+    val command: ImeCommand,
+    val highlighted: Boolean = false,
+    val visible: Boolean = true,
+)
+
+/** Everything the surface needs that is not in the session state. */
+data class ImeSurfaceConfig(
+    val rowHeightDp: Int = ImeMetrics.ROW_HEIGHT_DEFAULT_DP,
+    val popupOnKeyPress: Boolean = true,
+    val candidateTextSizeSp: Float = 18f,
+    val showCandidateComment: Boolean = true,
+    val enterLabel: String = "",
+    val toolbarActions: List<ToolbarAction> = emptyList(),
+    val panelSlots: List<PanelSlot> = emptyList(),
+)

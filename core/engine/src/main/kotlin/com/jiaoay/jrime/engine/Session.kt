@@ -6,6 +6,8 @@
 
 package com.jiaoay.jrime.engine
 
+import com.jiaoay.jrime.data.theme.model.KeyActionToken as LegacyKeyToken
+
 /** Which palette the surface should use. */
 enum class PaletteMode {
     FollowSystem,
@@ -85,7 +87,7 @@ sealed interface EngineEvent {
 
 /** UI intents. Only [ImeCommand]s flow from the surface to the rest of the app. */
 sealed interface ImeCommand {
-    data class Key(val token: KeyActionToken, val gesture: KeyGesture = KeyGesture.Tap) : ImeCommand
+    data class Key(val token: LegacyKeyToken, val gesture: KeyGesture = KeyGesture.Tap) : ImeCommand
 
     data class SelectCandidate(val index: Int) : ImeCommand
 
