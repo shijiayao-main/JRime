@@ -413,6 +413,12 @@ private fun deriveLabel(
     if (binding?.isSpace == true) {
         return schemaLabel.ifEmpty { SPACE_LABEL_FALLBACK }
     }
+    // The layout's own face wins over the preset's label (the comma and the
+    // period declare their CJK faces in the data, the backspace declares
+    // none); the preset label is the fallback.
+    if (key.label.isNotEmpty()) {
+        return key.label
+    }
     val label = binding?.label.orEmpty()
     if (label == ENTER_LABEL_PLACEHOLDER) {
         return enterLabel.ifEmpty { ENTER_LABEL_FALLBACK }

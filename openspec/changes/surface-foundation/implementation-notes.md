@@ -39,3 +39,10 @@
   - ⌫ 图标回退成 ⇦（`TextKey.labelSymbol` 未进 `KeyBinding`）；
   - 键间距/字号按 token（旧 22sp→19sp、padding 2dp→6dp），手感需真机校准；
   - 剪贴板 chip / 剪贴板面板 / 符号面板仍走旧实现与旧配色。
+
+## 2026-11-21 · 标签与 schema 收口
+
+- controller 消费 `onRimeSchemaUpdated`/`onInputStatusUpdate`，首帧即带 schema 名与输入模式；
+  空格键显示「飞鹤快拼」，与旧表面一致。
+- 键面字优先级改为「布局声明 label > preset label > token」：逗号「，」、句号「。」、
+  退格「⌫」恢复；空格 schema 名恢复。截图 `screenshots/emulator-2026-11-21-labels.png`。

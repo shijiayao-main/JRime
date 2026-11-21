@@ -315,6 +315,8 @@ private fun RowScope.ShiftRow(
         schemaLabel = state.schemaLabel,
         host = host,
         modifier = Modifier.weight(KeyboardLayoutOps.backspaceUnits(letters.size)),
+        labelOverride = "⌫",
+        isFunctionOverride = true,
     )
 }
 

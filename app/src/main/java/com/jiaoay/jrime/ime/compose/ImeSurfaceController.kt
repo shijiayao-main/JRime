@@ -8,6 +8,8 @@ package com.jiaoay.jrime.ime.compose
 
 import com.jiaoay.jrime.core.Candidates
 import com.jiaoay.jrime.core.CompositionProto
+import com.jiaoay.jrime.core.SchemaItem
+import com.jiaoay.jrime.core.StatusProto
 import com.jiaoay.jrime.core.RimeMessage
 import com.jiaoay.jrime.daemon.RimeSession
 import com.jiaoay.jrime.daemon.launchOnReady
@@ -59,10 +61,20 @@ class ImeSurfaceController(
     fun attach() {
         broadcaster.addReceiver(this)
         rime.launchOnReady { api ->
+            // Seed the option/status truth so the first frame renders the
+            // current schema and input mode instead of defaults.
+            val status = api.statusCached
             _state.update {
-                it.copy(
-                    asciiMode = api.getRuntimeOption("ascii_mode"),
-                    asciiPunctuation = api.getRuntimeOption("ascii_punct"),
+                ImeStateReducer.onEvent(
+                    it,
+                    EngineEvent.Status(
+                        asciiMode = status.isAsciiMode,
+                        asciiPunctuation = status.isAsciiPunct,
+                        fullShape = status.isFullShape,
+                        simplified = status.isSimplified,
+                        schemaId = status.schemaId,
+                        schemaLabel = status.schemaName,
+                    ),
                 )
             }
         }
@@ -127,6 +139,26 @@ class ImeSurfaceController(
         paging: Boolean,
     ) {
         _state.update { ImeStateReducer.onEvent(it, EngineEvent.Appearance(composing, menu, paging)) }
+    }
+
+    override fun onRimeSchemaUpdated(schema: SchemaItem) {
+        _state.update { it.copy(schemaLabel = schema.name.ifEmpty { schema.id }) }
+    }
+
+    override fun onInputStatusUpdate(value: StatusProto) {
+        _state.update {
+            ImeStateReducer.onEvent(
+                it,
+                EngineEvent.Status(
+                    asciiMode = value.isAsciiMode,
+                    asciiPunctuation = value.isAsciiPunct,
+                    fullShape = value.isFullShape,
+                    simplified = value.isSimplified,
+                    schemaId = value.schemaId,
+                    schemaLabel = value.schemaName,
+                ),
+            )
+        }
     }
 
     override fun onWindowAttached(window: BoardWindow) {
