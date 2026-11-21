@@ -10,11 +10,6 @@ import androidx.navigation.NavController
 import androidx.navigation.createGraph
 import androidx.navigation.fragment.fragment
 import com.jiaoay.jrime.R
-import com.jiaoay.jrime.ui.main.settings.AdvancedSettingsFragment
-import com.jiaoay.jrime.ui.main.settings.AppearanceSettingsFragment
-import com.jiaoay.jrime.ui.main.settings.ClipboardSettingsFragment
-import com.jiaoay.jrime.ui.main.settings.GeneralSettingsFragment
-import com.jiaoay.jrime.ui.main.settings.KeyboardSettingsFragment
 import com.jiaoay.jrime.ui.main.settings.ProfileSettingsFragment
 import com.jiaoay.jrime.ui.main.settings.SettingsFragment
 import com.jiaoay.jrime.ui.main.settings.userdict.UserDictionaryFragment
@@ -35,21 +30,6 @@ sealed class NavigationRoute : Parcelable {
 
     @Serializable
     data object Settings : NavigationRoute()
-
-    @Serializable
-    data object General : NavigationRoute()
-
-    @Serializable
-    data object VirtualKeyboard : NavigationRoute()
-
-    @Serializable
-    data object Appearance : NavigationRoute()
-
-    @Serializable
-    data object Clipboard : NavigationRoute()
-
-    @Serializable
-    data object Advanced : NavigationRoute()
 
     @Serializable
     data object Developer : NavigationRoute()
@@ -77,21 +57,6 @@ sealed class NavigationRoute : Parcelable {
 
             fragment<SettingsFragment, Settings> {
                 label = ctx.getString(R.string.settings)
-            }
-            fragment<GeneralSettingsFragment, General> {
-                label = ctx.getString(R.string.general)
-            }
-            fragment<KeyboardSettingsFragment, VirtualKeyboard> {
-                label = ctx.getString(R.string.virtual_keyboard)
-            }
-            fragment<AppearanceSettingsFragment, Appearance> {
-                label = ctx.getString(R.string.appearance)
-            }
-            fragment<ClipboardSettingsFragment, Clipboard> {
-                label = ctx.getString(R.string.clipboard)
-            }
-            fragment<AdvancedSettingsFragment, Advanced> {
-                label = ctx.getString(R.string.advanced)
             }
             fragment<DeveloperFragment, Developer> {
                 label = ctx.getString(R.string.developer)

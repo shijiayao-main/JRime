@@ -38,3 +38,17 @@
 ### 阶段 2b 待办
 六组 IA 重排、无孤儿双向断言、删除旧 Preference 页面与依赖、删除横屏/分屏等无效可见项、
 合并两套深色概念、hub 行的 enabled 依赖联动。
+
+## 2026-11-21 · 阶段 2b：六组 IA、无孤儿断言、旧页面清理
+
+- 六组信息架构：输入 / 键盘 / 候选 / 外观 / 剪贴板 / 系统与数据；`SettingsSpecsFactory`
+  从偏好声明自动派生并按 key 归类；无法归类的新 key 落键盘组，未映射类型隐藏而非丢失。
+- 无孤儿双向断言：`SettingsSpecsFactory` 支持注入 `providers` + `labeler`，配合
+  `FakeSharedPreferences` 在 JVM 单测中验证「每个声明偏好都有行 / 每行都指向真实偏好 /
+  key 唯一 / 六组齐全 / 外观与系统动作归类」；`AppSettingsStore` 读写与修订流同测。
+  全量 203+ 单测通过。
+- 删除旧 Preference 页面：General/Keyboard/Appearance/Clipboard/Advanced/Progress fragment
+  与对应导航目的地移除；首页仅保留 用户词典 / 配置 / 设置。`launchMainToKeyboard` 改指设置页。
+- 遗留无效可见项（横屏/分屏/隐藏工具栏/隐藏键符号/隐藏注解/扩大点击区）在 hub 中隐藏，
+  等遗留 Keyboard/Key 模型删除时一并删偏好。
+- 模拟器验证：六组顺序与行渲染正常（截图 `screenshots/emulator-2026-11-21-six-groups-*.png`）。

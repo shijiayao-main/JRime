@@ -194,6 +194,12 @@
     <string name="removed_n_items">Removed %1$d item(s)</string>
     <string name="candidates_layout">Candidate list layout</string>
     <string name="data_section">Data</string>
+    <string name="group_input">Input</string>
+    <string name="group_keyboard">Keyboard</string>
+    <string name="group_candidates">Candidates</string>
+    <string name="group_appearance">Appearance</string>
+    <string name="group_clipboard">Clipboard</string>
+    <string name="group_system">System and data</string>
     <string name="settings">Settings</string>
     <string name="search_settings">Search settings</string>
     <string name="no_matching_settings">No matching settings</string>

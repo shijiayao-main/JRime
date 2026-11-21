@@ -193,6 +193,12 @@
     <string name="removed_n_items">已移除 %1$d 个项目</string>
     <string name="candidates_layout">候选词列表布局</string>
     <string name="data_section">数据</string>
+    <string name="group_input">输入</string>
+    <string name="group_keyboard">键盘</string>
+    <string name="group_candidates">候选</string>
+    <string name="group_appearance">外观</string>
+    <string name="group_clipboard">剪贴板</string>
+    <string name="group_system">系统与数据</string>
     <string name="settings">设置</string>
     <string name="search_settings">搜索设置</string>
     <string name="no_matching_settings">没有匹配的设置项</string>

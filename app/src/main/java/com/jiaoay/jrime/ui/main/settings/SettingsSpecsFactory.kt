@@ -9,6 +9,7 @@ package com.jiaoay.jrime.ui.main.settings
 import android.content.Context
 import com.jiaoay.jrime.R
 import com.jiaoay.jrime.data.prefs.AppPrefs
+import com.jiaoay.jrime.data.prefs.PreferenceDelegateOwner
 import com.jiaoay.jrime.data.prefs.PreferenceDelegateUi
 import com.jiaoay.jrime.ui.settings.ChoiceOption
 import com.jiaoay.jrime.ui.settings.SettingControl
@@ -20,78 +21,91 @@ import com.jiaoay.jrime.ui.settings.SettingSpec
  *
  * The delegate layer already carries the UI metadata (title, default, range,
  * enum labels), so the hub is generated from the single source of truth
- * instead of duplicating a hand-written list. A new preference type that lands
- * without a mapping fails loudly at runtime (and compile-time review) rather
- * than silently disappearing from the settings.
+ * instead of duplicating a hand-written list: a new preference shows up here
+ * automatically, and a preference type without a mapping is emitted as a
+ * hidden row (kept for the no-orphan contract) instead of vanishing.
+ *
+ * The rows are re-grouped into the six product sections (input / keyboard /
+ * candidates / appearance / clipboard / system+data) rather than the old
+ * per-page provider buckets.
  */
 class SettingsSpecsFactory(
-    private val context: Context,
+    private val labeler: (Int) -> String,
+    private val dynamicChoices: (PreferenceDelegateUi.UniversalStringList<*>) -> List<ChoiceOption> = { emptyList() },
+    private val providers: List<PreferenceDelegateOwner>,
 ) {
     fun build(): List<SettingGroup> {
-        val groups = mutableListOf<SettingGroup>()
-        AppPrefs
-            .defaultInstance()
-            .settingProviders()
-            .forEachIndexed { groupOrder, provider ->
-                if (provider.title == 0) return@forEachIndexed
-                val groupTitle = context.getString(provider.title)
-                val specs =
-                    provider.preferenceDelegatesUi.mapIndexedNotNull { order, ui ->
-                        toSpec(ui, groupOrder, order, groupTitle)
-                    }
-                if (specs.isNotEmpty()) {
-                    groups += SettingGroup(
-                        id = provider::class.simpleName ?: "group-$groupOrder",
-                        title = groupTitle,
-                        order = groupOrder,
+        val rows = LinkedHashMap<String, MutableList<SettingSpec>>()
+        var order = 0
+        providers.forEach { provider ->
+            provider.preferenceDelegatesUi.forEach { ui ->
+                val group = groupFor(ui.key)
+                val spec = toSpec(ui, group, order)
+                order += 1
+                spec?.let { rows.getOrPut(group.id) { mutableListOf() } += it }
+            }
+        }
+        val groups =
+            GROUP_DEFS.mapNotNull { def ->
+                rows[def.id]?.let { specs ->
+                    SettingGroup(
+                        id = def.id,
+                        title = labeler(def.titleRes),
+                        order = def.order,
                         specs = specs,
                     )
                 }
-            }
-
-        val dataOrder = groups.size
-        val dataTitle = context.getString(R.string.data_section)
-        groups += SettingGroup(
-            id = "data",
-            title = dataTitle,
-            order = dataOrder,
-            specs =
-            listOf(
-                SettingSpec(
-                    key = ACTION_IMPORT_FONT,
-                    title = context.getString(R.string.import_font_title),
-                    groupId = "data",
-                    groupTitle = dataTitle,
-                    groupOrder = dataOrder,
-                    order = 0,
-                    control = SettingControl.Action(ACTION_IMPORT_FONT),
+            }.toMutableList()
+        val dataGroup =
+            SettingGroup(
+                id = GROUP_SYSTEM.id,
+                title = labeler(GROUP_SYSTEM.titleRes),
+                order = GROUP_SYSTEM.order,
+                specs =
+                listOf(
+                    SettingSpec(
+                        key = ACTION_IMPORT_FONT,
+                        title = labeler(R.string.import_font_title),
+                        groupId = GROUP_SYSTEM.id,
+                        groupTitle = labeler(GROUP_SYSTEM.titleRes),
+                        groupOrder = GROUP_SYSTEM.order,
+                        order = 0,
+                        control = SettingControl.Action(ACTION_IMPORT_FONT),
+                    ),
                 ),
-            ),
-        )
+            )
+        val systemIndex = groups.indexOfFirst { it.id == GROUP_SYSTEM.id }
+        if (systemIndex >= 0) {
+            val existing = groups[systemIndex]
+            groups[systemIndex] = existing.copy(specs = existing.specs + dataGroup.specs)
+        } else {
+            groups += dataGroup
+        }
         return groups.sortedBy { it.order }
     }
 
     private fun toSpec(
         ui: PreferenceDelegateUi<*>,
-        groupOrder: Int,
+        group: GroupDef,
         order: Int,
-        groupTitle: String,
     ): SettingSpec? {
-        val title =
-            runCatching { context.getString(titleOf(ui)) }.getOrNull()
-                ?: return null
+        val title = runCatching { labeler(titleOf(ui)) }.getOrNull() ?: return null
         fun spec(
             control: SettingControl,
             hidden: Boolean = false,
         ) = SettingSpec(
             key = ui.key,
             title = title,
-            groupId = groupTitle,
-            groupTitle = groupTitle,
-            groupOrder = groupOrder,
+            groupId = group.id,
+            groupTitle = labeler(group.titleRes),
+            groupOrder = group.order,
             order = order,
             control = control,
-            hidden = hidden,
+            // The legacy-only knobs (landscape split, hidden toolbar/symbols,
+            // expanded hit area) are still declared for the old Keyboard model
+            // and are hidden here until that model retires; the no-orphan
+            // contract keeps their specs in the list.
+            hidden = hidden || ui.key in LEGACY_HIDDEN_KEYS,
         )
         return when (ui) {
             is PreferenceDelegateUi.Switch -> spec(SettingControl.Toggle(ui.defaultValue))
@@ -129,7 +143,7 @@ class SettingsSpecsFactory(
                         list.entryValues.mapIndexed { index, value ->
                             ChoiceOption(
                                 value = list.serializer.serialize(value),
-                                label = context.getString(list.entryLabels[index]),
+                                label = labeler(list.entryLabels[index]),
                             )
                         },
                     ),
@@ -140,10 +154,7 @@ class SettingsSpecsFactory(
                 spec(
                     SettingControl.Choice(
                         defaultValue = ui.defaultValue.toString(),
-                        options =
-                        ui.entryValues().zip(ui.entryLabels(context)).map { (value, label) ->
-                            ChoiceOption(value = value, label = label.toString())
-                        },
+                        options = dynamicChoices(ui),
                     ),
                 )
 
@@ -151,13 +162,11 @@ class SettingsSpecsFactory(
                 if (ui.key == AppPrefs.Keyboard.CUSTOM_SOUND_EFFECT) {
                     spec(SettingControl.Action(ACTION_PICK_SOUND))
                 } else {
-                    // A click-only row without a generic editor: keep it
-                    // visible but inert rather than dropping it silently.
                     spec(SettingControl.TextField(""), hidden = true)
                 }
 
             else -> spec(SettingControl.TextField(""), hidden = true)
-        } ?: null
+        }
     }
 
     private fun titleOf(ui: PreferenceDelegateUi<*>): Int = when (ui) {
@@ -171,8 +180,85 @@ class SettingsSpecsFactory(
         else -> 0
     }
 
+    private fun groupFor(key: String): GroupDef = when {
+        key in INPUT_KEYS -> GROUP_INPUT
+        key in CANDIDATE_KEYS -> GROUP_CANDIDATES
+        key in APPEARANCE_KEYS -> GROUP_APPEARANCE
+        key.startsWith("clipboard") -> GROUP_CLIPBOARD
+        key in SYSTEM_KEYS -> GROUP_SYSTEM
+        else -> GROUP_KEYBOARD
+    }
+
+    private data class GroupDef(
+        val id: String,
+        val titleRes: Int,
+        val order: Int,
+    )
+
     companion object {
         const val ACTION_IMPORT_FONT = "import_font"
         const val ACTION_PICK_SOUND = "pick_sound"
+
+        private val GROUP_INPUT = GroupDef("input", R.string.group_input, 0)
+        private val GROUP_KEYBOARD = GroupDef("keyboard", R.string.group_keyboard, 1)
+        private val GROUP_CANDIDATES = GroupDef("candidates", R.string.group_candidates, 2)
+        private val GROUP_APPEARANCE = GroupDef("appearance", R.string.group_appearance, 3)
+        private val GROUP_CLIPBOARD = GroupDef("clipboard", R.string.group_clipboard, 4)
+        private val GROUP_SYSTEM = GroupDef("system", R.string.group_system, 5)
+
+        private val GROUP_DEFS =
+            listOf(GROUP_INPUT, GROUP_KEYBOARD, GROUP_CANDIDATES, GROUP_APPEARANCE, GROUP_CLIPBOARD, GROUP_SYSTEM)
+
+        private val INPUT_KEYS =
+            setOf(
+                AppPrefs.General.INLINE_PREEDIT_MODE,
+                AppPrefs.General.ASCII_SWITCH_TIPS,
+                AppPrefs.General.PREFERRED_VOICE_INPUT,
+                AppPrefs.Keyboard.DOUBLE_SPACE_PERIOD,
+                AppPrefs.Keyboard.USE_SOFT_CURSOR,
+                AppPrefs.Keyboard.SPEAK_ON_COMMIT,
+                AppPrefs.Keyboard.HOOK_CTRL_A,
+                AppPrefs.Keyboard.HOOK_CTRL_CV,
+                AppPrefs.Keyboard.HOOK_CTRL_LR,
+                AppPrefs.Keyboard.HOOK_CTRL_ZY,
+                AppPrefs.Keyboard.HOOK_SHIFT_SPACE,
+                AppPrefs.Keyboard.HOOK_SHIFT_NUM,
+                AppPrefs.Keyboard.HOOK_SHIFT_SYMBOL,
+            )
+
+        private val CANDIDATE_KEYS =
+            setOf(
+                AppPrefs.Appearance.CANDIDATE_PAGE_SIZE,
+                AppPrefs.Appearance.CANDIDATE_TEXT_SIZE,
+            )
+
+        private val APPEARANCE_KEYS =
+            setOf(
+                AppPrefs.Appearance.PALETTE_MODE,
+                AppPrefs.Appearance.ACCENT,
+                AppPrefs.Appearance.SHOW_KEY_HINTS,
+                AppPrefs.Advanced.UI_MODE,
+                AppPrefs.Advanced.SHOW_APP_ICON,
+            )
+
+        private val SYSTEM_KEYS = setOf(AppPrefs.Advanced.IGNORE_SYSTEM_GESTURE_INSETS)
+
+        /** Declared but only consumed by the retiring legacy Keyboard model. */
+        private val LEGACY_HIDDEN_KEYS =
+            setOf(
+                AppPrefs.Keyboard.LANDSCAPE_MODE,
+                AppPrefs.Keyboard.SPLIT_SPACE_PERCENT,
+                AppPrefs.Keyboard.HIDE_INPUT_BAR,
+                AppPrefs.Keyboard.HIDE_KEY_SYMBOL,
+                AppPrefs.Keyboard.HIDE_KEY_HINT,
+                AppPrefs.Keyboard.EXPAND_KEYPRESS_AREA,
+            )
+
+        /** Convenience for the app: resolves labels from resources. */
+        fun forContext(context: Context): SettingsSpecsFactory = SettingsSpecsFactory(
+            labeler = context::getString,
+            dynamicChoices = { ui -> ui.entryValues().map { ChoiceOption(it, it) } },
+            providers = AppPrefs.defaultInstance().settingProviders(),
+        )
     }
 }

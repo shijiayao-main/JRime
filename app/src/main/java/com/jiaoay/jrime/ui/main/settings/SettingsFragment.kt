@@ -49,7 +49,7 @@ class SettingsFragment : Fragment() {
     ): View {
         val appStore = AppSettingsStore(PreferenceManager.getDefaultSharedPreferences(requireContext()))
         store = appStore
-        val groups = SettingsSpecsFactory(requireContext()).build()
+        val groups = SettingsSpecsFactory.forContext(requireContext()).build()
         val strings =
             SettingsStrings(
                 title = getString(R.string.settings),
