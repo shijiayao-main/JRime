@@ -107,6 +107,7 @@ class ComposeInputView(
     private val appearancePrefs = AppPrefs.defaultInstance().appearance
     private var rowHeightDp by mutableIntStateOf(keyboardPrefs.rowHeight.getValue())
     private var popupOnKeyPress by mutableStateOf(keyboardPrefs.popupOnKeyPress.getValue())
+    private var spaceLongPressVoice by mutableStateOf(keyboardPrefs.spaceLongPressVoice.getValue())
     private var candidateTextSize by mutableIntStateOf(appearancePrefs.candidateTextSize.getValue())
     private var showKeyHints by mutableStateOf(appearancePrefs.showKeyHints.getValue())
     private var showCandidateComment by mutableStateOf(appearancePrefs.showCandidateComment.getValue())
@@ -160,6 +161,9 @@ class ComposeInputView(
                 AppPrefs.Keyboard.KEYBOARD_HEIGHT -> rowHeightDp = keyboardPrefs.rowHeight.getValue()
 
                 AppPrefs.Keyboard.POPUP_ON_KEY_PRESS -> popupOnKeyPress = keyboardPrefs.popupOnKeyPress.getValue()
+
+                AppPrefs.Keyboard.SPACE_LONG_PRESS_VOICE ->
+                    spaceLongPressVoice = keyboardPrefs.spaceLongPressVoice.getValue()
 
                 AppPrefs.Appearance.CANDIDATE_TEXT_SIZE ->
                     candidateTextSize = appearancePrefs.candidateTextSize.getValue()
@@ -250,6 +254,7 @@ class ComposeInputView(
         showCandidateComment = showCandidateComment,
         showLanguageToggle = asciiSwitchMode != AppPrefs.AsciiSwitchMode.SHIFT_ONLY,
         shiftTogglesLanguage = asciiSwitchMode != AppPrefs.AsciiSwitchMode.BUTTON_ONLY,
+        spaceLongPressVoice = spaceLongPressVoice,
         enterLabel = "↵",
         toolbarActions = toolbarActions(state),
         panelSlots = panelSlots(window),

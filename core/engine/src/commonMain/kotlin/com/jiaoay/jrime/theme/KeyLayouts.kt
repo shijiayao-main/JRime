@@ -360,6 +360,12 @@ object KeyLayouts {
     val presetKeys: Map<String, PresetKey> = mapOf(
         "Alt_space" to PresetKey(label = "空格", repeatable = true, send = "space"),
         "BackSpace" to PresetKey(label = "⇦", repeatable = true, send = "BackSpace"),
+        // Long-press behaviours added for the JRime surface (chrome row):
+        // space -> voice input method, enter -> literal newline, comma ->
+        // Chinese enumeration comma. They are presets so the layouts stay data.
+        "VoiceInput" to PresetKey(label = "语音", send = "VOICE_ASSIST"),
+        "Newline" to PresetKey(label = "换行", commit = "\n"),
+        "EnumerationComma" to PresetKey(label = "、", commit = "、"),
         "BackToPreviousSyllable" to PresetKey(label = "刪音节", send = "Control+BackSpace"),
         "Calc_Lua" to PresetKey(label = "计算器", text = "cC"),
         "Clear" to PresetKey(label = "清除", text = "{Control+a}{BackSpace}"),

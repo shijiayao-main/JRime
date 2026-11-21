@@ -125,6 +125,7 @@ class AppPrefs(
             const val SPLIT_SPACE_PERCENT = "keyboard_split_space"
             const val KEYBOARD_HEIGHT = "keyboard_row_height"
             const val DOUBLE_SPACE_PERIOD = "double_space_period"
+            const val SPACE_LONG_PRESS_VOICE = "space_long_press_voice"
 
             const val USE_SOFT_CURSOR = "use_soft_cursor"
             const val HIDE_INPUT_BAR = "hide_input_bar"
@@ -196,6 +197,7 @@ class AppPrefs(
         )
 
         val doubleSpacePeriod = switch(R.string.double_space_period, DOUBLE_SPACE_PERIOD, true)
+        val spaceLongPressVoice = switch(R.string.space_long_press_voice, SPACE_LONG_PRESS_VOICE, true)
 
         val useSoftCursor = switch(R.string.use_soft_cursor, USE_SOFT_CURSOR, true)
 

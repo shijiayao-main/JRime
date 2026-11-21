@@ -413,8 +413,28 @@ private fun RowScope.ChromeSlot(
 ) {
     val dataKey = remember(board, token) { board.keyForToken(token) }
     val fallbackKey = remember(token) { TextKeyboard.TextKey(click = LegacyKeyToken.Plain(token)) }
+    // The chrome row adds the long-press input behaviours the boards leave
+    // unused: voice on space, newline on enter, enumeration comma on comma.
+    val longPressOverride: LegacyKeyToken? =
+        remember(token, config.spaceLongPressVoice) {
+            when (token) {
+                "space" -> if (config.spaceLongPressVoice) LegacyKeyToken.Plain("VoiceInput") else null
+                "Return" -> LegacyKeyToken.Plain("Newline")
+                "," -> LegacyKeyToken.Plain("EnumerationComma")
+                else -> null
+            }
+        }
+    val baseKey = dataKey ?: fallbackKey
+    val effectiveKey =
+        remember(baseKey, longPressOverride) {
+            if (longPressOverride != null && baseKey.longClick == null) {
+                baseKey.copy(longClick = longPressOverride)
+            } else {
+                baseKey
+            }
+        }
     KeySurface(
-        key = dataKey ?: fallbackKey,
+        key = effectiveKey,
         presetKeys = presetKeys,
         appearance = appearance,
         config = config,

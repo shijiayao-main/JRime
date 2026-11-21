@@ -66,6 +66,8 @@ data class ImeSurfaceConfig(
     val showLanguageToggle: Boolean = true,
     /** Whether a Shift tap toggles Chinese/English (engine ascii_composer). */
     val shiftTogglesLanguage: Boolean = true,
+    /** Long-press on space switches to the preferred voice input method. */
+    val spaceLongPressVoice: Boolean = true,
     val enterLabel: String = "",
     val toolbarActions: List<ToolbarAction> = emptyList(),
     val panelSlots: List<PanelSlot> = emptyList(),

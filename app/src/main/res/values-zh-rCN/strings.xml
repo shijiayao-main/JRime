@@ -33,6 +33,8 @@
     <string name="speak_on_commit">上屏时朗读字符</string>
     <string name="key_long_press_timeout">长按按键的延迟时间</string>
     <string name="key_repeat_interval">重复按键的重复间隔</string>
+    <string name="space_long_press_voice">长按空格语音输入</string>
+    <string name="space_long_press_voice_summary">切换到系统语音输入法（需已安装，如 Google 语音输入）</string>
     <string name="double_space_period">双空格上屏句号</string>
     <string name="show_key_hints">显示按键提示</string>
     <string name="candidate_page_size">候选单页数量</string>
