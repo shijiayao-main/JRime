@@ -9,6 +9,7 @@ aboutlibraries = "15.3.0"
 kotest = "6.2.7"
 iconics = "5.6.0"
 composeBom = "2026.09.00"
+composeMultiplatform = "1.12.2"
 
 [libraries]
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }
@@ -69,3 +70,4 @@ aboutlibraries = { id = "com.mikepenz.aboutlibraries.plugin.android", version.re
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 spotless = { id = "com.diffplug.spotless", version = "8.11.0" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }

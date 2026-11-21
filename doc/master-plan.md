@@ -374,7 +374,8 @@ interface ImePanel {
 > M4 第一批（启动失败降级、整机备份恢复、诊断复制、一键安装脚本）已完成；
 > D1a 已完成（`:desktop:engine` Gradle 模块、macOS Shift 中英切换、`.app` 构建安装脚本）；
 > D1b 协议侧已完成（`:desktop:protocol` 拆分 + `EngineDataAccess` 倒置，golden 12/12 不变），
-> DTO 与 `:core:model` 汇合并入 D2。
+> DTO 与 `:core:model` 汇合并入 D2；D0 spike 已完成：macOS 上 CMP 无边框置顶非激活候选窗成立
+> （focusOwner 不抢占），Linux Wayland 候选窗按约束降级、Windows 需 WS_EX_NOACTIVATE 补洞。
 
 
 
