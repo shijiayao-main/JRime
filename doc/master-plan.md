@@ -377,7 +377,9 @@ interface ImePanel {
 > DTO 与 `:core:model` 汇合并入 D2；D0 spike 已完成：macOS 上 CMP 无边框置顶非激活候选窗成立
 > （focusOwner 不抢占），Linux Wayland 候选窗按约束降级、Windows 需 WS_EX_NOACTIVATE 补洞。
 > D2 第一/二批已完成：五个共享模块 KMP 化（android + desktop），`:desktop:app`
-> （引擎 + 行协议 + CMP 候选窗一体）在 macOS 跑通 ready/按键/候选与干净退出。
+> （引擎 + 行协议 + CMP 候选窗一体）在 macOS 跑通 ready/按键/候选与干净退出；
+> 桌面设置窗口已用共享 `:ui:settings` 跑通并与候选窗读取同一配置。macOS 自绘候选窗需
+> 辅助功能权限，默认仍用系统 `IMKCandidates`（待最终裁决）。
 
 
 

@@ -22,6 +22,7 @@ java {
 dependencies {
     implementation(project(":desktop:engine"))
     implementation(project(":desktop:protocol"))
+    implementation(project(":desktop:settings"))
     implementation(project(":ui:ime"))
     implementation(project(":ui:design"))
     implementation(compose.desktop.currentOs)

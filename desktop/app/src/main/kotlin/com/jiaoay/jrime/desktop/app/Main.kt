@@ -19,6 +19,8 @@ import com.jiaoay.jrime.core.CompositionProto
 import com.jiaoay.jrime.core.Rime
 import com.jiaoay.jrime.core.RimeDataAccess
 import com.jiaoay.jrime.desktop.DesktopEngineSession
+import com.jiaoay.jrime.desktop.settings.DesktopSettings
+import com.jiaoay.jrime.engine.AccentPreset
 import com.jiaoay.jrime.engine.CandidateView
 import com.jiaoay.jrime.engine.CompositionView
 import com.jiaoay.jrime.engine.ImeCommand
@@ -26,6 +28,7 @@ import com.jiaoay.jrime.engine.ImeSessionState
 import com.jiaoay.jrime.engine.KeyBinding
 import com.jiaoay.jrime.engine.KeyGesture
 import com.jiaoay.jrime.engine.KeyboardCatalog
+import com.jiaoay.jrime.engine.PaletteMode
 import com.jiaoay.jrime.ui.ime.DesktopCandidateSurface
 import com.jiaoay.jrime.ui.ime.ImeSurfaceConfig
 import com.jiaoay.jrime.ui.ime.ImeSurfaceHost
@@ -50,6 +53,11 @@ private class Shared(
     val state: MutableStateFlow<ImeSessionState>,
     val placement: MutableStateFlow<Rectangle>,
     val out: PrintStream,
+    val paletteMode: PaletteMode,
+    val accent: AccentPreset,
+    val candidateTextSizeSp: Float,
+    val showKeyHints: Boolean,
+    val showCandidateComment: Boolean,
 )
 
 /**
@@ -90,10 +98,30 @@ fun main(args: Array<String>) {
         System.err.println("engine never mounted schema $schema; messages=${session.lastMessages()}")
         exitProcess(2)
     }
-    val state = MutableStateFlow(readState())
+    // The desktop settings window writes this file; the candidate window reads
+    // it once at start (live reload lands with the settings window integration).
+    val appearance = DesktopSettings.read()
+    println(
+        "desktop-app: settings palette=${appearance[DesktopSettings.PALETTE_MODE]} " +
+            "accent=${appearance[DesktopSettings.ACCENT]}",
+    )
+    val paletteMode = appearance.toPaletteMode()
+    val accent = appearance.toAccent()
+    val state = MutableStateFlow(readState().copy(paletteMode = paletteMode, accent = accent))
     val placement = MutableStateFlow(Rectangle(0, 0, WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX))
     val out = PrintStream(System.out, true)
-    val sharedState = Shared(session, state, placement, out)
+    val sharedState =
+        Shared(
+            session = session,
+            state = state,
+            placement = placement,
+            out = out,
+            paletteMode = paletteMode,
+            accent = accent,
+            candidateTextSizeSp = appearance[DesktopSettings.CANDIDATE_TEXT_SIZE]?.toFloatOrNull() ?: 18f,
+            showKeyHints = appearance[DesktopSettings.SHOW_KEY_HINTS]?.toBooleanStrictOrNull() ?: true,
+            showCandidateComment = appearance[DesktopSettings.SHOW_CANDIDATE_COMMENT]?.toBooleanStrictOrNull() ?: true,
+        )
 
     thread(isDaemon = true, name = "desktop-protocol") { protocolLoop(sharedState) }
 
@@ -137,7 +165,12 @@ private fun runWindow(sharedState: Shared) {
             Box(modifier = Modifier.size(560.dp, 90.dp).background(Color(0xFF202124))) {
                 DesktopCandidateSurface(
                     state = state,
-                    config = ImeSurfaceConfig(candidateTextSizeSp = 18f),
+                    config =
+                    ImeSurfaceConfig(
+                        candidateTextSizeSp = sharedState.candidateTextSizeSp,
+                        showKeyHints = sharedState.showKeyHints,
+                        showCandidateComment = sharedState.showCandidateComment,
+                    ),
                     host = host,
                     catalog = catalog,
                     modifier = Modifier.size(560.dp, 90.dp),
@@ -175,7 +208,11 @@ private fun protocolLoop(sharedState: Shared) {
                 exitProcess(0)
             }
             sharedState.out.println(reply.json)
-            sharedState.state.value = readState()
+            sharedState.state.value =
+                readState().copy(
+                    paletteMode = sharedState.paletteMode,
+                    accent = sharedState.accent,
+                )
             if (trimmed == "exit") {
                 Rime.exitRime()
                 exitProcess(0)
@@ -194,7 +231,11 @@ private class ModelHost(
         if (command !is ImeCommand.SelectCandidate) return
         synchronized(sharedState.session) {
             val reply = sharedState.session.handle("sel ${command.index}") ?: return
-            val next = readState()
+            val next =
+                readState().copy(
+                    paletteMode = sharedState.paletteMode,
+                    accent = sharedState.accent,
+                )
             sharedState.state.value = next
             // The shell did not ask for this selection: push the outcome.
             val event =
@@ -252,3 +293,15 @@ private fun mapComposition(proto: CompositionProto): CompositionView = Compositi
     selEnd = proto.selEnd,
     commitPreview = proto.selStartText.orEmpty(),
 )
+
+private fun Map<String, String>.toPaletteMode(): PaletteMode = when (this[DesktopSettings.PALETTE_MODE]) {
+    "light" -> PaletteMode.ForceLight
+    "dark" -> PaletteMode.ForceDark
+    else -> PaletteMode.FollowSystem
+}
+
+private fun Map<String, String>.toAccent(): AccentPreset = when (this[DesktopSettings.ACCENT]) {
+    "green" -> AccentPreset.Green
+    "purple" -> AccentPreset.Purple
+    else -> AccentPreset.Blue
+}

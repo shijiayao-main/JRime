@@ -40,3 +40,16 @@
   → ready 含 proto/engine，`k n`/`k i` 返回组合态与候选，stdin EOF 后干净退出（BUILD SUCCESSFUL）。
   （rime 日志中的 predict.db / gram 缺失为此前已知的可选件缺失，不影响输入。）
 - 未做：Swift 壳接入、真实窗口定位/多屏、Linux ibus、Windows TSF。
+
+## 2026-11-21 · D2 第三批：桌面设置窗口 + 设置贯通
+
+- 新增 `:desktop:settings`：共享 `:ui:settings` 的 `SettingsScreen` 跑在桌面窗口（CMP），
+  后端是 `DesktopSettings`（`~/.config/jrime/settings.properties`，可用 `JRIME_SETTINGS_FILE` 覆盖）
+  与 `DesktopSettingsStore`；spec 直接按 `SettingSpec` 契约 authored（外观/候选 6 项）。
+- `:desktop:app` 读取同一配置文件：palette_mode/accent → `ImeSessionState.paletteMode/accent`；
+  candidate_text_size/show_key_hints/show_candidate_comment → `ImeSurfaceConfig`。
+- 冒烟：settings 窗口 `window up (rows=6)` 并打印默认值；写入
+  `palette_mode=dark, accent=green` 后候选窗 app 打印 `settings palette=dark accent=green`，
+  协议 ready 正常。
+- macOS 候选窗定位结论：IMK 公开 API 无插入点坐标，自绘窗需辅助功能权限；默认系统
+  `IMKCandidates`，CMP 候选窗用于 Linux X11/Windows，状态/设置窗保持共享 CMP（待主人最终裁决）。
