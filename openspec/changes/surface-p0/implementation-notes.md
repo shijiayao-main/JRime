@@ -15,3 +15,7 @@
   `1/3`、右箭头）。箭头点击/长按菜单/开关的真机走查留到最终验收。
 - 触感：复用 `vibrate_on_key_press`（默认关，设置页由 `settings-v2` 暴露）；M1 已把
   tap/long/slide 三档接入 host。
+
+- 2026-11-21 · 键面韵母提示：`FlypyKeyHints`（来源 schema `preedit_convert_rules`，
+  q=iu / w=ei / r=uan / … / n=iao 等 22 键）+ 单测；`KeySurface` 空闲态显示韵母角标，
+  组合态回落为长按数字提示。

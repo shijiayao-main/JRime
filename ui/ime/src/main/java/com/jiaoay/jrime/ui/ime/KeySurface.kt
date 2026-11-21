@@ -34,6 +34,7 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import com.jiaoay.jrime.data.theme.model.PresetKey
 import com.jiaoay.jrime.data.theme.model.TextKeyboard
+import com.jiaoay.jrime.engine.FlypyKeyHints
 import com.jiaoay.jrime.engine.GestureConfig
 import com.jiaoay.jrime.engine.GestureSample
 import com.jiaoay.jrime.engine.ImeCommand
@@ -122,7 +123,23 @@ internal fun KeySurface(
             resolveBehaviors(key, appearance, presetKeys)
         }
     val faceLabel = labelOverride ?: deriveLabel(key, faceBinding, schemaLabel, config.enterLabel)
-    val faceHint = remember(key) { key.labelSymbol.ifEmpty { key.hint }.ifEmpty { null } }
+    val faceHint =
+        remember(key, appearance.composing, config.showKeyHints) {
+            if (config.showKeyHints) {
+                // Idle: the letter face teaches its 小鹤 rhyme (a learning
+                // aid); composing: the layout's own hint (the select-order
+                // digit on the letter keys) takes over.
+                val rhyme =
+                    if (!appearance.composing && keyLabelIsSingleLetter(faceLabel)) {
+                        FlypyKeyHints.hintFor(faceLabel[0])
+                    } else {
+                        null
+                    }
+                rhyme ?: key.labelSymbol.ifEmpty { key.hint }.ifEmpty { null }
+            } else {
+                null
+            }
+        }
     val isEnter = isEnterOverride ?: (faceBinding?.isEnter == true)
     val isFunction = isFunctionOverride ?: (faceBinding?.functional == true)
 
@@ -382,6 +399,9 @@ private fun LegacyKeyToken.toEngineToken(): KeyActionToken = when (this) {
     is LegacyKeyToken.Plain -> KeyActionToken.Text(token)
     is LegacyKeyToken.Inline -> KeyActionToken.Text(commit ?: text ?: label.orEmpty())
 }
+
+/** A one-letter face (the letter keys the rhyme hints belong on). */
+private fun keyLabelIsSingleLetter(label: String): Boolean = label.length == 1 && label[0].isLetter()
 
 /** A key with no behaviour slot at all is a spacer (draws nothing). */
 private fun TextKeyboard.TextKey.hasNoBehavior(): Boolean = click == null &&
