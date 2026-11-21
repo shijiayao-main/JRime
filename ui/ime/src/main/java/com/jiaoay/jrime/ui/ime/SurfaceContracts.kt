@@ -61,6 +61,7 @@ data class ImeSurfaceConfig(
     val popupOnKeyPress: Boolean = true,
     val candidateTextSizeSp: Float = 18f,
     val showCandidateComment: Boolean = true,
+    val showKeyHints: Boolean = true,
     val enterLabel: String = "",
     val toolbarActions: List<ToolbarAction> = emptyList(),
     val panelSlots: List<PanelSlot> = emptyList(),

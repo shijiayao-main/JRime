@@ -11,6 +11,7 @@ import com.jiaoay.jrime.daemon.launchOnReady
 import com.jiaoay.jrime.data.prefs.AppPrefs
 import com.jiaoay.jrime.data.theme.model.KeyActionToken
 import com.jiaoay.jrime.data.theme.model.PresetKey
+import com.jiaoay.jrime.engine.CandidateActionKind
 import com.jiaoay.jrime.engine.ImeCommand
 import com.jiaoay.jrime.engine.KeyboardId
 import com.jiaoay.jrime.engine.PanelId
@@ -40,6 +41,10 @@ class ImeCommandExecutor(
     fun execute(command: ImeCommand) {
         when (command) {
             is ImeCommand.Key -> executeAction(KeyAction(command.token, presetKeys))
+
+            is ImeCommand.ChangeCandidatePage, is ImeCommand.SetCandidatePageSize -> Unit
+
+            is ImeCommand.CandidateAction -> handleCandidateAction(command)
 
             is ImeCommand.SelectCandidate ->
                 rime.launchOnReady { it.selectCandidate(command.index, global = true) }
@@ -74,6 +79,23 @@ class ImeCommandExecutor(
             is ImeCommand.SetPaletteMode -> Unit
 
             ImeCommand.HideKeyboard -> service.requestHideSelf(0)
+        }
+    }
+
+    private fun handleCandidateAction(command: ImeCommand.CandidateAction) {
+        when (command.action) {
+            CandidateActionKind.Pin -> dispatchToken(KeyActionToken.Plain("PinCandFunc"))
+
+            CandidateActionKind.Delete ->
+                rime.launchOnReady { it.deleteCandidate(command.index, global = true) }
+
+            CandidateActionKind.Copy -> {
+                val clipboard = service.getSystemService(android.content.ClipboardManager::class.java)
+                clipboard?.setPrimaryClip(android.content.ClipData.newPlainText("candidate", command.text))
+            }
+
+            // The encoding lookup lands with the M3 hint batch.
+            CandidateActionKind.QueryCode -> Unit
         }
     }
 

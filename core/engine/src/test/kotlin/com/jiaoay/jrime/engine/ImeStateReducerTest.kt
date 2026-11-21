@@ -24,7 +24,42 @@ class ImeStateReducerTest :
             cleared.composition shouldBe null
         }
 
-        "a candidate event replaces the list, highlight and paging" {
+        "a bulk candidate list is paged by the state's page size" {
+            val items = (0 until 16).map { CandidateView(it, "c$it") }
+            val state = ImeStateReducer.onEvent(
+                ImeSessionState(candidatePageSize = 7),
+                EngineEvent.Candidates(items),
+            )
+            state.candidates.size shouldBe 16
+            state.candidatePage shouldBe 0
+            state.candidatePageCount shouldBe 3
+        }
+
+        "page flipping clamps at both ends" {
+            val items = (0 until 16).map { CandidateView(it, "c$it") }
+            var state = ImeStateReducer.onEvent(ImeSessionState(), EngineEvent.Candidates(items))
+            state = ImeStateReducer.onCommand(state, ImeCommand.ChangeCandidatePage(forward = false))
+            state.candidatePage shouldBe 0
+            state = ImeStateReducer.onCommand(state, ImeCommand.ChangeCandidatePage(forward = true))
+            state.candidatePage shouldBe 1
+            state = ImeStateReducer.onCommand(state, ImeCommand.ChangeCandidatePage(forward = true))
+            state = ImeStateReducer.onCommand(state, ImeCommand.ChangeCandidatePage(forward = true))
+            state.candidatePage shouldBe 2
+        }
+
+        "changing the page size recomputes the page count and keeps the page in range" {
+            val items = (0 until 16).map { CandidateView(it, "c$it") }
+            var state = ImeStateReducer.onEvent(ImeSessionState(), EngineEvent.Candidates(items))
+            state = ImeStateReducer.onCommand(state, ImeCommand.SetCandidatePageSize(9))
+            state.candidatePageSize shouldBe 9
+            state.candidatePageCount shouldBe 2
+            state = ImeStateReducer.onCommand(state, ImeCommand.SetCandidatePageSize(5))
+            state.candidatePageSize shouldBe 5
+            state.candidatePageCount shouldBe 4
+            (state.candidatePage <= state.candidatePageCount - 1) shouldBe true
+        }
+
+        "a candidate event resets to the first page" {
             val candidates =
                 listOf(
                     CandidateView(0, "你"),
@@ -36,8 +71,8 @@ class ImeStateReducerTest :
             )
             state.candidates shouldBe candidates
             state.highlightedIndex shouldBe 1
-            state.candidatePage shouldBe 2
-            state.candidatePageCount shouldBe 4
+            state.candidatePage shouldBe 0
+            state.candidatePageCount shouldBe 1
         }
 
         "a status event maps the engine flags" {

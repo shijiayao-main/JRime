@@ -103,6 +103,9 @@ class ComposeInputView(
     private val host =
         object : ImeSurfaceHost {
             override fun dispatch(command: ImeCommand) {
+                // UI-local state first (paging/panels swap instantly), then the
+                // engine/platform effect.
+                controller.onCommand(command)
                 executor.execute(command)
             }
 

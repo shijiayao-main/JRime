@@ -34,6 +34,9 @@
     <string name="key_long_press_timeout">长按按键的延迟时间</string>
     <string name="key_repeat_interval">重复按键的重复间隔</string>
     <string name="double_space_period">双空格上屏句号</string>
+    <string name="show_key_hints">显示按键提示</string>
+    <string name="candidate_page_size">候选单页数量</string>
+    <string name="candidate_text_size">候选字号</string>
     <string name="popup_on_key_press">按键时弹出显示字符</string>
     <string name="expand_keypress_area_to_edge">将按键范围扩展至边缘</string>
     <string name="use_soft_cursor">预编辑区使用插入符号（^）</string>

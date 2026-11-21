@@ -272,7 +272,7 @@ internal fun KeySurface(
             },
             modifier = Modifier.align(Alignment.Center),
         )
-        if (faceHint != null) {
+        if (config.showKeyHints && faceHint != null) {
             BasicText(
                 text = faceHint,
                 style = ImeTypography.keyHintStyle(palette.hintText).copy(textAlign = TextAlign.Center),

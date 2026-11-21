@@ -139,6 +139,9 @@ class AppPrefs(
             const val SPEAK_ON_KEYPRESS = "speak_on_keypress"
             const val SPEAK_ON_COMMIT = "speak_on_commit"
             const val POPUP_ON_KEY_PRESS = "show_key_popup"
+            const val SHOW_KEY_HINTS = "show_key_hints"
+            const val CANDIDATE_PAGE_SIZE = "candidate_page_size"
+            const val CANDIDATE_TEXT_SIZE = "candidate_text_size"
             const val EXPAND_KEYPRESS_AREA = "expand_keypress_area"
             const val SWIPE_TRAVEL = "key_swipe_travel"
             const val SWIPE_VELOCITY = "key_swipe_velocity"
@@ -252,6 +255,26 @@ class AppPrefs(
         val speakOnKeyPress = switch(R.string.speak_on_keypress, SPEAK_ON_KEYPRESS, false)
         val speakOnCommit = switch(R.string.speak_on_commit, SPEAK_ON_COMMIT, false)
         val popupOnKeyPress = switch(R.string.popup_on_key_press, POPUP_ON_KEY_PRESS, true)
+
+        // The M2 surface knobs: hints on the key faces, candidate page size
+        // and candidate text size. Values only for now; the settings page
+        // lands in settings-v2.
+        val showKeyHints = switch(R.string.show_key_hints, SHOW_KEY_HINTS, true)
+        val candidatePageSize = int(
+            R.string.candidate_page_size,
+            CANDIDATE_PAGE_SIZE,
+            7,
+            5,
+            9,
+        )
+        val candidateTextSize = int(
+            R.string.candidate_text_size,
+            CANDIDATE_TEXT_SIZE,
+            18,
+            15,
+            22,
+            "sp",
+        )
         val expandKeypressArea = switch(R.string.expand_keypress_area_to_edge, EXPAND_KEYPRESS_AREA, false)
 
         // The displacement (dp) past which a touch counts as a swipe; 0

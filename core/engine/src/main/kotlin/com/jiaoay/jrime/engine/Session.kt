@@ -22,6 +22,11 @@ object ImeMetrics {
     const val ROW_HEIGHT_DEFAULT_DP: Int = 50
     const val CONTENT_ROWS: Int = 6
     const val CANDIDATE_PAGE_SIZE: Int = 7
+    const val CANDIDATE_PAGE_SIZE_MIN: Int = 5
+    const val CANDIDATE_PAGE_SIZE_MAX: Int = 9
+    const val CANDIDATE_TEXT_SIZE_DEFAULT: Int = 18
+    const val CANDIDATE_TEXT_SIZE_MIN: Int = 15
+    const val CANDIDATE_TEXT_SIZE_MAX: Int = 22
 }
 
 /** One candidate as the surface needs it. */
@@ -48,6 +53,7 @@ data class ImeSessionState(
     val highlightedIndex: Int = -1,
     val candidatePage: Int = 0,
     val candidatePageCount: Int = 1,
+    val candidatePageSize: Int = ImeMetrics.CANDIDATE_PAGE_SIZE,
     val composing: Boolean = false,
     val asciiMode: Boolean = false,
     val asciiPunctuation: Boolean = false,
@@ -92,6 +98,14 @@ sealed interface EngineEvent {
     data class Option(val option: String, val value: Boolean) : EngineEvent
 }
 
+/** The candidate long-press menu's actions. */
+enum class CandidateActionKind {
+    Pin,
+    Delete,
+    Copy,
+    QueryCode,
+}
+
 /** UI intents. Only [ImeCommand]s flow from the surface to the rest of the app. */
 sealed interface ImeCommand {
     data class Key(val token: LegacyKeyToken, val gesture: KeyGesture = KeyGesture.Tap) : ImeCommand
@@ -116,6 +130,12 @@ sealed interface ImeCommand {
 
     data class MoveCursor(val chars: Int = 0, val lines: Int = 0) : ImeCommand
 
+    data class ChangeCandidatePage(val forward: Boolean) : ImeCommand
+
+    data class SetCandidatePageSize(val size: Int) : ImeCommand
+
+    data class CandidateAction(val index: Int, val action: CandidateActionKind, val text: String = "") : ImeCommand
+
     data class SetRowHeight(val dp: Int) : ImeCommand
 
     data class SetPaletteMode(val mode: PaletteMode) : ImeCommand
@@ -139,13 +159,16 @@ object ImeStateReducer {
                 composing = event.view != null,
             )
 
-        is EngineEvent.Candidates ->
+        is EngineEvent.Candidates -> {
+            val size = state.candidatePageSize.coerceAtLeast(1)
+            val pageCount = ((event.items.size + size - 1) / size).coerceAtLeast(1)
             state.copy(
                 candidates = event.items,
                 highlightedIndex = event.highlighted,
-                candidatePage = event.page,
-                candidatePageCount = event.pageCount,
+                candidatePage = 0,
+                candidatePageCount = pageCount,
             )
+        }
 
         is EngineEvent.Status ->
             state.copy(
@@ -191,6 +214,26 @@ object ImeStateReducer {
             )
 
         is ImeCommand.SetPaletteMode -> state.copy(paletteMode = command.mode)
+
+        is ImeCommand.ChangeCandidatePage -> {
+            val target =
+                (state.candidatePage + if (command.forward) 1 else -1)
+                    .coerceIn(0, (state.candidatePageCount - 1).coerceAtLeast(0))
+            state.copy(candidatePage = target)
+        }
+
+        is ImeCommand.SetCandidatePageSize -> {
+            val size = command.size.coerceIn(
+                ImeMetrics.CANDIDATE_PAGE_SIZE_MIN,
+                ImeMetrics.CANDIDATE_PAGE_SIZE_MAX,
+            )
+            val pageCount = ((state.candidates.size + size - 1) / size).coerceAtLeast(1)
+            state.copy(
+                candidatePageSize = size,
+                candidatePageCount = pageCount,
+                candidatePage = state.candidatePage.coerceAtMost(pageCount - 1),
+            )
+        }
 
         else -> state
     }

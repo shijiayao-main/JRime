@@ -8,14 +8,16 @@ package com.jiaoay.jrime.ime.compose
 
 import com.jiaoay.jrime.core.Candidates
 import com.jiaoay.jrime.core.CompositionProto
+import com.jiaoay.jrime.core.RimeMessage
 import com.jiaoay.jrime.core.SchemaItem
 import com.jiaoay.jrime.core.StatusProto
-import com.jiaoay.jrime.core.RimeMessage
 import com.jiaoay.jrime.daemon.RimeSession
 import com.jiaoay.jrime.daemon.launchOnReady
+import com.jiaoay.jrime.data.prefs.AppPrefs
 import com.jiaoay.jrime.engine.CandidateView
 import com.jiaoay.jrime.engine.CompositionView
 import com.jiaoay.jrime.engine.EngineEvent
+import com.jiaoay.jrime.engine.ImeCommand
 import com.jiaoay.jrime.engine.ImeSessionState
 import com.jiaoay.jrime.engine.ImeStateReducer
 import com.jiaoay.jrime.engine.KeyboardId
@@ -64,9 +66,10 @@ class ImeSurfaceController(
             // Seed the option/status truth so the first frame renders the
             // current schema and input mode instead of defaults.
             val status = api.statusCached
+            val pageSize = AppPrefs.defaultInstance().keyboard.candidatePageSize.getValue()
             _state.update {
                 ImeStateReducer.onEvent(
-                    it,
+                    it.copy(candidatePageSize = pageSize),
                     EngineEvent.Status(
                         asciiMode = status.isAsciiMode,
                         asciiPunctuation = status.isAsciiPunct,
@@ -86,6 +89,15 @@ class ImeSurfaceController(
                     }
                 }
             }
+    }
+
+    /**
+     * Applies a UI-local command to the session state (paging, panel switches,
+     * keyboard switches). The same command then flows to the executor for its
+     * engine/platform effect.
+     */
+    fun onCommand(command: ImeCommand) {
+        _state.update { ImeStateReducer.onCommand(it, command) }
     }
 
     fun detach() {
