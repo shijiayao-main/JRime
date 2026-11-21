@@ -89,6 +89,13 @@
 - 候选长按菜单加入语义图标（置顶/删词/复制/查编码）。
 - 变更记录：`openspec/changes/feature-simplify/`；下一步 P3 面板去 BoardWindow 化后再清主题/死偏好。
 
+## 面板 Compose 状态化 P3a（2026-11-21）
+
+- 剪贴板/符号面板改为纯 Compose 状态（`ClipboardPanelState`/`SymbolsPanelState`），面板组合时收集数据、
+  解散时释放；不再依赖 BoardWindow 的窗口内容/View 创建，关闭面板走显式回调。
+- 模拟器验证两面板正常；截图见 `openspec/changes/panel-compose/screenshots/`。下一步 P3b 删除
+  BoardWindow/KeyboardWindow/Keyboard/Key/CommonKeyboardActionListener 与 InputView legacy 层。
+
 ## 复现命令
 
 ```sh

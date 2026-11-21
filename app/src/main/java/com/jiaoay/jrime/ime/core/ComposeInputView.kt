@@ -9,11 +9,14 @@ package com.jiaoay.jrime.ime.core
 import android.content.SharedPreferences
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -45,6 +48,8 @@ import com.jiaoay.jrime.ime.compose.ImeCommandExecutor
 import com.jiaoay.jrime.ime.compose.ImeSurfaceController
 import com.jiaoay.jrime.ime.compose.LiquidPanel
 import com.jiaoay.jrime.ime.compose.LocalImeColors
+import com.jiaoay.jrime.ime.compose.panels.ClipboardPanelState
+import com.jiaoay.jrime.ime.compose.panels.SymbolsPanelState
 import com.jiaoay.jrime.ime.compose.toEngineAccent
 import com.jiaoay.jrime.ime.compose.toEnginePaletteMode
 import com.jiaoay.jrime.ime.keyboard.InputFeedbackManager
@@ -268,6 +273,11 @@ class ComposeInputView(
         },
     )
 
+    private fun closePanel() {
+        controller.onCommand(ImeCommand.ClosePanel)
+        executor.execute(ImeCommand.ClosePanel)
+    }
+
     private fun toolbarActions(state: ImeSessionState): List<ToolbarAction> = listOf(
         toolbar("settings", "Settings", "Settings", ImeIcon.Settings),
         toolbar(
@@ -322,9 +332,14 @@ class ComposeInputView(
             title = "剪贴板",
             icon = ImeIcon.Clipboard,
         ) { modifier ->
-            (window as? ClipboardWindow)?.let {
-                legacyImeColors { ClipboardPanel(it, modifier) }
+            val state = remember {
+                ClipboardPanelState(service, onClosePanel = ::closePanel)
             }
+            DisposableEffect(state) {
+                state.start()
+                onDispose { state.stop() }
+            }
+            legacyImeColors { ClipboardPanel(state, modifier) }
         },
         PanelSlot(
             id = PanelId.Phrase,
@@ -341,9 +356,18 @@ class ComposeInputView(
             title = "符号",
             icon = ImeIcon.Emoji,
         ) { modifier ->
-            (window as? LiquidWindow)?.let {
-                legacyImeColors { LiquidPanel(it, modifier) }
+            val state = remember {
+                SymbolsPanelState(
+                    service = service,
+                    rime = rime,
+                    scope = scope,
+                    onClosePanel = ::closePanel,
+                )
             }
+            LaunchedEffect(Unit) {
+                if (state.currentTabIndex < 0) state.setDataByIndex(0)
+            }
+            legacyImeColors { LiquidPanel(state, modifier) }
         },
     )
 

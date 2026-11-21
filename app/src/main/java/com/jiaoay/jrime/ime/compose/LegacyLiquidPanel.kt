@@ -28,7 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jiaoay.jrime.ime.symbol.LiquidWindow
+import com.jiaoay.jrime.ime.compose.panels.SymbolsPanelState
 
 /**
  * The liquid symbol pages: a horizontally scrolling tab strip above the key
@@ -39,7 +39,7 @@ import com.jiaoay.jrime.ime.symbol.LiquidWindow
 @Suppress("FunctionName")
 @Composable
 fun LiquidPanel(
-    liquidWindow: LiquidWindow,
+    state: SymbolsPanelState,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalImeColors.current
@@ -61,15 +61,15 @@ fun LiquidPanel(
             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            itemsIndexed(liquidWindow.tabs) { index, tag ->
+            itemsIndexed(state.tabs) { index, tag ->
                 LiquidTabChip(
                     label = tag.label,
-                    selected = index == liquidWindow.currentTabIndex,
+                    selected = index == state.currentTabIndex,
                     colors = colors,
-                ) { liquidWindow.setDataByIndex(index) }
+                ) { state.setDataByIndex(index) }
             }
         }
-        val symbols = liquidWindow.currentKeys
+        val symbols = state.currentKeys
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 44.dp),
             modifier = Modifier
@@ -84,7 +84,7 @@ fun LiquidPanel(
                     modifier = Modifier
                         .height(44.dp)
                         .background(colors.keyBackground, RoundedCornerShape(6.dp))
-                        .clickable { liquidWindow.tap(item) },
+                        .clickable { state.tap(item) },
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(text = item.text, style = TextStyle(fontSize = 20.sp, color = colors.keyText))

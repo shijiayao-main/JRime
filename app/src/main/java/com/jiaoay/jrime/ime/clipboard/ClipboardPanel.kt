@@ -38,6 +38,7 @@ import androidx.compose.ui.window.PopupProperties
 import com.jiaoay.jrime.ime.compose.GboardKeyboard
 import com.jiaoay.jrime.ime.compose.ImeColors
 import com.jiaoay.jrime.ime.compose.LocalImeColors
+import com.jiaoay.jrime.ime.compose.panels.ClipboardPanelState
 import com.jiaoay.jrime.ime.compose.rememberKeyboardRowHeightDp
 
 /**
@@ -50,7 +51,7 @@ import com.jiaoay.jrime.ime.compose.rememberKeyboardRowHeightDp
 @Suppress("FunctionName")
 @Composable
 fun ClipboardPanel(
-    window: ClipboardWindow,
+    state: ClipboardPanelState,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalImeColors.current
@@ -64,8 +65,8 @@ fun ClipboardPanel(
             .height((GboardKeyboard.KEYBOARD_CONTENT_ROWS * rowHeightDp).dp)
             .background(colors.keyboardBackground),
     ) {
-        ClipboardTabStrip(window, colors)
-        val items = if (window.currentTab == 0) window.clippings else window.favorites
+        ClipboardTabStrip(state, colors)
+        val items = if (state.currentTab == 0) state.clippings else state.favorites
         if (items.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -74,12 +75,12 @@ fun ClipboardPanel(
                 contentAlignment = Alignment.Center,
             ) {
                 BasicText(
-                    text = if (window.currentTab == 0) "剪贴板为空" else "收藏为空",
+                    text = if (state.currentTab == 0) "剪贴板为空" else "收藏为空",
                     style = TextStyle(fontSize = 15.sp, color = colors.keySymbol),
                 )
             }
         } else {
-            ClipboardList(window, colors, items)
+            ClipboardList(state, colors, items)
         }
     }
 }
@@ -88,7 +89,7 @@ fun ClipboardPanel(
 @Suppress("FunctionName")
 @Composable
 private fun ClipboardTabStrip(
-    window: ClipboardWindow,
+    state: ClipboardPanelState,
     colors: ImeColors,
 ) {
     Row(
@@ -98,10 +99,10 @@ private fun ClipboardTabStrip(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TabChip("剪贴板", window.currentTab == 0, colors) { window.selectTab(0) }
-        TabChip("收藏", window.currentTab == 1, colors) { window.selectTab(1) }
+        TabChip("剪贴板", state.currentTab == 0, colors) { state.selectTab(0) }
+        TabChip("收藏", state.currentTab == 1, colors) { state.selectTab(1) }
         Box(modifier = Modifier.weight(1f))
-        MenuChip("清空", colors) { window.clearCurrentTab() }
+        MenuChip("清空", colors) { state.clearCurrentTab() }
     }
 }
 
@@ -155,7 +156,7 @@ private fun MenuChip(
 @Suppress("FunctionName")
 @Composable
 private fun ClipboardList(
-    window: ClipboardWindow,
+    state: ClipboardPanelState,
     colors: ImeColors,
     items: List<ClipboardItem>,
 ) {
@@ -170,7 +171,7 @@ private fun ClipboardList(
             ClipCard(
                 item = item,
                 colors = colors,
-                onClick = { window.paste(item) },
+                onClick = { state.paste(item) },
                 onLongPress = { menuFor = item },
             )
         }
@@ -178,7 +179,7 @@ private fun ClipboardList(
     menuFor?.let { item ->
         ClipItemMenu(
             item = item,
-            window = window,
+            state = state,
             colors = colors,
             onDismiss = { menuFor = null },
         )
@@ -225,30 +226,30 @@ private fun ClipCard(
 @Composable
 private fun ClipItemMenu(
     item: ClipboardItem,
-    window: ClipboardWindow,
+    state: ClipboardPanelState,
     colors: ImeColors,
     onDismiss: () -> Unit,
 ) {
     val entries =
         buildList {
-            if (window.currentTab == 0) {
+            if (state.currentTab == 0) {
                 if (item.pinned) {
-                    add("取消置顶" to { window.unpin(item) })
+                    add("取消置顶" to { state.unpin(item) })
                 } else {
-                    add("置顶" to { window.pin(item) })
+                    add("置顶" to { state.pin(item) })
                 }
-                add("收藏" to { window.favorite(item) })
+                add("收藏" to { state.favorite(item) })
             }
-            if (window.currentTab == 0) {
-                add("编辑" to { window.editClipping(item) })
+            if (state.currentTab == 0) {
+                add("编辑" to { state.editClipping(item) })
             } else {
-                add("编辑" to { window.editFavorite(item) })
+                add("编辑" to { state.editFavorite(item) })
             }
-            add("分享" to { window.share(item) })
-            if (window.currentTab == 0) {
-                add("删除" to { window.deleteClipping(item) })
+            add("分享" to { state.share(item) })
+            if (state.currentTab == 0) {
+                add("删除" to { state.deleteClipping(item) })
             } else {
-                add("删除" to { window.deleteFavorite(item) })
+                add("删除" to { state.deleteFavorite(item) })
             }
         }
     Popup(
