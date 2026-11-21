@@ -381,6 +381,11 @@ interface ImePanel {
 > | D3 桌面日常 | 🟡 | macOS 可安装（系统候选窗）；`:desktop:app` 候选窗空闲隐藏 + 设置热重载；Linux/Windows 需对应平台实测；验收手册已出 |
 >
 > 完成/待验收的标准与操作见 `doc/verification-guide.md`。
+> **2026-11-21 主人反馈批次**：展示去同文/Trime 化、JRime 风格定调（飞鹤快拼=默认方案非身份）、
+> 长按输入补全+长按空格语音（切系统语音 IME，零麦克风权限）、设置页两层分类、默认规则调优
+> （中文标点/通用字集/候选单页 7）、开源说明页与 THIRD_PARTY_NOTICES、README 三语重写。
+> 详见 `doc/style-guide.md`、`doc/voice-input-notes.md`、`doc/schema-rules-notes.md` 与 `doc/changelog.md`。
+
 
 > 工期为「一人 + AI」估算，单位：周。每期一个 OpenSpec change，独立可交付、可回滚；不追求并行抢进度。
 
