@@ -130,6 +130,9 @@ sealed interface ImeCommand {
 
     data class SetOption(val option: String, val value: Boolean) : ImeCommand
 
+    /** The 简/繁 toggle: drives the schema's zh_simp / zh_trad option pair. */
+    data class SetSimplified(val simplified: Boolean) : ImeCommand
+
     data class OpenPanel(val id: PanelId) : ImeCommand
 
     data object ClosePanel : ImeCommand
@@ -226,6 +229,8 @@ object ImeStateReducer {
         is ImeCommand.SetPaletteMode -> state.copy(paletteMode = command.mode)
 
         is ImeCommand.SetAccent -> state.copy(accent = command.accent)
+
+        is ImeCommand.SetSimplified -> state.copy(simplified = command.simplified)
 
         is ImeCommand.ChangeCandidatePage -> {
             val target =

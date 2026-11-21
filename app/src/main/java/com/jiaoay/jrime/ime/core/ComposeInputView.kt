@@ -51,6 +51,9 @@ import com.jiaoay.jrime.ime.keyboard.CommonKeyboardActionListener
 import com.jiaoay.jrime.ime.keyboard.InputFeedbackManager
 import com.jiaoay.jrime.ime.keyboard.KeyAction
 import com.jiaoay.jrime.ime.keyboard.KeyboardWindow
+import com.jiaoay.jrime.ime.phrase.CustomPhraseStore
+import com.jiaoay.jrime.ime.phrase.PhrasePanel
+import com.jiaoay.jrime.ime.phrase.PhraseWindow
 import com.jiaoay.jrime.ime.symbol.LiquidWindow
 import com.jiaoay.jrime.ime.window.BoardWindow
 import com.jiaoay.jrime.ime.window.BoardWindowManager
@@ -82,6 +85,7 @@ class ComposeInputView(
     private val keyboardWindow: KeyboardWindow by instance()
     private val windowManager: BoardWindowManager by instance()
     private val liquidWindow: LiquidWindow by instance()
+    private val phraseWindow: PhraseWindow by lazy { PhraseWindow(di) }
 
     private val catalog = KeyboardCatalog.shipped()
     private val controller = ImeSurfaceController(broadcaster, rime, service.lifecycleScope, keyboardWindow)
@@ -93,6 +97,7 @@ class ComposeInputView(
             windowManager = windowManager,
             keyboardWindow = keyboardWindow,
             liquidWindow = liquidWindow,
+            phraseWindow = phraseWindow,
             presetKeys = catalog.presetKeys,
         )
 
@@ -189,6 +194,7 @@ class ComposeInputView(
     init {
         Timber.d("ComposeInputView init (shared surface)")
         controller.attach()
+        CustomPhraseStore.bind(service.lifecycleScope)
         keyboardPrefs.rowHeight.sharedPreferences.registerOnSharedPreferenceChangeListener(prefListener)
         compose =
             ComposeView(service).apply {
@@ -257,6 +263,25 @@ class ComposeInputView(
         toolbar("number", "123", "Keyboard_number"),
         toolbar("clipboard", "📋", "clipboard_window"),
         toolbar("emoji", "☻", "liquid_keyboard_emoji"),
+        // Engine-option toggles (the old surface only reached these through
+        // /so or a hardware shortcut).
+        ToolbarAction(
+            id = "simplified",
+            label = if (state.simplified) "简" else "繁",
+            command = ImeCommand.SetSimplified(!state.simplified),
+            highlighted = !state.simplified,
+        ),
+        ToolbarAction(
+            id = "fullshape",
+            label = if (state.fullShape) "全" else "半",
+            command = ImeCommand.SetOption("full_shape", !state.fullShape),
+            highlighted = state.fullShape,
+        ),
+        ToolbarAction(
+            id = "phrase",
+            label = "语",
+            command = ImeCommand.OpenPanel(PanelId.Phrase),
+        ),
     )
 
     private fun toolbar(
@@ -281,6 +306,16 @@ class ComposeInputView(
         ) { modifier ->
             (window as? ClipboardWindow)?.let {
                 legacyImeColors { ClipboardPanel(it, modifier) }
+            }
+        },
+        PanelSlot(
+            id = PanelId.Phrase,
+            title = "常用语",
+            icon = "语",
+        ) { modifier ->
+            PhrasePanel(modifier = modifier) { text ->
+                controller.onCommand(ImeCommand.ClosePanel)
+                executor.execute(ImeCommand.CommitText(text))
             }
         },
         PanelSlot(

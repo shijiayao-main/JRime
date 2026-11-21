@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -116,26 +118,34 @@ private fun RowScope.IdleTopBar(
     config: ImeSurfaceConfig,
     host: ImeSurfaceHost,
 ) {
-    config.toolbarActions
-        .filter { it.visible }
-        .forEach { action ->
+    // The action row scrolls horizontally: the action set grows over time
+    // (input-mode toggles, phrase panel, ...) and a fixed row would push the
+    // trailing chips off-screen on narrow bands.
+    val actions = config.toolbarActions.filter { it.visible }
+    LazyRow(
+        modifier = Modifier.weight(1f),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        items(actions, key = { it.id }) { action ->
             TopBarChip(
                 label = action.label,
                 highlighted = action.highlighted,
                 onClick = { host.dispatch(action.command) },
             )
         }
-    config.clipboardChip?.let { clipboardChip ->
-        // The latest clip is a one-tap paste; it yields on narrow bands
-        // instead of squeezing the fixed-size chips off the right edge.
-        Box(
-            modifier = Modifier.weight(2f, fill = false),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            clipboardChip()
+        config.clipboardChip?.let { clipboardChip ->
+            item(key = "clipboard-chip") {
+                // The latest clip is a one-tap paste; it yields on narrow
+                // bands instead of squeezing the fixed-size chips.
+                Box(
+                    modifier = Modifier.widthIn(max = ImeDimens.MinTouchTarget * 4),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    clipboardChip()
+                }
+            }
         }
     }
-    Spacer(modifier = Modifier.weight(1f))
     TopBarLanguageAndHide(state = state, host = host)
 }
 

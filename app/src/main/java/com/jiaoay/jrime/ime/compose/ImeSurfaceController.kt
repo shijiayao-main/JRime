@@ -26,6 +26,7 @@ import com.jiaoay.jrime.ime.broadcast.InputBroadcastReceiver
 import com.jiaoay.jrime.ime.broadcast.InputBroadcaster
 import com.jiaoay.jrime.ime.clipboard.ClipboardWindow
 import com.jiaoay.jrime.ime.keyboard.KeyboardWindow
+import com.jiaoay.jrime.ime.phrase.PhraseWindow
 import com.jiaoay.jrime.ime.symbol.LiquidWindow
 import com.jiaoay.jrime.ime.window.BoardWindow
 import kotlinx.coroutines.CoroutineScope
@@ -66,13 +67,27 @@ class ImeSurfaceController(
             // Seed the option/status truth so the first frame renders the
             // current schema and input mode instead of defaults.
             val status = api.statusCached
+            // The schema ships a traditional lexicon plus conversion filters;
+            // the product default is simplified, so enable zh_simp when no
+            // character-form option is set yet.
+            val formOptions = listOf("zh_simp", "zh_trad", "zh_hk", "zh_tw")
+            val enabledForms = formOptions.count { api.getRuntimeOption(it) }
+            if (enabledForms == 0) {
+                api.setRuntimeOption("zh_simp", true)
+            }
+            val simplified = api.getRuntimeOption("zh_simp")
             val appearance = AppPrefs.defaultInstance().appearance
             val pageSize = appearance.candidatePageSize.getValue()
             val paletteMode = appearance.paletteMode.getValue().toEnginePaletteMode()
             val accent = appearance.accent.getValue().toEngineAccent()
             _state.update {
                 ImeStateReducer.onEvent(
-                    it.copy(candidatePageSize = pageSize, paletteMode = paletteMode, accent = accent),
+                    it.copy(
+                        candidatePageSize = pageSize,
+                        paletteMode = paletteMode,
+                        accent = accent,
+                        simplified = simplified,
+                    ),
                     EngineEvent.Status(
                         asciiMode = status.isAsciiMode,
                         asciiPunctuation = status.isAsciiPunct,
@@ -183,6 +198,7 @@ class ImeSurfaceController(
                 is KeyboardWindow -> null
                 is ClipboardWindow -> PanelId.Clipboard
                 is LiquidWindow -> PanelId.Symbols
+                is PhraseWindow -> PanelId.Phrase
                 else -> null
             }
         _state.update { it.copy(activePanel = panel) }
@@ -190,5 +206,8 @@ class ImeSurfaceController(
 
     override fun onRimeOptionUpdated(value: RimeMessage.OptionMessage.Data) {
         _state.update { ImeStateReducer.onEvent(it, EngineEvent.Option(value.option, value.value)) }
+        if (value.option == "zh_simp") {
+            _state.update { it.copy(simplified = value.value) }
+        }
     }
 }

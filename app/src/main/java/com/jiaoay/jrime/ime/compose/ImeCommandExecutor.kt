@@ -19,6 +19,7 @@ import com.jiaoay.jrime.ime.core.TrimeInputMethodService
 import com.jiaoay.jrime.ime.keyboard.CommonKeyboardActionListener
 import com.jiaoay.jrime.ime.keyboard.KeyAction
 import com.jiaoay.jrime.ime.keyboard.KeyboardWindow
+import com.jiaoay.jrime.ime.phrase.PhraseWindow
 import com.jiaoay.jrime.ime.symbol.LiquidWindow
 import com.jiaoay.jrime.ime.window.BoardWindowManager
 import timber.log.Timber
@@ -36,6 +37,7 @@ class ImeCommandExecutor(
     private val windowManager: BoardWindowManager,
     private val keyboardWindow: KeyboardWindow,
     private val liquidWindow: LiquidWindow,
+    private val phraseWindow: PhraseWindow,
     private val presetKeys: Map<String, PresetKey>,
 ) {
     fun execute(command: ImeCommand) {
@@ -63,6 +65,12 @@ class ImeCommandExecutor(
 
             is ImeCommand.SetOption ->
                 rime.launchOnReady { it.setRuntimeOption(command.option, command.value) }
+
+            is ImeCommand.SetSimplified ->
+                rime.launchOnReady { api ->
+                    api.setRuntimeOption("zh_simp", command.simplified)
+                    api.setRuntimeOption("zh_trad", !command.simplified)
+                }
 
             is ImeCommand.OpenPanel -> openPanel(command.id)
 
@@ -124,7 +132,7 @@ class ImeCommandExecutor(
 
             PanelId.Editor -> dispatchToken(KeyActionToken.Plain("Keyboard_editor"))
 
-            PanelId.Phrase -> dispatchToken(KeyActionToken.Plain("clipboard_window"))
+            PanelId.Phrase -> windowManager.attachWindow(phraseWindow)
         }
     }
 
