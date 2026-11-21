@@ -19,6 +19,7 @@
 | [harness-design.md](harness-design.md) | librime oracle / golden 轨迹 / harness 验收设计（Path B 的验收底座） |
 | [pathb-syllabifier-spec.md](pathb-syllabifier-spec.md) | Path B 音节切分器语义规格（41 facts） |
 | [architecture-review.md](architecture-review.md) | 2026-11-18 全仓架构评审（历史证据，P1/P2 清单仍可引用） |
+| [verification-guide.md](verification-guide.md) | **最终验收手册**：手机/三平台逐项操作与期望、已知限制、回滚与反馈清单 |
 | [Keyboard.md](Keyboard.md) | Liquid Keyboard 历史参数笔记（trime 遗产） |
 | [trime-schema.json](trime-schema.json) | 方案配置 schema（引擎输入参考） |
 

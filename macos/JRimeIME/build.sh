@@ -5,6 +5,13 @@
 # Prereqs (local machine, same as ./harness/smoke.sh): JDK (jlink) and
 # app/src/main/jni/host/build-host/ populated for the dylib link.
 set -e
+# SDK/driver alignment: a CommandLineTools SDK newer than the selectedXcode's
+# linker breaks the TBD architecture lists. Pin the SDK/DVT to the selected
+# developer directory when possible.
+if command -v xcrun >/dev/null 2>&1; then
+  export DEVELOPER_DIR=${DEVELOPER_DIR:-$(xcode-select -p)}
+  export SDKROOT=${SDKROOT:-$(xcrun --sdk macosx --show-sdk-path)}
+fi
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 SRC=$REPO/macos/JRimeIME
 JAVA_HOME=${JAVA_HOME:-$(/usr/libexec/java_home)}

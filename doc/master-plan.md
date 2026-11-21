@@ -365,24 +365,22 @@ interface ImePanel {
 
 ## 5. 分期路线图
 
-> **实施进度（2026-11-21）**：M0 文档收口完成；M1 共享表面已接管 `ComposeInputView`
-> （`afa0b56`…`da8bef2`），模拟器冒烟通过；M2 第一批（`55a42fe` 候选分页/长按菜单/提示/简繁全角，
-> `07ffdb2` 外观页/强调色/死设置清理）已落地并模拟器验证。真实设备体验验收按约定留到最后。
-> 尚未完成：M1 遗留旧模型清理、M3 剩余（中英切换方式、词库逐词管理）、M4 剩余（真机矩阵/
-> 签名/备份回归）、桌面线。
-> M2（候选/提示/开关/外观/设置中心）、M3 第一批（输入规则、常用语面板）、
-> M4 第一批（启动失败降级、整机备份恢复、诊断复制、一键安装脚本）已完成；
-> D1a 已完成（`:desktop:engine` Gradle 模块、macOS Shift 中英切换、`.app` 构建安装脚本）；
-> D1b 协议侧已完成（`:desktop:protocol` 拆分 + `EngineDataAccess` 倒置，golden 12/12 不变），
-> DTO 与 `:core:model` 汇合并入 D2；D0 spike 已完成：macOS 上 CMP 无边框置顶非激活候选窗成立
-> （focusOwner 不抢占），Linux Wayland 候选窗按约束降级、Windows 需 WS_EX_NOACTIVATE 补洞。
-> D2 第一/二批已完成：五个共享模块 KMP 化（android + desktop），`:desktop:app`
-> （引擎 + 行协议 + CMP 候选窗一体）在 macOS 跑通 ready/按键/候选与干净退出；
-> 桌面设置窗口已用共享 `:ui:settings` 跑通并与候选窗读取同一配置；Linux IBus 薄壳已实现
-> （协议客户端有单测）、Windows TSF 脚手架与契约已落，均待对应平台实测。macOS 自绘候选窗
-> 需辅助功能权限，默认仍用系统 `IMKCandidates`（待最终裁决）。
+## 5. 分期路线图
 
-
+> **实施状态（2026-11-21 r2）**
+>
+> | 期 | 状态 | 备注 |
+> |---|---|---|
+> | M0 收口 | ✅ | 文档权威链、基线、旧 change 真机项待统一验收后归档 |
+> | M1 表面层 | ✅（遗留清理待办） | 共享 CMP-clean 表面接管；旧 Keyboard/Key/BoardWindow 模型与旧面板待最终清理 |
+> | M2 手机 P0 | ✅ | 候选分页/长按菜单、键面韵母提示、简繁全角与 10 条输入规则、外观（深浅/强调色）、Compose 设置中心六组+搜索+无孤儿断言、死设置清理 |
+> | M3 输入规则/词库 | 🟡 大部分 | 输入规则、常用语面板、词库备份/恢复已完成；中英切换方式偏好、词库逐词管理未做 |
+> | M4 稳定发布 | 🟡 大部分 | 启动失败降级、整机备份恢复、诊断复制、一键安装脚本完成；真机矩阵/签名 secrets/7 天观察待主人 |
+> | D1 桌面内核 | ✅ | `:desktop:engine`/`:desktop:protocol` Gradle 化；协议依赖倒置；macOS Shift 切中英、安装脚本 |
+> | D2 共享桌面 UI | 🟡 | 五模块 KMP 化；`:desktop:app`（引擎+协议+CMP 候选窗）与 `:desktop:settings` 跑通；Linux IBus 薄壳（单测）与 Windows 契约就绪；Shell 集成/Windows 实机待办 |
+> | D3 桌面日常 | 🟡 | macOS 可安装（系统候选窗）；Linux/Windows 需对应平台实测；验收手册已出 |
+>
+> 完成/待验收的标准与操作见 `doc/verification-guide.md`。
 
 > 工期为「一人 + AI」估算，单位：周。每期一个 OpenSpec change，独立可交付、可回滚；不追求并行抢进度。
 
