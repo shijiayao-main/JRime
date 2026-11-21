@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import com.jiaoay.jrime.R
+import com.jiaoay.jrime.daemon.RimeDaemon
 import com.jiaoay.jrime.data.userdict.UserDictEntry
 import com.jiaoay.jrime.data.userdict.UserDictManager
 import com.jiaoay.jrime.data.userdict.UserDictText
@@ -106,7 +107,11 @@ class UserDictBrowserFragment : Fragment() {
                 runCatching {
                     withContext(Dispatchers.IO) {
                         importEntries(dict, next)
-                        exportEntries(dict)
+                        exportEntries(dict).also {
+                            // The engine caches user dictionaries in the live session;
+                            // a restart is what makes imported/deleted entries visible.
+                            RimeDaemon.restartRime(fullCheck = false)
+                        }
                     }
                 }.onSuccess {
                     entries = it

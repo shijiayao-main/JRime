@@ -20,4 +20,6 @@
   -2147483648`（`EditTextInt` 类大范围整数偏好被映射成 Material3 Slider，steps 溢出）。
   修复：大范围整数改为文本编辑行；Slider 的 steps 计算加防御（范围>1000 步则连续滑块）；
   新增「sliders always have a bounded tick range」回归测试。
+- 编辑后调用 `RimeDaemon.restartRime(fullCheck=false)`：引擎会把用户词典缓存在活会话里，
+  重启是让导入/删除立即生效的必要动作（与常用语写回的处理一致）。
 - 证据截图：`screenshots/settings-system-group.png`、`screenshots/userdict-browser.png`。

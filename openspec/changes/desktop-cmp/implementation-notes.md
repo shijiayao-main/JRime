@@ -66,3 +66,11 @@
   `ITfContextView::GetTextExt` 光标矩形 + `WS_EX_NOACTIVATE` 补洞 + 安装/CI 待办）。
 - 修正 Shift 切换的 Release 语义：macOS Swift `mapModifier` 区分按下/抬起（`Release+Shift_L`），
   Linux engine 同样发 press/release 对（librime ascii_composer 只在完整 tap 后切换）。
+
+## 2026-11-21 · D3 打磨：窗口空闲隐藏 + 设置热重载
+
+- `:desktop:app` 候选窗按「是否有组合/候选」自动显示/隐藏：
+  冒烟输出 `candidate window ready (active=false)` → `hidden`，`k n` 后 → `shown`。
+- 设置文件轮询（1.5s）热重载：运行中把 `palette_mode` 改为 dark 后输出
+  `settings reloaded palette=dark`，配色即时生效，无需重启引擎进程。
+- 冒烟脚本 `/tmp/desktop_app_smoke.py` 驱动 ready/k n/改设置/exit，RC=0。

@@ -378,7 +378,7 @@ interface ImePanel {
 > | M4 稳定发布 | 🟡 大部分 | 启动失败降级、整机备份恢复、诊断复制、一键安装脚本完成；真机矩阵/签名 secrets/7 天观察待主人 |
 > | D1 桌面内核 | ✅ | `:desktop:engine`/`:desktop:protocol` Gradle 化；协议依赖倒置；macOS Shift 切中英、安装脚本 |
 > | D2 共享桌面 UI | 🟡 | 五模块 KMP 化；`:desktop:app`（引擎+协议+CMP 候选窗）与 `:desktop:settings` 跑通；Linux IBus 薄壳（单测）与 Windows 契约就绪；Shell 集成/Windows 实机待办 |
-> | D3 桌面日常 | 🟡 | macOS 可安装（系统候选窗）；Linux/Windows 需对应平台实测；验收手册已出 |
+> | D3 桌面日常 | 🟡 | macOS 可安装（系统候选窗）；`:desktop:app` 候选窗空闲隐藏 + 设置热重载；Linux/Windows 需对应平台实测；验收手册已出 |
 >
 > 完成/待验收的标准与操作见 `doc/verification-guide.md`。
 

@@ -46,18 +46,15 @@ private const val VERSION = "1.0.0-desktop"
 private const val PROTOCOL_VERSION = 1
 private const val WINDOW_WIDTH_PX = 560
 private const val WINDOW_HEIGHT_PX = 90
+private const val SETTINGS_POLL_MS = 1_500L
 
 /** Everything the protocol thread and the UI share. */
 private class Shared(
     val session: DesktopEngineSession,
     val state: MutableStateFlow<ImeSessionState>,
     val placement: MutableStateFlow<Rectangle>,
+    val appearance: MutableStateFlow<Map<String, String>>,
     val out: PrintStream,
-    val paletteMode: PaletteMode,
-    val accent: AccentPreset,
-    val candidateTextSizeSp: Float,
-    val showKeyHints: Boolean,
-    val showCandidateComment: Boolean,
 )
 
 /**
@@ -65,20 +62,24 @@ private class Shared(
  * Compose candidate window.
  *
  * Shell requests are answered exactly like [com.jiaoay.jrime.desktop.DesktopServer];
- * a `rect x y w h` request (new) places the candidate window near the caret and
- * is acknowledged with `{"ok":true}`. Changes initiated inside the app (candidate
+ * a `rect x y w h` request places the candidate window near the caret and is
+ * acknowledged with `{"ok":true}`. Changes initiated inside the app (candidate
  * clicks) are pushed as an asynchronous `{"event":"update",...}` line so the
  * shell can commit the text / refresh marked text.
+ *
+ * The window hides itself while there is nothing to show (no composition, no
+ * candidates), and the desktop settings file is polled so appearance changes
+ * apply without restarting the process.
  */
 fun main(args: Array<String>) {
-    var shared: String? = null
+    var sharedDir: String? = null
     var user: String? = null
     var dylib: String? = null
     var schema = "flypy_xhfast"
     var i = 0
     while (i < args.size) {
         when (args[i]) {
-            "--shared" -> shared = args[++i]
+            "--shared" -> sharedDir = args[++i]
             "--user" -> user = args[++i]
             "--dylib" -> dylib = args[++i]
             "--schema" -> schema = args[++i]
@@ -86,44 +87,30 @@ fun main(args: Array<String>) {
         }
         i++
     }
-    if (shared == null || user == null || dylib == null) {
+    if (sharedDir == null || user == null || dylib == null) {
         throw IllegalArgumentException("--shared/--user/--dylib are required")
     }
     System.setOut(PrintStream(System.err)) // stdout carries protocol lines only
     System.load(File(dylib).absolutePath)
-    Rime.startupRime(shared, user, VERSION)
+    Rime.startupRime(sharedDir, user, VERSION)
 
     val session = DesktopEngineSession(VERSION, PROTOCOL_VERSION, schema)
     if (!session.awaitReady()) {
         System.err.println("engine never mounted schema $schema; messages=${session.lastMessages()}")
         exitProcess(2)
     }
-    // The desktop settings window writes this file; the candidate window reads
-    // it once at start (live reload lands with the settings window integration).
-    val appearance = DesktopSettings.read()
+    val appearance = MutableStateFlow(DesktopSettings.read())
     println(
-        "desktop-app: settings palette=${appearance[DesktopSettings.PALETTE_MODE]} " +
-            "accent=${appearance[DesktopSettings.ACCENT]}",
+        "desktop-app: settings palette=${appearance.value[DesktopSettings.PALETTE_MODE]} " +
+            "accent=${appearance.value[DesktopSettings.ACCENT]}",
     )
-    val paletteMode = appearance.toPaletteMode()
-    val accent = appearance.toAccent()
-    val state = MutableStateFlow(readState().copy(paletteMode = paletteMode, accent = accent))
+    val state = MutableStateFlow(readState())
     val placement = MutableStateFlow(Rectangle(0, 0, WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX))
     val out = PrintStream(System.out, true)
-    val sharedState =
-        Shared(
-            session = session,
-            state = state,
-            placement = placement,
-            out = out,
-            paletteMode = paletteMode,
-            accent = accent,
-            candidateTextSizeSp = appearance[DesktopSettings.CANDIDATE_TEXT_SIZE]?.toFloatOrNull() ?: 18f,
-            showKeyHints = appearance[DesktopSettings.SHOW_KEY_HINTS]?.toBooleanStrictOrNull() ?: true,
-            showCandidateComment = appearance[DesktopSettings.SHOW_CANDIDATE_COMMENT]?.toBooleanStrictOrNull() ?: true,
-        )
+    val sharedState = Shared(session, state, placement, appearance, out)
 
     thread(isDaemon = true, name = "desktop-protocol") { protocolLoop(sharedState) }
+    thread(isDaemon = true, name = "desktop-settings-watch") { watchSettings(sharedState) }
 
     if (GraphicsEnvironment.isHeadless()) {
         System.err.println("desktop-app: headless; protocol only (send exit to stop)")
@@ -134,16 +121,33 @@ fun main(args: Array<String>) {
     runWindow(sharedState)
 }
 
+private fun watchSettings(sharedState: Shared) {
+    val file = DesktopSettings.file
+    var lastModified = if (file.isFile) file.lastModified() else 0L
+    while (true) {
+        Thread.sleep(SETTINGS_POLL_MS)
+        val modified = if (file.isFile) file.lastModified() else 0L
+        if (modified != lastModified) {
+            lastModified = modified
+            val values = DesktopSettings.read()
+            sharedState.appearance.value = values
+            println("desktop-app: settings reloaded palette=${values[DesktopSettings.PALETTE_MODE]}")
+        }
+    }
+}
+
 private fun runWindow(sharedState: Shared) {
     val catalog = KeyboardCatalog.shipped()
     application {
         val position by sharedState.placement.collectAsState()
         val state by sharedState.state.collectAsState()
+        val appearance by sharedState.appearance.collectAsState()
         val windowState =
             rememberWindowState(
                 size = DpSize(560.dp, 90.dp),
                 position = WindowPosition(position.x.dp, position.y.dp),
             )
+        val active = state.composing || state.candidates.isNotEmpty()
         Window(
             onCloseRequest = {
                 Rime.exitRime()
@@ -154,22 +158,30 @@ private fun runWindow(sharedState: Shared) {
             undecorated = true,
             alwaysOnTop = true,
             resizable = false,
+            visible = active,
         ) {
             window.focusableWindowState = false
             window.minimumSize = java.awt.Dimension(WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX)
-            LaunchedEffect(Unit) { println("desktop-app: candidate window up") }
+            LaunchedEffect(Unit) { println("desktop-app: candidate window ready (active=$active)") }
+            LaunchedEffect(active) { println("desktop-app: candidate window ${if (active) "shown" else "hidden"}") }
             LaunchedEffect(position) {
                 windowState.position = WindowPosition(position.x.dp, position.y.dp)
             }
             val host = remember { ModelHost(sharedState) }
             Box(modifier = Modifier.size(560.dp, 90.dp).background(Color(0xFF202124))) {
                 DesktopCandidateSurface(
-                    state = state,
+                    state =
+                    state.copy(
+                        paletteMode = appearance.toPaletteMode(),
+                        accent = appearance.toAccent(),
+                    ),
                     config =
                     ImeSurfaceConfig(
-                        candidateTextSizeSp = sharedState.candidateTextSizeSp,
-                        showKeyHints = sharedState.showKeyHints,
-                        showCandidateComment = sharedState.showCandidateComment,
+                        candidateTextSizeSp =
+                        appearance[DesktopSettings.CANDIDATE_TEXT_SIZE]?.toFloatOrNull() ?: 18f,
+                        showKeyHints = appearance[DesktopSettings.SHOW_KEY_HINTS]?.toBooleanStrictOrNull() ?: true,
+                        showCandidateComment =
+                        appearance[DesktopSettings.SHOW_CANDIDATE_COMMENT]?.toBooleanStrictOrNull() ?: true,
                     ),
                     host = host,
                     catalog = catalog,
@@ -189,14 +201,13 @@ private fun protocolLoop(sharedState: Shared) {
         if (trimmed.startsWith("rect ")) {
             val parts = trimmed.substring(5).trim().split(" +".toRegex())
             if (parts.size >= 4) {
-                val rect =
+                sharedState.placement.value =
                     Rectangle(
                         parts[0].toIntOrNull() ?: 0,
                         parts[1].toIntOrNull() ?: 0,
                         WINDOW_WIDTH_PX,
                         WINDOW_HEIGHT_PX,
                     )
-                sharedState.placement.value = rect
             }
             sharedState.out.println("{\"ok\":true}")
             continue
@@ -208,11 +219,7 @@ private fun protocolLoop(sharedState: Shared) {
                 exitProcess(0)
             }
             sharedState.out.println(reply.json)
-            sharedState.state.value =
-                readState().copy(
-                    paletteMode = sharedState.paletteMode,
-                    accent = sharedState.accent,
-                )
+            sharedState.state.value = readState()
             if (trimmed == "exit") {
                 Rime.exitRime()
                 exitProcess(0)
@@ -231,11 +238,7 @@ private class ModelHost(
         if (command !is ImeCommand.SelectCandidate) return
         synchronized(sharedState.session) {
             val reply = sharedState.session.handle("sel ${command.index}") ?: return
-            val next =
-                readState().copy(
-                    paletteMode = sharedState.paletteMode,
-                    accent = sharedState.accent,
-                )
+            val next = readState()
             sharedState.state.value = next
             // The shell did not ask for this selection: push the outcome.
             val event =
