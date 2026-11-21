@@ -5,45 +5,42 @@
  */
 
 plugins {
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.kmp.library)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.compose.multiplatform)
 }
 
-android {
-    namespace = "com.jiaoay.jrime.ui.ime"
-    compileSdk = 37
-
-    defaultConfig {
+kotlin {
+    androidLibrary {
+        namespace = "com.jiaoay.jrime.ui.ime"
+        compileSdk = 37
         minSdk = 26
     }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+    jvm("desktop") {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+        }
     }
 
-    buildFeatures {
-        compose = true
-    }
-
-    testOptions {
-        unitTests.all {
-            it.useJUnitPlatform()
+    sourceSets {
+        commonMain.dependencies {
+            api(project(":ui:design"))
+            implementation(project(":core:engine"))
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(compose.runtime)
+            implementation(compose.foundation)
+            implementation(compose.material3)
+            implementation(compose.ui)
+        }
+        commonTest.dependencies {
+            implementation(libs.junit)
+            implementation(libs.kotest.runner.junit5)
+            implementation(libs.kotest.assertions.core)
         }
     }
 }
 
-dependencies {
-    implementation(project(":core:engine"))
-    implementation(project(":ui:design"))
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(platform(libs.compose.bom))
-    implementation(libs.compose.runtime)
-    implementation(libs.compose.ui)
-    implementation(libs.compose.foundation)
-    implementation(libs.compose.material3)
-
-    testImplementation(libs.junit)
-    testImplementation(libs.kotest.runner.junit5)
-    testImplementation(libs.kotest.assertions.core)
+tasks.withType<Test> {
+    useJUnitPlatform()
 }

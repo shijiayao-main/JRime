@@ -73,6 +73,8 @@ class SurfaceGuardTest :
 private fun resolveSourceRoot(): File {
     val candidates =
         listOf(
+            File("src/commonMain/kotlin"),
+            File("ui/ime/src/commonMain/kotlin"),
             File("src/main/java"),
             File("ui/ime/src/main/java"),
         )

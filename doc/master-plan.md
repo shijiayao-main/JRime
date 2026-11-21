@@ -376,6 +376,8 @@ interface ImePanel {
 > D1b 协议侧已完成（`:desktop:protocol` 拆分 + `EngineDataAccess` 倒置，golden 12/12 不变），
 > DTO 与 `:core:model` 汇合并入 D2；D0 spike 已完成：macOS 上 CMP 无边框置顶非激活候选窗成立
 > （focusOwner 不抢占），Linux Wayland 候选窗按约束降级、Windows 需 WS_EX_NOACTIVATE 补洞。
+> D2 第一批已完成：五个共享模块 KMP 化（android + desktop），桌面候选窗用同一份
+> `:ui:ime` 代码在 macOS CMP 窗口跑通。
 
 
 
