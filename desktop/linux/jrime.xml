@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component>
+  <name>org.freedesktop.IBus.JRime</name>
+  <description>JRime 飞鹤快拼输入法</description>
+  <exec>ibus-engine-jrime</exec>
+  <version>0.1.0</version>
+  <author>JRime</author>
+  <license>GPL-3.0-or-later</license>
+  <homepage>https://github.com/jiaoay/jrime</homepage>
+  <textdomain>jrime</textdomain>
+  <engines>
+    <engine>
+      <name>jrime</name>
+      <language>zh</language>
+      <license>GPL-3.0-or-later</license>
+      <author>JRime</author>
+      <layout>us</layout>
+      <longname>JRime 飞鹤快拼</longname>
+      <description>JRime 飞鹤快拼输入法</description>
+      <rank>1</rank>
+    </engine>
+  </engines>
+</component>

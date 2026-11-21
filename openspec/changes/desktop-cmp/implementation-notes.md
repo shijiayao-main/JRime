@@ -53,3 +53,16 @@
   协议 ready 正常。
 - macOS 候选窗定位结论：IMK 公开 API 无插入点坐标，自绘窗需辅助功能权限；默认系统
   `IMKCandidates`，CMP 候选窗用于 Linux X11/Windows，状态/设置窗保持共享 CMP（待主人最终裁决）。
+
+## 2026-11-21 · D2 第四批：Linux IBus 薄壳 + Windows 契约
+
+- `desktop/linux/`：`jrime_engine_client.py`（行协议客户端，支持异步 event 行）、
+  `jrime_ibus_engine.py`（IBus engine：键映射、preedit、lookup table、commit、
+  候选点击、Shift/大小写切换按键对与 Release 语义）、`jrime.xml` + `ibus-engine-jrime` +
+  `install.sh` + README。协议客户端用假引擎跑 6 个单测（ready/key/select+event/rect/stop/错误路径）全绿。
+  候选 UI 走 IBus 面板（Wayland 安全路径）。
+- `desktop/README.md`：三壳状态与协议扩展（rect / event update）契约。
+- `desktop/windows/README.md`：TSF 脚手架与协议契约（in-proc DLL + 单 broker + CMP 候选窗 +
+  `ITfContextView::GetTextExt` 光标矩形 + `WS_EX_NOACTIVATE` 补洞 + 安装/CI 待办）。
+- 修正 Shift 切换的 Release 语义：macOS Swift `mapModifier` 区分按下/抬起（`Release+Shift_L`），
+  Linux engine 同样发 press/release 对（librime ascii_composer 只在完整 tap 后切换）。

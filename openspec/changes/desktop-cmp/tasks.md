@@ -20,5 +20,5 @@
       ——候选窗定位**结论（待裁决）**：macOS 公开 IMK API 不提供插入点屏幕坐标，自绘候选窗需要辅助功能权限
       或 accessibility API；系统 `IMKCandidates` 无此成本。默认继续用系统候选窗，CMP 候选窗用于
       Linux X11/Windows（可由 X11/TSF 拿到光标矩形），状态窗/设置窗仍共享 CMP。
-- [ ] 2.7 Linux ibus 壳 + X11 候选窗 + Wayland 降级路径
-- [ ] 2.8 Windows TSF 薄壳 + CMP 候选窗（WS_EX_NOACTIVATE 补洞）+ CI 首次实跑
+- [~] 2.7 Linux ibus 薄壳已实现（`desktop/linux/`：协议客户端 + IBus engine + component/安装脚本；客户端 6 个单测通过）；候选窗用 IBus 面板（Wayland 安全路径）；需 Linux 会话实测
+- [~] 2.8 Windows TSF 脚手架与协议契约已落 `desktop/windows/README.md`（DLL+broker+rect/event 形状、安装/签名/CI 待办）；本环境无 Windows 工具链，未编译

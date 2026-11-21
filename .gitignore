@@ -493,3 +493,5 @@ app/src/main/jni/librime/build/
 # host precompile tooling
 app/src/main/jni/boost-*.tar.xz
 app/src/main/jni/host/build-host/
+__pycache__/
+*.pyc

@@ -378,8 +378,9 @@ interface ImePanel {
 > （focusOwner 不抢占），Linux Wayland 候选窗按约束降级、Windows 需 WS_EX_NOACTIVATE 补洞。
 > D2 第一/二批已完成：五个共享模块 KMP 化（android + desktop），`:desktop:app`
 > （引擎 + 行协议 + CMP 候选窗一体）在 macOS 跑通 ready/按键/候选与干净退出；
-> 桌面设置窗口已用共享 `:ui:settings` 跑通并与候选窗读取同一配置。macOS 自绘候选窗需
-> 辅助功能权限，默认仍用系统 `IMKCandidates`（待最终裁决）。
+> 桌面设置窗口已用共享 `:ui:settings` 跑通并与候选窗读取同一配置；Linux IBus 薄壳已实现
+> （协议客户端有单测）、Windows TSF 脚手架与契约已落，均待对应平台实测。macOS 自绘候选窗
+> 需辅助功能权限，默认仍用系统 `IMKCandidates`（待最终裁决）。
 
 
 

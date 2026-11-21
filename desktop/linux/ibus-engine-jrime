@@ -1,0 +1,3 @@
+#!/bin/sh
+# IBus launches this to start the JRime engine process (the Python shell).
+exec python3 "${JRIME_LIBDIR:-/usr/share/ibus-jrime}/jrime_ibus_engine.py" "$@"

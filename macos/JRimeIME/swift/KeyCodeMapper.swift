@@ -28,9 +28,15 @@ enum KeyCodeMapper {
     /// schema's Chinese/English toggle (ascii_composer), CapsLock commits the
     /// raw code (commit_code). Other modifiers pass through untouched.
     static func mapModifier(_ event: NSEvent) -> String? {
+        // flagsChanged fires for both press and release; librime distinguishes
+        // the pair through the Release modifier, and ascii_composer only
+        // toggles after a complete tap.
+        let pressed = event.modifierFlags.contains(.shift)
         switch event.keyCode {
-        case 56, 60: return "Shift_L"
-        case 57: return "Caps_Lock"
+        case 56, 60: return pressed ? "Shift_L" : "Release+Shift_L"
+        case 57:
+            let caps = event.modifierFlags.contains(.capsLock)
+            return caps ? "Caps_Lock" : "Release+Caps_Lock"
         default: return nil
         }
     }
