@@ -4,9 +4,9 @@
   ~ SPDX-FileCopyrightText: 2026 JRime
   ~ SPDX-License-Identifier: GPL-3.0-or-later
   ~
-  ~ The launcher mark: the fast seal. The glyph is the outline of U+5FEB from
-  ~ Noto Sans SC Bold (c) Google, SIL Open Font License 1.1, embedded as a
-  ~ vector path and fitted to the adaptive-icon safe zone.
+  ~ The JRime launcher mark: a white "J" monogram with an accent key dot under
+  ~ it. Scheme-neutral on purpose: the shipped flypy board is only the
+  ~ default scheme, never the product identity.
   -->
 
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
@@ -14,7 +14,12 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+  <!-- The J stem and hook, fitted to the adaptive-icon safe zone. -->
   <path
       android:fillColor="#FFFFFF"
-      android:pathData="M36.18 29.84H42.26V77.86H36.18ZM31.73 39.96 36.18 40.58Q36.07 42.77 35.74 45.38Q35.41 47.99 34.92 50.52Q34.44 53.05 33.82 55L29.27 53.41Q29.89 51.67 30.37 49.35Q30.86 47.02 31.22 44.56Q31.57 42.11 31.73 39.96ZM40.88 40.06 45.08 38.33Q45.84 39.86 46.64 41.65Q47.43 43.44 48.07 45.13Q48.71 46.81 49.01 48.09L44.56 50.19Q44.31 48.86 43.72 47.12Q43.13 45.38 42.42 43.52Q41.7 41.65 40.88 40.06ZM48.2 37.61H74.38V55.87H68.4V43.29H48.2ZM45.89 52.7H77.6V58.53H45.89ZM64 53.92Q65.12 58.12 67.04 61.72Q68.96 65.33 71.85 68.04Q74.74 70.75 78.73 72.28Q77.96 72.9 77.14 73.92Q76.32 74.94 75.56 76.02Q74.79 77.09 74.33 78.06Q69.98 75.97 66.94 72.62Q63.9 69.27 61.85 64.82Q59.8 60.37 58.47 54.95ZM57.09 29.84H63.28V47.99Q63.28 51.11 62.92 54.38Q62.57 57.66 61.67 60.93Q60.78 64.2 59.06 67.27Q57.35 70.34 54.61 73.13Q51.88 75.91 47.94 78.16Q47.53 77.45 46.76 76.58Q46 75.71 45.13 74.81Q44.26 73.92 43.54 73.41Q47.38 71.52 49.88 69.19Q52.39 66.86 53.85 64.25Q55.3 61.65 55.99 58.88Q56.68 56.12 56.89 53.34Q57.09 50.55 57.09 47.99Z"/>
+      android:pathData="M56,26 L70,26 L70,59 C70,71.7 61.5,80 48.5,80 C36,80 29,72.4 29,60.5 L29,56 L43,56 L43,60.9 C43,65 45.3,68 49.2,68 C53,68 56,65.3 56,60.9 Z" />
+  <!-- One accent key dot: a quiet nod to the keyboard surface. -->
+  <path
+      android:fillColor="#8AB4F8"
+      android:pathData="M54,85.5 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
 </vector>

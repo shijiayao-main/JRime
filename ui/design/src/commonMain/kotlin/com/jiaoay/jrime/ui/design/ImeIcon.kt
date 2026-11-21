@@ -7,9 +7,11 @@
 package com.jiaoay.jrime.ui.design
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardReturn
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Backspace
 import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.Keyboard
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PushPin
@@ -76,4 +79,7 @@ enum class ImeIcon(
     Diagnostics(Icons.Outlined.Description, "diagnostics"),
     Add(Icons.Outlined.Add, "add"),
     TextFields(Icons.Outlined.TextFields, "text_fields"),
+    Backspace(Icons.Outlined.Backspace, "backspace"),
+    Enter(Icons.AutoMirrored.Outlined.KeyboardReturn, "enter"),
+    Shift(Icons.Outlined.KeyboardArrowUp, "shift"),
 }

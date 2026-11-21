@@ -4,7 +4,7 @@ JRime 没有 YAML/主题/布局配置层。要新增能力，写一个 **Kotlin 
 `ExtensionRegistry`。所有贡献都是 typed model：动作是 `ImeAction`，键盘槽位是 `KeySlot`，工具栏是
 `ExtensionToolbarAction`，没有任何字符串命令或 YAML。
 
-参考实现：`extensions/sample/`（`SampleExtension`），本指南的代码都来自它。
+参考实现：`extensions/sample/`（`SampleExtension`，含 4 行符号板、动作、工具栏与输入规则），本指南的代码都来自它。
 
 ## 1. 新建模块
 

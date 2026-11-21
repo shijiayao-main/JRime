@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +48,7 @@ import com.jiaoay.jrime.engine.KeyGestureResolver
 import com.jiaoay.jrime.engine.KeySpec
 import com.jiaoay.jrime.engine.SwipeDir
 import com.jiaoay.jrime.ui.design.ImeDimens
+import com.jiaoay.jrime.ui.design.ImeIcon
 import com.jiaoay.jrime.ui.design.ImeMotion
 import com.jiaoay.jrime.ui.design.ImeShapes
 import com.jiaoay.jrime.ui.design.ImeTypography
@@ -166,6 +169,21 @@ internal fun KeySurface(
         }
     val singleCharLabel = faceLabel.length == 1 && faceLabel[0].isLetterOrDigit()
     val popupLabel = faceLabel.takeIf { config.popupOnKeyPress && pressed && singleCharLabel }
+    // Function keys carry vector faces from the semantic icon set (the data
+    // label stays the accessibility text); schema-driven enter labels and the
+    // Chinese shift label keep their text face.
+    val faceIcon =
+        remember(key, faceLabel) {
+            val token =
+                (key.click as? LegacyKeyToken.Plain)?.token
+                    ?: (key.ascii as? LegacyKeyToken.Plain)?.token
+            when {
+                token == "BackSpace" && faceLabel == "⌫" -> ImeIcon.Backspace
+                token in setOf("Return", "KP_Enter") && faceLabel == "↵" -> ImeIcon.Enter
+                token in setOf("Shift_L", "Shift_R") && faceLabel == "⇧" -> ImeIcon.Shift
+                else -> null
+            }
+        }
 
     Box(
         modifier =
@@ -279,16 +297,28 @@ internal fun KeySurface(
             .fillMaxSize()
             .background(background, ImeShapes.Key),
     ) {
-        BasicText(
-            text = faceLabel,
-            style =
-            if (singleCharLabel) {
-                ImeTypography.keyLetterStyle(foreground).copy(textAlign = TextAlign.Center)
-            } else {
-                ImeTypography.keySymbolStyle(foreground).copy(textAlign = TextAlign.Center)
-            },
-            modifier = Modifier.align(Alignment.Center),
-        )
+        if (faceIcon != null) {
+            Icon(
+                imageVector = faceIcon.vector,
+                contentDescription = faceLabel,
+                tint = foreground,
+                modifier =
+                Modifier
+                    .align(Alignment.Center)
+                    .size(ImeDimens.IconCategory),
+            )
+        } else {
+            BasicText(
+                text = faceLabel,
+                style =
+                if (singleCharLabel) {
+                    ImeTypography.keyLetterStyle(foreground).copy(textAlign = TextAlign.Center)
+                } else {
+                    ImeTypography.keySymbolStyle(foreground).copy(textAlign = TextAlign.Center)
+                },
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
         if (config.showKeyHints && faceHint != null) {
             BasicText(
                 text = faceHint,

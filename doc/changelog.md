@@ -118,6 +118,13 @@
 - 模拟器验证：顶栏「扩展示例」切到示例键盘、符号上屏、返回内置键盘；截图见
   `openspec/changes/extension-sample/screenshots/`。
 
+## UI 收尾：功能键图标 + 启动图标 + 扩展示例键盘（2026-11-21）
+
+- `ImeIcon` 增加 Backspace/Enter/Shift，键盘功能键改为矢量图标面（schema 回车文字/中文「辅助」保留文字）。
+- 启动图标改为方案中立的 J monogram + 强调色 key dot（去掉「快」字旧标记），背景换 `#12263A`。
+- 示例扩展键盘补足符号/中文标点行，band 与内置键盘一致；图标表文档更新。
+- 截图见 `openspec/changes/ui-polish/screenshots/`。
+
 ## 复现命令
 
 ```sh
