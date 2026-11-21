@@ -372,7 +372,9 @@ interface ImePanel {
 > 签名/备份回归）、桌面线。
 > M2（候选/提示/开关/外观/设置中心）、M3 第一批（输入规则、常用语面板）、
 > M4 第一批（启动失败降级、整机备份恢复、诊断复制、一键安装脚本）已完成；
-> D1a 已完成（`:desktop:engine` Gradle 模块、macOS Shift 中英切换、`.app` 构建安装脚本）。
+> D1a 已完成（`:desktop:engine` Gradle 模块、macOS Shift 中英切换、`.app` 构建安装脚本）；
+> D1b 协议侧已完成（`:desktop:protocol` 拆分 + `EngineDataAccess` 倒置，golden 12/12 不变），
+> DTO 与 `:core:model` 汇合并入 D2。
 
 
 

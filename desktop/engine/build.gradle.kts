@@ -14,11 +14,15 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
 }
 
+dependencies {
+    implementation(project(":desktop:protocol"))
+}
+
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_11)
     }
-    sourceSets["main"].kotlin.srcDirs("java", "../protocol-common")
+    sourceSets["main"].kotlin.srcDir("java")
 }
 
 java {

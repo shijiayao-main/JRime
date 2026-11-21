@@ -1,6 +1,7 @@
 @file:JvmName("Replay")
 
 import com.jiaoay.jrime.core.Rime
+import com.jiaoay.jrime.core.RimeDataAccess
 import com.jiaoay.jrime.core.RimeKeyEvent
 import com.jiaoay.jrime.protocol.EngineSnapshotSampler
 import com.jiaoay.jrime.protocol.SchemaReadyProbe
@@ -53,7 +54,9 @@ fun main(args: Array<String>) {
 
     // Ready probe: the session must have mounted the expected schema before
     // the first key goes in, or the trace would sample a dead engine.
-    val ready = SchemaReadyProbe.awaitSchemaReady(schema)
+    val sampler = EngineSnapshotSampler(RimeDataAccess)
+    val probe = SchemaReadyProbe(RimeDataAccess)
+    val ready = probe.awaitSchemaReady(schema)
     if (!ready) {
         System.err.println(
             "engine never mounted schema " + schema +
@@ -63,14 +66,14 @@ fun main(args: Array<String>) {
     }
 
     PrintWriter(OutputStreamWriter(FileOutputStream(out), StandardCharsets.UTF_8)).use { w ->
-        w.println(EngineSnapshotSampler.sampleLine("start", true, 0))
+        w.println(sampler.sampleLine("start", true, 0))
         var n = 1
         for (op in steps) {
             val handled = apply(op.trim())
-            w.println(EngineSnapshotSampler.sampleLine(op.trim(), handled, n))
+            w.println(sampler.sampleLine(op.trim(), handled, n))
             n++
         }
-        w.println(EngineSnapshotSampler.sampleLine("end", true, n))
+        w.println(sampler.sampleLine("end", true, n))
     }
     Rime.exitRime()
     System.out.println("REPLAY OK")

@@ -19,9 +19,10 @@
 - [x] 3.2 全仓闸门（Android 侧 test/assembleDebug/spotless）
 - [ ] 3.3 真机：系统设置添加输入源、打字/候选/Shift 切中英验收（主人）
 
-## 4. D1b（下一批）
+## 4. D1b（协议拆分已完成，模型汇合待办）
 
-- [ ] 4.1 协议依赖倒置（EngineDataAccess）+ `:desktop:protocol` 物理拆分
+- [x] 4.1 协议依赖倒置（EngineDataAccess）+ `:desktop:protocol` 物理拆分（DTO 迁入协议模块）
 - [ ] 4.2 桌面 DTO 与 `:core:model` 汇合（P1-1/P2-1 收口，golden 重录窗口）
+      —— 结论：桌面 DTO 的构造签名由 C++ 桥 `FindClass` 绑定（`Candidates.Paged(finished,lastPageSize,reverse,pageSize,candidates)`），与 app `RimeProto` 语义不同；汇合需桥侧适配器 + golden 重录，D2 处理
 - [ ] 4.3 桌面部署/配置热更新（deploy 请求或启动维护）
 - [ ] 4.4 零拷贝启动/每宿主 JVM 评估

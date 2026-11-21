@@ -1,14 +1,17 @@
 package com.jiaoay.jrime.protocol
 
-import com.jiaoay.jrime.core.Rime
-
 /**
  * Samples one engine snapshot as the canonical protocol JSON line
  * (doc/harness-design.md §4). Single source of truth shared by the engine
  * server (no step field) and the harness replay driver (step-prefixed trace),
  * so the golden trace and live responses keep the same shape minus step.
+ *
+ * The engine is reached through [EngineDataAccess], never directly: the same
+ * sampler serves the librime JNI bridge today and a Kotlin engine later.
  */
-object EngineSnapshotSampler {
+class EngineSnapshotSampler(
+    private val access: EngineDataAccess,
+) {
     fun sampleLine(
         op: String,
         handled: Boolean,
@@ -16,17 +19,17 @@ object EngineSnapshotSampler {
         proto: Int? = null,
         engine: String? = null,
     ): String {
-        val ctx = Rime.getRimeContext()
-        val st = Rime.getRimeStatus()
-        val commit = Rime.getRimeCommit() // drains the commit buffer
-        val comp = ctx.composition
+        val ctx = access.context()
+        val st = access.status()
+        val commit = access.commit() // drains the commit buffer
+        val comp = ctx?.composition
         val preedit = comp?.preedit
         val sb = StringBuilder()
         sb.append("{")
         if (step != null) sb.append("\"step\":").append(step).append(',')
         sb.append("\"op\":\"").append(JsonLineCodec.encode(op)).append('"')
             .append(",\"handled\":").append(handled)
-            .append(",\"raw\":\"").append(JsonLineCodec.encode(Rime.getRimeRawInput())).append('"')
+            .append(",\"raw\":\"").append(JsonLineCodec.encode(access.rawInput())).append('"')
             .append(",\"preedit\":\"").append(JsonLineCodec.encode(preedit)).append('"')
             .append(",\"commit\":")
             .append(
@@ -42,7 +45,7 @@ object EngineSnapshotSampler {
         if (proto != null) sb.append(",\"proto\":").append(proto)
         if (engine != null) sb.append(",\"engine\":\"").append(JsonLineCodec.encode(engine)).append('"')
         sb.append(",\"cands\":[")
-        val cands = Rime.getRimeCandidates(0, 48)
+        val cands = access.candidates(0, 48)
         for (i in cands.indices) {
             if (i > 0) sb.append(',')
             sb.append("[\"").append(JsonLineCodec.encode(cands[i].text)).append("\",\"")
