@@ -12,8 +12,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.Preference
+import androidx.preference.PreferenceGroup
 import com.jiaoay.jrime.R
 import com.jiaoay.jrime.ui.common.PaddingPreferenceFragment
+import com.jiaoay.jrime.util.Const
+import com.jiaoay.jrime.util.addCategory
+import com.jiaoay.jrime.util.addPreference
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.entity.License
 import kotlinx.coroutines.launch
@@ -27,31 +31,52 @@ class LicenseFragment : PaddingPreferenceFragment() {
     ) {
         lifecycleScope.launch {
             val context = preferenceManager.context
-            preferenceScreen = preferenceManager.createPreferenceScreen(requireContext()).apply {
-                val jsonString = resources.openRawResource(R.raw.aboutlibraries)
-                    .bufferedReader()
-                    .use { it.readText() }
+            val jsonString = resources.openRawResource(R.raw.aboutlibraries)
+                .bufferedReader()
+                .use { it.readText() }
+            val libraries =
                 Libs
                     .Builder()
                     .withJson(jsonString)
                     .build()
                     .libraries
-                    .sortedBy {
-                        if (it.tag == "native") it.uniqueId.uppercase() else it.uniqueId.lowercase()
-                    }.forEach {
-                        addPreference(
-                            Preference(context).apply {
-                                isIconSpaceReserved = false
-                                title = "${it.uniqueId}:${it.artifactVersion}"
-                                summary = it.licenses.joinToString { l -> l.spdxId ?: l.name }
-                                setOnPreferenceClickListener { _ ->
-                                    showLicenseDialog(it.uniqueId, it.licenses)
-                                }
-                            },
-                        )
-                    }
+            val native = libraries.filter { it.tag == "native" }.sortedBy { it.uniqueId.lowercase() }
+            val others = libraries.filter { it.tag != "native" }.sortedBy { it.uniqueId.lowercase() }
+            preferenceScreen = preferenceManager.createPreferenceScreen(requireContext()).apply {
+                addPreference(
+                    getString(R.string.licenses_intro_title),
+                    getString(R.string.licenses_intro_summary),
+                )
+                addPreference(
+                    getString(R.string.upstream_credits_title),
+                    getString(R.string.upstream_credits_summary),
+                ) {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Const.RIME_URL)))
+                }
+                addCategory(R.string.licenses_section_native) {
+                    native.forEach { library -> addLibraryPreference(context, library) }
+                }
+                addCategory(R.string.licenses_section_libraries) {
+                    others.forEach { library -> addLibraryPreference(context, library) }
+                }
             }
         }
+    }
+
+    private fun PreferenceGroup.addLibraryPreference(
+        context: android.content.Context,
+        library: com.mikepenz.aboutlibraries.entity.Library,
+    ) {
+        addPreference(
+            Preference(context).apply {
+                isIconSpaceReserved = false
+                title = "${library.uniqueId}:${library.artifactVersion}"
+                summary = library.licenses.joinToString { l -> l.spdxId ?: l.name }
+                setOnPreferenceClickListener { _ ->
+                    showLicenseDialog(library.uniqueId, library.licenses)
+                }
+            },
+        )
     }
 
     override fun onResume() {

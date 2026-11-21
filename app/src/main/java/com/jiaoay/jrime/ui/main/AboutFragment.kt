@@ -1,5 +1,6 @@
 /*
- * SPDX-FileCopyrightText: 2015 - 2025 Rime community
+ * SPDX-FileCopyrightText: 2015 - 2026 Rime community
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
@@ -19,62 +20,72 @@ import com.jiaoay.jrime.util.addCategory
 import com.jiaoay.jrime.util.addPreference
 import com.jiaoay.jrime.util.formatDateTime
 
+/**
+ * About JRime: project intro, version/build facts and the open-source entry
+ * points (license page, source repo, GPL text, privacy). Community channels of
+ * the upstream project are intentionally not presented here — JRime is its own
+ * app.
+ */
 class AboutFragment : PaddingPreferenceFragment() {
-
     @SuppressLint("UseKtx")
     override fun onCreatePreferences(
         savedInstanceState: Bundle?,
         rootKey: String?,
     ) {
         preferenceScreen = preferenceManager.createPreferenceScreen(requireContext()).apply {
-            addPreference(R.string.current_version, Const.VERSION_NAME) {
-                startActivity(
-                    Intent(
-                        Intent.ACTION_VIEW,
-                        Uri.parse("${BuildConfig.BUILD_GIT_REPO}/commit/${BuildConfig.BUILD_COMMIT_HASH}"),
-                    ),
-                )
-            }
-            addPreference(R.string.librime_version, BuildConfig.LIBRIME_VERSION) {
-                val hash = getCommitFromVersionName(BuildConfig.LIBRIME_VERSION)
-                startActivity(
-                    Intent(
-                        Intent.ACTION_VIEW,
-                        Uri.parse("${Const.LIBRIME_URL}/commit/$hash"),
-                    ),
-                )
-            }
-            addPreference(R.string.opencc_version, BuildConfig.OPENCC_VERSION) {
-                val hash = getCommitFromVersionName(BuildConfig.OPENCC_VERSION)
-                startActivity(
-                    Intent(
-                        Intent.ACTION_VIEW,
-                        Uri.parse("${Const.OPENCC_URL}/commit/$hash"),
-                    ),
-                )
-            }
             addPreference(
-                Preference(requireContext()).apply {
-                    isIconSpaceReserved = false
-                    isCopyingEnabled = true
-                    setTitle(R.string.build_info)
-                    summary = requireContext().getString(
-                        R.string.build_info_format,
-                        BuildConfig.BUILDER,
-                        BuildConfig.BUILD_COMMIT_HASH,
-                        formatDateTime(BuildConfig.BUILD_TIMESTAMP),
-                    )
-                },
+                getString(R.string.about_intro_title),
+                getString(R.string.about_intro_summary),
             )
-            addCategory("") {
-                isIconSpaceReserved = false
-                addPreference(R.string.privacy_policy) {
+
+            addCategory(R.string.about_version_section) {
+                addPreference(R.string.current_version, Const.VERSION_NAME) {
                     startActivity(
                         Intent(
                             Intent.ACTION_VIEW,
-                            Uri.parse(Const.PRIVACY_POLICY_URL),
+                            Uri.parse("${BuildConfig.BUILD_GIT_REPO}/commit/${BuildConfig.BUILD_COMMIT_HASH}"),
                         ),
                     )
+                }
+                addPreference(R.string.librime_version, BuildConfig.LIBRIME_VERSION) {
+                    val hash = getCommitFromVersionName(BuildConfig.LIBRIME_VERSION)
+                    startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("${Const.LIBRIME_URL}/commit/$hash"),
+                        ),
+                    )
+                }
+                addPreference(R.string.opencc_version, BuildConfig.OPENCC_VERSION) {
+                    val hash = getCommitFromVersionName(BuildConfig.OPENCC_VERSION)
+                    startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("${Const.OPENCC_URL}/commit/$hash"),
+                        ),
+                    )
+                }
+                addPreference(
+                    Preference(requireContext()).apply {
+                        isIconSpaceReserved = false
+                        isCopyingEnabled = true
+                        setTitle(R.string.build_info)
+                        summary = requireContext().getString(
+                            R.string.build_info_format,
+                            BuildConfig.BUILDER,
+                            BuildConfig.BUILD_COMMIT_HASH,
+                            formatDateTime(BuildConfig.BUILD_TIMESTAMP),
+                        )
+                    },
+                )
+            }
+
+            addCategory(R.string.about_open_source_section) {
+                addPreference(
+                    R.string.licenses_intro_title,
+                    R.string.licenses_intro_summary,
+                ) {
+                    findNavController().navigate(NavigationRoute.License)
                 }
                 addPreference(R.string.source_code, R.string.git_repo) {
                     startActivity(
@@ -92,44 +103,11 @@ class AboutFragment : PaddingPreferenceFragment() {
                         ),
                     )
                 }
-                addPreference(
-                    R.string.open_source_licenses,
-                    R.string.licenses_of_third_party_libraries,
-                ) {
-                    findNavController().navigate(NavigationRoute.License)
-                }
-            }
-            addCategory("") {
-                isIconSpaceReserved = false
-                addPreference(R.string.qq_group_1, Const.QQ_GROUP_1_NUM) {
+                addPreference(R.string.privacy_policy, R.string.git_repo) {
                     startActivity(
                         Intent(
                             Intent.ACTION_VIEW,
-                            Uri.parse(Const.QQ_GROUP_1_URL),
-                        ),
-                    )
-                }
-                addPreference(R.string.qq_group_2, Const.QQ_GROUP_2_NUM) {
-                    startActivity(
-                        Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse(Const.QQ_GROUP_2_URL),
-                        ),
-                    )
-                }
-                addPreference(R.string.rime_qq_group, Const.RIME_QQ_GROUP_NUM) {
-                    startActivity(
-                        Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse(Const.RIME_QQ_GROUP_URL),
-                        ),
-                    )
-                }
-                addPreference(R.string.telegram, Const.TELEGRAM_NAME) {
-                    startActivity(
-                        Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse(Const.TELEGRAM_URL),
+                            Uri.parse(Const.PRIVACY_POLICY_URL),
                         ),
                     )
                 }

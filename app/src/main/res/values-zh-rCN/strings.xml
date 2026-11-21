@@ -9,9 +9,6 @@
     <!-- 输入法平台名称  -->
     <string name="app_name_release">JRime</string>
     <string name="app_name_debug">JRime（调试）</string>
-    <string name="qq_group_1">同文 QQ 群 1</string>
-    <string name="qq_group_2">同文 QQ 群 2</string>
-    <string name="rime_qq_group">中州韵 QQ 群</string>
     <string name="librime_version">RIME 版本</string>
     <string name="opencc_version">OpenCC 版本</string>
     <string name="current_version">当前版本</string>
@@ -63,7 +60,7 @@
     <string name="deploy_finish">部署完成</string>
     <string name="system_default">系统默认</string>
     <string name="key_swipe_travel">触发按键滑动手势的距离</string>
-    <string name="trime_app_slogan">击响中文之韵</string>
+    <string name="trime_app_slogan">JRime · 专注好用的 Rime 输入法</string>
     <string name="custom_sound_effect_name">自定义按键音效</string>
     <string name="setup_banner_text">启用并选择 <b>JRime</b> 作为输入法即可开始打字——点此打开系统设置</string>
     <string name="setup_dialog_enable_title">启用 JRime</string>
@@ -86,7 +83,6 @@
     <string name="hook_ctrl_zy">拦截 Ctrl+Z/Y</string>
     <string name="key_swipe_velocity">触发按键滑动手势的速度（距离/速度满足其一即可）</string>
     <string name="build_info">构建信息</string>
-    <string name="telegram">Telegram</string>
     <string name="quick_bar">快捷栏</string>
     <string name="copy_done">已复制</string>
     <string name="hook_shift_space">点击空格时，忽略Shift的锁定状态</string>
@@ -307,4 +303,15 @@
     <string name="word_segment">分词</string>
     <string name="star_success">收藏成功</string>
     <string name="ignore_system_gesture_insets">忽略系统手势边衬区</string>
+    <string name="ime_subtype_label">JRime 输入法</string>
+    <string name="about_intro_title">关于 JRime</string>
+    <string name="about_intro_summary">JRime 是一个专注日常输入的 Android Rime 输入法：共享 Compose 界面、精简的分类设置、用户词典工具与桌面配套。默认方案是小鹤双拼/飞鹤快拼（flypy_xhfast），其他 Rime 方案可以像任何 Rime 前端一样导入并切换。</string>
+    <string name="licenses_intro_title">开源说明与致谢</string>
+    <string name="licenses_intro_summary">JRime 以 GPL-3.0-or-later 授权，构建在开源 Rime 生态之上。下面先列 Rime 引擎与原生组件，再列 AndroidX/Kotlin/Compose 等库；点击条目查看许可证。</string>
+    <string name="licenses_section_native">Rime 引擎与原生组件</string>
+    <string name="licenses_section_libraries">应用、界面与工具库</string>
+    <string name="upstream_credits_title">上游项目</string>
+    <string name="upstream_credits_summary">Rime / librime、OpenCC、Trime（JRime 派生自的 Android 前端）以及 Rime 社区的词典与方案。</string>
+    <string name="about_version_section">版本与构建</string>
+    <string name="about_open_source_section">开源与致谢</string>
 </resources>

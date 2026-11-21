@@ -6,178 +6,85 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # JRime
 
-專精化的 Android Rime 輸入法：衍生自 [Trime](https://github.com/osfans/trime)（同文輸入法），面向小鶴（flypy）音形方案客製化，是個人自用專案，正在按 [改造路線圖](doc/refactor/roadmap.md) 重構。
+**JRime 是一個專注日常輸入的 Android Rime 輸入法**：共享 Compose 鍵盤與介面、精簡的分類設定、
+使用者詞典工具，以及桌面端配套。它衍生自 [Trime](https://github.com/osfans/trime)，透過 JNI
+執行 [RIME](https://rime.im/) 引擎（`librime`）。
 
-![build](https://github.com/shijiayao-main/JRime/actions/workflows/commit-ci.yml/badge.svg?branch=main)
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![GitHub release](https://img.shields.io/github/release/shijiayao-main/JRime.svg)](https://github.com/shijiayao-main/JRime/releases)
-[![Latest build](https://img.shields.io/github/last-commit/shijiayao-main/JRime.svg)](https://github.com/shijiayao-main/JRime/releases/tag/nightly)
+預設方案是 **小鶴雙拼 / 飛鶴快拼**（`flypy_xhfast`）——這只是預設值，不是綁定：JRime 是通用
+Rime 前端，其他方案可以像任何 Rime 應用一樣匯入並切換。
 
-[English](README.md) | [简体中文](README_sc.md) | 繁體中文
+[English](README.md) | [简体中文](README_sc.md)
 
-## 關於
+## 功能
 
-同文（Trime）是一個 Android 輸入法前端，基於著名的 [RIME] 輸入法框架，使用 Kotlin 撰寫並透過 JNI 呼叫原生程式碼。它源自開源的[注音倉頡輸入法]專案，支援 Android 8.0 以上版本，旨在保護漢語各地方言母語，是音碼、形碼通用的輸入法平臺。
+- **一套 Compose 介面**：鍵盤、頂欄、候選條、面板與設定共用同一份 Compose 程式碼，並已 KMP 化
+  到桌面；統一的 design token / 配色層。
+- **日常可用的候選**：候選分頁、長按選單（置頂/刪詞/複製/查碼）、小鶴韻母鍵面提示、
+  候選單頁數量/字號/註解可調。
+- **輸入規則放進應用**：簡繁、全形、英文標點、表情候選、聯想、單字優先、全拼預編輯、碼區提示、
+  增廣字集。
+- **分類設定 + 搜尋**：輸入/鍵盤/候選/外觀/剪貼簿/系統與資料六類，不再是一條超長清單。
+- **詞典工具**：瀏覽/搜尋/加詞/調頻/刪除使用者詞典；常用語面板（`custom_phrase.txt`）；
+  整機使用者資料備份/還原；複製診斷資訊。
+- **長按輸入**：字母列長按數字/大寫/符號；空格長按語音輸入法、Enter 長按換行、逗號長按頓號。
+- **桌面配套（進行中）**：共享 JVM 引擎/協議、Compose 候選窗應用與設定應用、macOS IMK 殼、
+  Linux IBus 引擎殼、Windows TSF 腳手架。
+- **穩定性**：啟動失敗降級、設定崩潰修復、設定無孤兒測試、表面守護測試、引擎 golden 回歸。
 
-[查看文檔](https://github.com/shijiayao-main/JRime/wiki)
+## 環境需求
 
-## 下載
+- Android 8.0（API 26）以上。
+- 建置：JDK 20、Android SDK 37、Gradle wrapper（`./gradlew`）。引擎原始碼已隨倉庫；桌面建置另需
+  宿主 librime（見 `harness/README.md`）。
+- 可選語音輸入：安裝任意系統語音輸入法（如 Google 語音輸入）後可使用長按空格。
 
-- 穩定版 <br>
-  [<img alt='Get it on F-Droid' src='https://fdroid.gitlab.io/artwork/badge/get-it-on.png' height='80px'/>](https://f-droid.org/packages/com.jiaoay.jrime)
-
-- 每夜版 [點選下載](https://github.com/shijiayao-main/JRime/releases/tag/nightly)
-
-- 測試版 [點選下載](https://github.com/shijiayao-main/JRime/actions)
-
-- 配置文件 [rimerc](https://github.com/Bambooin/rimerc)
-
-## 沿革
-
-TRIME 是 Tongwen RIME 或是 ThaeRv Input Method 的縮寫：
-
-- 最初，輸入法是寫給[泰如拼音](http://taerv.nguyoeh.com/ime/)（tae5 rv2）的，中文名為“泰如輸入法”；
-- 然後，添加了吳語等方言碼錶，做成了一個輸入法平臺，更名為“漢字方言輸入法”；
-- 後來，相容了五筆、兩筆等形碼，在太空衛士、徵羽的建議下，更名為“[同文輸入法平臺 2.x](https://github.com/shijiayao-main/JRime-legacy)”。寓意音碼形碼同臺，方言官話同文；
-- 之後，藉助 JNI 技術，享受了 [librime](https://github.com/rime/librime) 的成果，升級為“同文輸入法平臺 3.x”，簡稱“同文輸入法”。
-
-歡迎參與[貢獻](CONTRIBUTING.md)！
-
-## 開發入門
-
-### 準備
-
-#### 開發環境要求
-
-- Android SDK 和 Android NDK
-  - 如果還不熟悉 Android 開發，建議安裝 [Android Studio](https://developer.android.com/studio)，它會自動安裝並配置所需的 SDK、NDK 和 CMake 版本。
-
-- JDK（OpenJDK）17
-- Python 3（用於給 OpenCC 生成詞典文字檔案）
-
-#### Windows 上的前提條件
-
-目前建置設定會在建置過程中建立符號連結，開發者需要：
-
-- 啟用[開發人員模式](https://learn.microsoft.com/zh-tw/windows/apps/get-started/enable-your-device-for-development) 以在無管理員權限的情況下建立符號連結。
-
-- 啟用 `git` 的符號連結支援：
-
-  ```powershell
-  git config --global core.symlinks true
-  ```
-
-如果無法或不想啟用上述設定也沒關係。建置系統會在符號連結建立失敗時自動改用複製。
-
-### 建置
-
-#### 1. 克隆此專案並拉取所有子模組：
+## 建置與安裝
 
 ```sh
-git clone https://github.com/shijiayao-main/JRime.git
-cd trime
-git submodule update --init --recursive
+# 全倉閘門（單測 + assembleDebug + spotless）
+./gradlew test :core:model:jvmTest :core:engine:jvmTest :ui:ime:desktopTest \
+  :app:assembleDebug spotlessCheck
 
-# 或使用部分克隆節省時間：
-# git submodule update --init --recursive --filter=blob:none
+# 建置 + 安裝到已連線裝置並啟用輸入法
+./script/install-debug.sh
 ```
 
-#### 2. 編譯偵錯版本：
+release 預設未簽名；設定 `SIGNING_KEY`、`KEY_STORE_PASSWORD`、`KEY_ALIAS`、`KEY_PASSWORD`
+（見 `app/build.gradle.kts`）後簽名。
 
-```sh
-# On Linux or macOS
-make debug
+## 自己驗收
 
-# On Windows
-.\gradlew assembleDebug
-```
+- [doc/verification-guide.md](doc/verification-guide.md)：手機/macOS/Linux 逐項驗收、已知限制、
+  回滾與回饋清單。
+- [doc/changelog.md](doc/changelog.md)：每批交付與驗證方式。
+- [doc/perf-baseline.md](doc/perf-baseline.md)：APK 體積與冷啟動基線。
 
-首次原生建置會自動下載 Boost，需要網路連線。
+## 文件
 
-#### 3. 編譯正式版本：
+| 文件 | 用途 |
+|---|---|
+| [doc/master-plan.md](doc/master-plan.md) | 總規劃（產品原則、架構、里程碑、風險） |
+| [doc/verification-guide.md](doc/verification-guide.md) | 主人驗收清單 |
+| [doc/changelog.md](doc/changelog.md) | 交付記錄與已修問題 |
+| [doc/voice-input-notes.md](doc/voice-input-notes.md) | 長按空格語音的路線比較與結論 |
+| [doc/perf-baseline.md](doc/perf-baseline.md) | 體積/啟動基線 |
+| [doc/screenshots/README.md](doc/screenshots/README.md) | 介面證據索引 |
+| [openspec/changes/](openspec/changes/) | 各期 change 提案、任務與實作說明 |
 
-請在倉庫根目錄建立 `keystore.properties` 檔案，包含以下[簽名資訊](https://developer.android.com/studio/publish/app-signing)：
+桌面殼見 [desktop/](desktop/README.md)，macOS 殼見 [macos/JRimeIME/](macos/JRimeIME/README.md)。
 
-```properties
-storePassword=myStorePassword
-keyPassword=mykeyPassword
-keyAlias=myKeyAlias
-storeFile=myStoreFileLocation
-```
+## 授權與致謝
 
-然後執行：
+JRime 以 **GPL-3.0-or-later** 授權——見 [LICENSE](LICENSE)。
 
-```sh
-# On Linux or macOS
-make release
+- 完整第三方授權清單：[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+  （由 `script/gen-third-party-notices.py` 產生），應用內「關於 → 開源說明」同樣可查。
+- 上游致謝：[Rime 社群](https://rime.im/) 的 `librime`、[OpenCC](https://github.com/BYVoid/OpenCC)，
+  以及 JRime 衍生自的 Android 前端 [Trime](https://github.com/osfans/trime)；Rime 詞典/方案
+  版權歸各自作者。
+- JRime 自身新增的 Compose 介面、設定、詞典工具、桌面配套與修復均為本專案內容；與上游應用無隸屬關係。
 
-# On Windows
-.\gradlew assembleRelease
-```
+## 隱私
 
-### 檢查
-
-執行單元測試和 Android Lint：
-
-```sh
-make check
-```
-
-套用程式碼風格格式化：
-
-```sh
-make style-apply
-```
-
-### 疑難排解
-
-如果在更新子模組或工具鏈後原生建置失敗，請清除建置產物後重試：
-
-```sh
-# On Linux or macOS
-make clean
-
-# On Windows
-.\gradlew clean
-```
-
-其他問題：
-
-1. 確認所有子模組都已初始化且為最新版本。如果修改了一個或多個子模組，請確保它們與目前修訂版本相容。
-2. 如果問題仍然存在，嘗試重新克隆倉庫。
-3. 檢查是否有相關的 issue 或 PR，並嘗試其中建議的解決方案。
-4. 如果以上方法都無效，請附上建置日誌開啟 issue。
-
-## 鳴謝
-
-- 開發：[osfans](https://github.com/osfans)
-- 貢獻：[boboIqiqi](https://github.com/boboIqiqi)、[Bambooin](https://github.com/Bambooin)、[senchi96](https://github.com/senchi96)、[heiher](https://github.com/heiher)、[abay](https://github.com/a342191555)、[iovxw](https://github.com/iovxw)、[huyz-git](https://github.com/huyz-git)、[tumuyan](https://github.com/tumuyan)、[WhiredPlanck](https://github.com/WhiredPlanck)、[nopdan](https://github.com/nopdan)。完整名單見 [AUTHORS](AUTHORS)。
-- [維基](https://github.com/shijiayao-main/JRime/wiki)：[xiaoqun2016](https://github.com/xiaoqun2016)、[boboIqiqi](https://github.com/boboIqiqi)......
-- 翻譯：天真可愛的滿滿（繁體中文）、點解（英文）......
-- 鍵盤：天真可愛的滿滿、皛筱曉小笨魚、吳琛 11、熊貓阿 Bo、默默ㄇㄛ ˋ......
-- 捐贈：[Releases](https://github.com/shijiayao-main/JRime/releases) 中的“打賞”實時更新
-- 社群：在 [Issues](https://github.com/shijiayao-main/JRime/issues)、[QQ 群 (811142286)](https://jq.qq.com/?_wv=1027&k=AXdR80HN)、[QQ 群 (224230445)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=pg_q7UVumWYLq1Rk8kIAqkK1xGt64VnX&authKey=04m9l7OBO5H5vgrEL8IbpsmtnptWM60xy%2FUwYCfyvw9VcRhe8zRzAS1ezoemZdFr&noverify=0&group_code=224230445)、[貼吧](http://tieba.baidu.com/f?kw=rime)、[Telegram](https://t.me/trime_dev) 中反饋意見的網友
-- 專案：[RIME]、[OpenCC]、[注音倉頡輸入法]等開源專案
-
-## 第三方庫
-
-- [Boost C++ Libraries](https://www.boost.org/) (Boost Software License)
-- [darts-clone](https://github.com/s-yata/darts-clone) (New BSD License)
-- [LevelDB](https://github.com/google/leveldb) (New BSD License)
-- [libiconv](https://www.gnu.org/software/libiconv/) (LGPL License)
-- [librime-lua](https://github.com/hchunhui/librime-lua) (BSD 3-Clause License)
-- [librime-octagram](https://github.com/lotem/librime-octagram) (GPL-3.0 License)
-- [librime-predict](https://github.com/rime/librime-predict) (BSD 3-Clause License)
-- [marisa-trie](https://github.com/s-yata/marisa-trie) (BSD License)
-- [spdlog](https://github.com/gabime/spdlog) (MIT License)
-- [fmt](https://github.com/fmtlib/fmt) (MIT License)
-- [OpenCC](https://github.com/BYVoid/OpenCC) (Apache License 2.0)
-- [RIME](https://rime.im) (BSD License)
-- [snappy](https://github.com/google/snappy) (BSD License)
-- [utfcpp](https://github.com/nemtrif/utfcpp) (Boost Software License)
-- [yaml-cpp](https://github.com/jbeder/yaml-cpp) (MIT License)
-- [注音倉頡輸入法](https://code.google.com/archive/p/android-traditional-chinese-ime/) (Apache License 2.0)
-
-[注音倉頡輸入法]: https://code.google.com/archive/p/android-traditional-chinese-ime/
-[RIME]: https://rime.im
-[OpenCC]: https://github.com/BYVoid/OpenCC
+JRime 在本機執行 Rime 引擎，不收集、不上傳輸入內容。可選語音輸入由你切換到的系統語音輸入法負責
+（JRime 本身不申請麥克風權限）。見 [PRIVACY.md](PRIVACY.md)。

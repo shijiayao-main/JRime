@@ -10,9 +10,6 @@
     <string name="app_name_release">JRime</string>
     <string name="app_name_debug">JRime (Debug)</string>
     <!-- Preference settings -->
-    <string name="qq_group_1">JRime QQ group 1</string>
-    <string name="qq_group_2">JRime QQ group 2</string>
-    <string name="rime_qq_group">RIME QQ group</string>
     <string name="librime_version">RIME version</string>
     <string name="opencc_version">OpenCC version</string>
     <string name="current_version">Current version</string>
@@ -67,7 +64,7 @@
     <string name="open_source_licenses">Open Source Licenses</string>
     <string name="system_default">System default</string>
     <string name="key_swipe_travel">Min travel for gesture</string>
-    <string name="trime_app_slogan">Rimes with Your Keystrokes on Android</string>
+    <string name="trime_app_slogan">JRime · a focused Rime input method</string>
     <string name="custom_sound_effect_name">Custom key Sound Effect</string>
     <string name="setup_banner_text">Enable and select <b>JRime</b> as your input method to start typing — tap to open settings</string>
     <string name="setup_dialog_enable_title">Enable JRime</string>
@@ -90,7 +87,6 @@
     <string name="hook_ctrl_zy">Hook Ctrl+Z/Y</string>
     <string name="key_swipe_velocity">The speed of triggering the button swipe gesture (the distance/velocity is sufficient)</string>
     <string name="build_info">Build Info</string>
-    <string name="telegram">Telegram</string>
     <string name="quick_bar">Quick bar</string>
     <string name="copy_done">Copied to clipboard!</string>
     <string name="hook_shift_space">Ignore Shift locked for Space</string>
@@ -308,4 +304,15 @@
     <string name="star_success">Star success</string>
     <string name="ignore_system_gesture_insets">Ignore system gesture insets</string>
     <string name="clipboard_mask_sensitive">Mask sensitive data (such as passwords)</string>
+    <string name="ime_subtype_label">JRime input method</string>
+    <string name="about_intro_title">About JRime</string>
+    <string name="about_intro_summary">JRime is an Android Rime input method focused on everyday typing: shared Compose UI, a compact settings hub, user dictionary tools and desktop companions. The default schema is 小鹤双拼/飞鹤快拼 (flypy_xhfast) — other Rime schemas can be imported and switched like in any Rime frontend.</string>
+    <string name="licenses_intro_title">Open source &amp; attribution</string>
+    <string name="licenses_intro_summary">JRime is licensed under GPL-3.0-or-later and is built on the open source Rime ecosystem. Engine and native components are listed first, then AndroidX/Kotlin/Compose and other libraries. Tap an entry to view its license.</string>
+    <string name="licenses_section_native">Rime engine &amp; native components</string>
+    <string name="licenses_section_libraries">App, UI &amp; tooling libraries</string>
+    <string name="upstream_credits_title">Upstream projects</string>
+    <string name="upstream_credits_summary">Rime / librime, OpenCC, Trime (the Android frontend JRime derives from) and the Rime community\'s dictionaries.</string>
+    <string name="about_version_section">Version &amp; build</string>
+    <string name="about_open_source_section">Open source &amp; credits</string>
 </resources>
