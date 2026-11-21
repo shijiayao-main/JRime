@@ -121,16 +121,11 @@ class AppPrefs(
         shared: SharedPreferences,
     ) : PreferenceDelegateOwner(shared, R.string.virtual_keyboard) {
         companion object {
-            const val LANDSCAPE_MODE = "keyboard_landscape_mode"
-            const val SPLIT_SPACE_PERCENT = "keyboard_split_space"
             const val KEYBOARD_HEIGHT = "keyboard_row_height"
             const val DOUBLE_SPACE_PERIOD = "double_space_period"
             const val SPACE_LONG_PRESS_VOICE = "space_long_press_voice"
 
             const val USE_SOFT_CURSOR = "use_soft_cursor"
-            const val HIDE_INPUT_BAR = "hide_input_bar"
-            const val HIDE_KEY_SYMBOL = "hide_key_symbol"
-            const val HIDE_KEY_HINT = "hide_key_hint"
 
             const val SOUND_ON_KEYPRESS = "sound_on_keypress"
             const val KEY_SOUND_VOLUME = "sound_volume"
@@ -146,44 +141,12 @@ class AppPrefs(
             const val SHOW_CANDIDATE_COMMENT = "show_candidate_comment"
             const val CANDIDATE_PAGE_SIZE = "candidate_page_size"
             const val CANDIDATE_TEXT_SIZE = "candidate_text_size"
-            const val EXPAND_KEYPRESS_AREA = "expand_keypress_area"
-            const val SWIPE_TRAVEL = "key_swipe_travel"
-            const val SWIPE_VELOCITY = "key_swipe_velocity"
-            const val LONG_PRESS_TIMEOUT = "key_long_press_timeout"
-            const val REPEAT_INTERVAL = "key_repeat_interval"
-            const val DOUBLE_TAP_TIMEOUT = "key_double_tap_timeout"
-            const val SLIDE_STEP_SIZE = "key_slide_step_size"
 
             const val HOOK_CTRL_A = "hook_ctrl_a"
             const val HOOK_CTRL_CV = "hook_ctrl_cv"
             const val HOOK_CTRL_LR = "hook_ctrl_lr"
             const val HOOK_CTRL_ZY = "hook_ctrl_zy"
-            const val HOOK_SHIFT_SPACE = "hook_shift_space"
-            const val HOOK_SHIFT_NUM = "hook_shift_num"
-            const val HOOK_SHIFT_SYMBOL = "hook_shift_symbol"
-            const val HOOK_SHIFT_ARROW = "hook_shift_arrow"
-
-            const val MAX_SPAN_COUNT = "max_span_count"
-            const val MAX_SPAN_COUNT_LANDSCAPE = "max_span_count_landscape"
-            const val HORIZONTAL_CANDIDATE_MODE = "horizontal_candidate_mode"
         }
-
-        enum class LandscapeMode(override val stringRes: Int) : PreferenceDelegateEnum {
-            NEVER(R.string.never),
-            LANDSCAPE(R.string.landscape_only),
-            WIDE(R.string.wide_or_landscape),
-            ALWAYS(R.string.always),
-        }
-
-        val landscapeMode = enum(R.string.enable_landscape_mode, LANDSCAPE_MODE, LandscapeMode.NEVER)
-        val splitSpacePercent = int(
-            R.string.split_space_percent,
-            SPLIT_SPACE_PERCENT,
-            100,
-            0,
-            200,
-            "%",
-        )
 
         val rowHeight = int(
             R.string.keyboard_row_height,
@@ -198,10 +161,6 @@ class AppPrefs(
         val spaceLongPressVoice = switch(R.string.space_long_press_voice, SPACE_LONG_PRESS_VOICE, true)
 
         val useSoftCursor = switch(R.string.use_soft_cursor, USE_SOFT_CURSOR, true)
-
-        val hideInputBar = switch(R.string.hide_input_bar, HIDE_INPUT_BAR, false)
-        val hideKeySymbol = switch(R.string.hide_key_symbol, HIDE_KEY_SYMBOL, false)
-        val hideKeyHint = switch(R.string.hide_key_hint, HIDE_KEY_HINT, false)
 
         val soundOnKeyPress = switch(R.string.sound_on_keypress, SOUND_ON_KEYPRESS, false)
         val soundVolume = int(
@@ -237,55 +196,21 @@ class AppPrefs(
         val speakOnKeyPress = switch(R.string.speak_on_keypress, SPEAK_ON_KEYPRESS, false)
         val speakOnCommit = switch(R.string.speak_on_commit, SPEAK_ON_COMMIT, false)
         val popupOnKeyPress = switch(R.string.popup_on_key_press, POPUP_ON_KEY_PRESS, true)
-        val expandKeypressArea = switch(R.string.expand_keypress_area_to_edge, EXPAND_KEYPRESS_AREA, false)
 
         // The displacement (dp) past which a touch counts as a swipe; 0
         // (shown as "Disable") turns swipe detection off entirely.
-        val swipeTravel = int(
-            R.string.key_swipe_travel,
-            SWIPE_TRAVEL,
-            40,
-            0,
-            400,
-            "dp",
-            10,
-            R.string.disable,
-            useMinAsDefault = true,
-        )
 
         // The long-press trigger delay; 0 (the default, shown as "System
         // default") follows the system long-press timeout, the accessibility
         // setting respect included. An explicit value overrides it.
-        val longPressTimeout = int(
-            R.string.key_long_press_timeout,
-            LONG_PRESS_TIMEOUT,
-            0,
-            0,
-            1000,
-            "ms",
-            10,
-            R.string.system_default,
-        )
 
         // The backspace-style repeat cadence; 80ms is the pace the gesture
         // code always ran at before this preference took effect.
-        val repeatInterval = int(
-            R.string.key_repeat_interval,
-            REPEAT_INTERVAL,
-            80,
-            10,
-            100,
-            "ms",
-            10,
-        )
 
         val hookCtrlA = switch(R.string.hook_ctrl_a, HOOK_CTRL_A, false)
         val hookCtrlCV = switch(R.string.hook_ctrl_cv, HOOK_CTRL_CV, false)
         val hookCtrlLR = switch(R.string.hook_ctrl_lr, HOOK_CTRL_LR, false)
         val hookCtrlZY = switch(R.string.hook_ctrl_zy, HOOK_CTRL_ZY, false)
-        val hookShiftSpace = switch(R.string.hook_shift_space, HOOK_SHIFT_SPACE, false)
-        val hookShiftNum = switch(R.string.hook_shift_num, HOOK_SHIFT_NUM, false)
-        val hookShiftSymbol = switch(R.string.hook_shift_symbol, HOOK_SHIFT_SYMBOL, false)
     }
 
     /**
@@ -350,16 +275,9 @@ class AppPrefs(
         shared: SharedPreferences,
     ) : PreferenceDelegateOwner(shared, R.string.advanced) {
         companion object {
-            const val SHOW_APP_ICON = "show_app_icon"
             const val IGNORE_SYSTEM_GESTURE_INSETS = "ignore_system_gesture_insets"
         }
 
-        val showAppIcon = switch(
-            R.string.show_app_icon,
-            SHOW_APP_ICON,
-            true,
-            R.string.only_available_on_some_roms,
-        )
         val ignoreSystemGestureInsets = switch(
             R.string.ignore_system_gesture_insets,
             IGNORE_SYSTEM_GESTURE_INSETS,

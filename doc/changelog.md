@@ -104,6 +104,12 @@
 - 模拟器验证：键盘/中英切换/输入、数字键盘、剪贴板/表情/符号面板均正常（截图见
   `openspec/changes/panel-compose/screenshots/`）。下一步 P4：dead prefs 与颜色/主题 legacy 清理。
 
+## 死偏好清理 P4.2（2026-11-21）
+
+- 删除 P3b 后无消费者的 19 个偏好（landscape/split/hide/expand/swipe/long-press/repeat/hook_shift/
+  show_app_icon 等）及常量/枚举引用，设置中心行数收敛（键盘 14→9、输入 24→21 等）；模拟器验证应用
+  与设置正常。下一步：Theme/ColorManager/NativeTheme/ImeColors 等颜色/主题 legacy 清理。
+
 ## 复现命令
 
 ```sh

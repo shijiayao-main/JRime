@@ -119,7 +119,7 @@ class SettingsSpecsFactory(
             // expanded hit area) are still declared for the old Keyboard model
             // and are hidden here until that model retires; the no-orphan
             // contract keeps their specs in the list.
-            hidden = hidden || ui.key in LEGACY_HIDDEN_KEYS,
+            hidden = hidden,
         )
         return when (ui) {
             is PreferenceDelegateUi.Switch -> spec(SettingControl.Toggle(ui.defaultValue))
@@ -232,9 +232,6 @@ class SettingsSpecsFactory(
                 AppPrefs.Keyboard.HOOK_CTRL_CV,
                 AppPrefs.Keyboard.HOOK_CTRL_LR,
                 AppPrefs.Keyboard.HOOK_CTRL_ZY,
-                AppPrefs.Keyboard.HOOK_SHIFT_SPACE,
-                AppPrefs.Keyboard.HOOK_SHIFT_NUM,
-                AppPrefs.Keyboard.HOOK_SHIFT_SYMBOL,
             )
 
         private val CANDIDATE_KEYS =
@@ -249,21 +246,9 @@ class SettingsSpecsFactory(
                 AppPrefs.Appearance.ACCENT,
                 AppPrefs.Appearance.SHOW_KEY_HINTS,
                 AppPrefs.Appearance.SHOW_CANDIDATE_COMMENT,
-                AppPrefs.Advanced.SHOW_APP_ICON,
             )
 
         private val SYSTEM_KEYS = setOf(AppPrefs.Advanced.IGNORE_SYSTEM_GESTURE_INSETS)
-
-        /** Declared but only consumed by the retiring legacy Keyboard model. */
-        private val LEGACY_HIDDEN_KEYS =
-            setOf(
-                AppPrefs.Keyboard.LANDSCAPE_MODE,
-                AppPrefs.Keyboard.SPLIT_SPACE_PERCENT,
-                AppPrefs.Keyboard.HIDE_INPUT_BAR,
-                AppPrefs.Keyboard.HIDE_KEY_SYMBOL,
-                AppPrefs.Keyboard.HIDE_KEY_HINT,
-                AppPrefs.Keyboard.EXPAND_KEYPRESS_AREA,
-            )
 
         /** Convenience for the app: resolves labels from resources. */
         fun forContext(context: Context): SettingsSpecsFactory = SettingsSpecsFactory(

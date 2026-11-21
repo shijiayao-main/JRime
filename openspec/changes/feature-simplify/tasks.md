@@ -5,4 +5,8 @@
 - [x] 1.3 候选长按菜单（置顶/删词/复制/查编码）加语义图标
 - [x] 1.4 文案/文档更新（验收手册/变更记录/路线图）
 - [x] 1.5 构建/单测/spotless 验证
-- [ ] 1.6 下一批：主题/颜色 YAML 时代类清理、死偏好与设置派生收敛（需 P3 面板迁移后）
+- [x] 1.6 死偏好清理（P3b 后无消费者的 keyboard/advanced 项）：landscape/split/hide*/expand/swipe*/
+      long_press/repeat/hook_shift*/show_app_icon 等 19 个偏好与常量删除；设置中心行数收敛
+      （键盘 14→9、输入 24→21 等）
+- [ ] 1.7 下一批：主题/颜色 YAML 时代类清理（Theme/ThemeManager/ColorManager/NativeTheme/ImeColors 等），
+      面板配色改用 :ui:design token

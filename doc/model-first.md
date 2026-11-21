@@ -97,8 +97,8 @@ YAML/主题时代类；面板内容迁移为 Compose state holder + `PanelSlot`�
 - **P3（已完成）**：面板改 Compose state holder；删除 BoardWindow/KeyboardWindow/Keyboard/Key/
   CommonKeyboardActionListener/InputView 等 legacy 视图层（~5k 行），Compose 输入视图自立（消息泵/生命周期/
   面板槽）。
-- **P4（进行中）**：已删除自定义音效 YAML（应用层零 YAML）；颜色/主题去 legacy、死偏好与设置派生收敛
-  待 P3 面板迁移后一并清理。
+- **P4（进行中）**：已删除自定义音效 YAML（应用层零 YAML）与 19 个死偏好（设置行数收敛）；
+  剩余：颜色/主题 legacy 类清理。
 - **P5**：扩展模块示例 + 文档 + 注册入口（ServiceLoader 或显式 registry）；README/开发说明改为
   「写 Kotlin model 扩展」而不是「改 YAML」。
 - 每批：单测 + assembleDebug + spotless 全绿；真机验收留最后。
