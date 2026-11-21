@@ -57,6 +57,14 @@
 - 清数据首装实测：使用英文标点=关、增广字集=关、表情候选=开、联想=关（截图见
   `openspec/changes/rule-defaults/screenshots/`）。详见 `doc/schema-rules-notes.md`。
 
+## 模型化扩展（P1，2026-11-21）
+
+- 新增 typed `ImeAction` 与 `ActionResolver`：随包布局全部槽位类型化，YAML 时代文本宏改为显式
+  `TextEdit` 序列，Unsupported 为空（测试钉死）。
+- 新增 `JrimeExtension`/`ExtensionRegistry`：扩展按 Kotlin model 注册（actions/keyboards/panels/
+  inputRules），冲突显式报错。
+- 架构与 P1–P5 路线见 `doc/model-first.md`；本批只加模型与测试，运行时 UI 暂不变。
+
 ## 复现命令
 
 ```sh
