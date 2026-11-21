@@ -12,6 +12,7 @@ enum KeyCodeMapper {
 
     // librime modifier masks
     static let shift = 1 << 0
+    static let lock = 1 << 1
     static let control = 1 << 2
     static let alt = 1 << 3
 
@@ -22,6 +23,17 @@ enum KeyCodeMapper {
         115: "Home", 119: "End", 116: "Prior", 121: "Next",
         117: "Delete",
     ]
+
+    /// The modifier keys the engine wants as key events: a Shift tap is the
+    /// schema's Chinese/English toggle (ascii_composer), CapsLock commits the
+    /// raw code (commit_code). Other modifiers pass through untouched.
+    static func mapModifier(_ event: NSEvent) -> String? {
+        switch event.keyCode {
+        case 56, 60: return "Shift_L"
+        case 57: return "Caps_Lock"
+        default: return nil
+        }
+    }
 
     static func map(_ event: NSEvent) -> Mapped? {
         let flags = event.modifierFlags

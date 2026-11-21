@@ -43,11 +43,23 @@ final class InputController: IMKInputController {
     // MARK: key handling
 
     override func handle(_ event: NSEvent!, client sender: Any!) -> Bool {
-        guard let event = event, event.type == .keyDown,
-              let client = sender as? IMKTextInput else { return false }
+        guard let event = event, let client = sender as? IMKTextInput else { return false }
         currentClient = client
         ensureEngine()
-        guard let mapped = KeyCodeMapper.map(event),
+        // Modifier presses are key events to the engine: a lone Shift tap is
+        // the schema's Chinese/English toggle, CapsLock the commit-code key.
+        // Combinations (Cmd/Ctrl/Option shortcuts) and the shifted-letter
+        // case keep flowing through the normal path below / to the app.
+        if event.type == .flagsChanged {
+            let conflicts = event.modifierFlags.intersection([.command, .control, .option])
+            guard conflicts.isEmpty,
+                  let repr = KeyCodeMapper.mapModifier(event),
+                  let reply = engine?.key(repr: repr, mask: 0) else { return false }
+            apply(reply, client)
+            return reply.handled
+        }
+        guard event.type == .keyDown,
+              let mapped = KeyCodeMapper.map(event),
               let reply = engine?.key(repr: mapped.repr, mask: mapped.mask) else {
             return false
         }
