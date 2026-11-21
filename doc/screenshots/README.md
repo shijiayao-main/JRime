@@ -26,7 +26,9 @@
 
 | 截图 | 说明 |
 |---|---|
-| [settings hub](../openspec/changes/settings-v2/screenshots/emulator-2026-11-21-compose-settings-hub.png) | Compose 设置中心 + 搜索 |
+| [settings hub](../openspec/changes/settings-v2/screenshots/emulator-2026-11-21-compose-settings-hub.png) | Compose 设置中心 + 搜索（旧单页版） |
+| [category landing](../openspec/changes/settings-categories/screenshots/2026-11-21-category-landing.png) | 设置分类首页（六卡片 + 说明 + 项数） |
+| [category detail](../openspec/changes/settings-categories/screenshots/2026-11-21-category-detail.png) | 设置分类详情（返回/标题/项数/搜索） |
 | [input group](../openspec/changes/settings-v2/screenshots/emulator-2026-11-21-six-groups-input.png) | 输入组（含 10 条输入规则） |
 | [keyboard group](../openspec/changes/settings-v2/screenshots/emulator-2026-11-21-six-groups-keyboard.png) | 键盘组 |
 | [appearance page](../openspec/changes/settings-v2/screenshots/emulator-2026-11-21-appearance-page.png) | 外观（深浅/强调色/候选字号等） |

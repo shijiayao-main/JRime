@@ -127,4 +127,6 @@ data class SettingGroup(
     val title: String,
     val order: Int,
     val specs: List<SettingSpec>,
+    /** One line shown on the category landing page. */
+    val summary: String = "",
 )

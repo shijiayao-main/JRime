@@ -90,6 +90,9 @@ class SettingsFragment : Fragment() {
                 empty = getString(R.string.no_matching_settings),
                 cancel = getString(R.string.cancel),
                 confirm = getString(R.string.ok),
+                back = getString(R.string.settings_back),
+                itemsCountFormat = getString(R.string.settings_items_count),
+                categories = getString(R.string.settings_categories),
             )
         return ComposeView(requireContext()).apply {
             setContent {

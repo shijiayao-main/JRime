@@ -53,6 +53,7 @@ class SettingsSpecsFactory(
                         title = labeler(def.titleRes),
                         order = def.order,
                         specs = specs,
+                        summary = labeler(def.summaryRes),
                     )
                 }
             }.toMutableList()
@@ -74,6 +75,7 @@ class SettingsSpecsFactory(
                 id = GROUP_SYSTEM.id,
                 title = labeler(GROUP_SYSTEM.titleRes),
                 order = GROUP_SYSTEM.order,
+                summary = labeler(GROUP_SYSTEM.summaryRes),
                 specs =
                 listOf(
                     actionSpec(ACTION_IMPORT_FONT, R.string.import_font_title, 0),
@@ -198,6 +200,7 @@ class SettingsSpecsFactory(
         val id: String,
         val titleRes: Int,
         val order: Int,
+        val summaryRes: Int,
     )
 
     companion object {
@@ -208,12 +211,12 @@ class SettingsSpecsFactory(
         const val ACTION_COPY_DIAGNOSTICS = "__action_copy_diagnostics"
         const val ACTION_OPEN_USERDICT_BROWSER = "__action_userdict_browser"
 
-        private val GROUP_INPUT = GroupDef("input", R.string.group_input, 0)
-        private val GROUP_KEYBOARD = GroupDef("keyboard", R.string.group_keyboard, 1)
-        private val GROUP_CANDIDATES = GroupDef("candidates", R.string.group_candidates, 2)
-        private val GROUP_APPEARANCE = GroupDef("appearance", R.string.group_appearance, 3)
-        private val GROUP_CLIPBOARD = GroupDef("clipboard", R.string.group_clipboard, 4)
-        private val GROUP_SYSTEM = GroupDef("system", R.string.group_system, 5)
+        private val GROUP_INPUT = GroupDef("input", R.string.group_input, 0, R.string.group_input_summary)
+        private val GROUP_KEYBOARD = GroupDef("keyboard", R.string.group_keyboard, 1, R.string.group_keyboard_summary)
+        private val GROUP_CANDIDATES = GroupDef("candidates", R.string.group_candidates, 2, R.string.group_candidates_summary)
+        private val GROUP_APPEARANCE = GroupDef("appearance", R.string.group_appearance, 3, R.string.group_appearance_summary)
+        private val GROUP_CLIPBOARD = GroupDef("clipboard", R.string.group_clipboard, 4, R.string.group_clipboard_summary)
+        private val GROUP_SYSTEM = GroupDef("system", R.string.group_system, 5, R.string.group_system_summary)
 
         private val GROUP_DEFS =
             listOf(GROUP_INPUT, GROUP_KEYBOARD, GROUP_CANDIDATES, GROUP_APPEARANCE, GROUP_CLIPBOARD, GROUP_SYSTEM)

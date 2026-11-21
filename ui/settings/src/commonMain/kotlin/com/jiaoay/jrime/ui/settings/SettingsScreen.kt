@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -50,6 +51,9 @@ data class SettingsStrings(
     val cancel: String,
     val confirm: String,
     val notSet: String = "",
+    val back: String = "Back",
+    val itemsCountFormat: String = "%d settings",
+    val categories: String = "Categories",
 )
 
 /**
@@ -93,33 +97,74 @@ fun SettingsScreen(
                 .sortedBy { it.order }
         }
 
+    var openedGroupId by remember { mutableStateOf<String?>(null) }
+    val openedGroup = groups.firstOrNull { it.id == openedGroupId }
+    val searching = query.trim().isNotEmpty()
+
     Column(modifier = modifier.fillMaxSize()) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            placeholder = { Text(strings.searchPlaceholder) },
-            singleLine = true,
-            modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-        )
-        if (visibleGroups.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(strings.empty)
+        if (openedGroup == null) {
+            SearchField(
+                value = query,
+                onValueChange = { query = it },
+                strings = strings,
+            )
+            when {
+                visibleGroups.isEmpty() ->
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(strings.empty)
+                    }
+
+                searching ->
+                    // A search always spans every category (fast path to a
+                    // known setting); grouped results keep the context.
+                    SettingsRowList(
+                        groups = visibleGroups,
+                        store = store,
+                        strings = strings,
+                        revision = revision,
+                        options = options,
+                        onAction = onAction,
+                        onEditChoice = { editingChoice = it },
+                        onEditText = { editingText = it },
+                    )
+
+                else ->
+                    CategoryList(
+                        groups = groups.sortedBy { it.order },
+                        strings = strings,
+                        onOpen = { openedGroupId = it.id },
+                    )
             }
         } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                visibleGroups.forEach { group ->
-                    item(key = "header-${group.id}") {
-                        Text(
-                            text = group.title,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp),
-                        )
-                    }
-                    items(group.specs, key = { "spec-${it.key}" }) { spec ->
+            CategoryHeader(
+                title = openedGroup.title,
+                backLabel = strings.back,
+                countLabel = strings.itemsCountFormat.format(openedGroup.specs.count { !it.hidden }),
+                onBack = { openedGroupId = null },
+            )
+            // Search stays available inside a category: same field, narrower scope.
+            SearchField(
+                value = query,
+                onValueChange = { query = it },
+                strings = strings,
+            )
+            val needle = query.trim()
+            val rows =
+                openedGroup.specs.filter { spec ->
+                    !spec.hidden &&
+                        (
+                            needle.isEmpty() ||
+                                spec.title.contains(needle, ignoreCase = true) ||
+                                spec.summary?.contains(needle, ignoreCase = true) == true
+                            )
+                }
+            if (rows.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(strings.empty)
+                }
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(rows, key = { "spec-${it.key}" }) { spec ->
                         // A choice/text edit happens in a dialog; the row must
                         // re-read the store on the revision bump or LazyColumn
                         // keeps the stale label (item stability skips it).
@@ -158,6 +203,168 @@ fun SettingsScreen(
             strings = strings,
             onDismiss = { editingText = null },
         )
+    }
+}
+
+@Suppress("FunctionName")
+@Composable
+private fun SearchField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    strings: SettingsStrings,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(strings.searchPlaceholder) },
+        singleLine = true,
+        modifier =
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+    )
+}
+
+/** The category landing: one card per settings group with its summary. */
+@Suppress("FunctionName")
+@Composable
+private fun CategoryList(
+    groups: List<SettingGroup>,
+    strings: SettingsStrings,
+    onOpen: (SettingGroup) -> Unit,
+) {
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        item(key = "categories-title") {
+            Text(
+                text = strings.categories,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
+            )
+        }
+        items(groups, key = { "category-${it.id}" }) { group ->
+            CategoryCard(
+                group = group,
+                strings = strings,
+                onClick = { onOpen(group) },
+            )
+        }
+    }
+}
+
+@Suppress("FunctionName")
+@Composable
+private fun CategoryCard(
+    group: SettingGroup,
+    strings: SettingsStrings,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier =
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clickable(onClick = onClick),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = group.title,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                if (group.summary.isNotEmpty()) {
+                    Text(
+                        text = group.summary,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Text(
+                    text = strings.itemsCountFormat.format(group.specs.count { !it.hidden }),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+            Text(
+                text = "›",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/** A category's rows above the landing (title + back + count). */
+@Suppress("FunctionName")
+@Composable
+private fun CategoryHeader(
+    title: String,
+    backLabel: String,
+    countLabel: String,
+    onBack: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TextButton(onClick = onBack) { Text("‹ $backLabel") }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = countLabel,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/** The grouped result list used while searching (and reused by the old flow). */
+@Suppress("FunctionName")
+@Composable
+private fun SettingsRowList(
+    groups: List<SettingGroup>,
+    store: SettingsStore,
+    strings: SettingsStrings,
+    revision: Int,
+    options: RuntimeOptionSource?,
+    onAction: (String) -> Unit,
+    onEditChoice: (SettingSpec) -> Unit,
+    onEditText: (SettingSpec) -> Unit,
+) {
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        groups.forEach { group ->
+            item(key = "header-${group.id}") {
+                Text(
+                    text = group.title,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp),
+                )
+            }
+            items(group.specs, key = { "spec-${it.key}" }) { spec ->
+                key(revision) {
+                    Column {
+                        SettingRow(
+                            spec = spec,
+                            store = store,
+                            strings = strings,
+                            options = options,
+                            onAction = onAction,
+                            onEditChoice = { onEditChoice(spec) },
+                            onEditText = { onEditText(spec) },
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -86,6 +86,12 @@ class SettingsSpecsFactoryTest :
             }
         }
 
+        "every settings group carries a landing-page summary" {
+            groups.forEach { group ->
+                group.summary.isNotEmpty() shouldBe true
+            }
+        }
+
         "the data actions are visible in the system group" {
             val systemKeys = specs.filter { it.groupId == "system" }.map { it.key }.toSet()
             systemKeys.shouldContainAll(

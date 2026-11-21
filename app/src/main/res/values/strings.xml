@@ -196,6 +196,15 @@
     <string name="removed_n_items">Removed %1$d item(s)</string>
     <string name="candidates_layout">Candidate list layout</string>
     <string name="data_section">Data</string>
+    <string name="group_input_summary">Schema rules: simplified/traditional, punctuation, emoji, prediction, hints</string>
+    <string name="group_keyboard_summary">Height, sounds, vibration, popup, hook keys, long-press space voice</string>
+    <string name="group_candidates_summary">Page size, text size, comments, hints, accent text</string>
+    <string name="group_appearance_summary">Light/dark, accent color, key hints, candidate comments</string>
+    <string name="group_clipboard_summary">History listening, suggestions, filtering, return after paste</string>
+    <string name="group_system_summary">User dictionary, backup/restore, diagnostics, font import</string>
+    <string name="settings_categories">Categories</string>
+    <string name="settings_back">Back</string>
+    <string name="settings_items_count">%1$d settings</string>
     <string name="group_input">Input</string>
     <string name="group_keyboard">Keyboard</string>
     <string name="group_candidates">Candidates</string>

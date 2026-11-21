@@ -28,6 +28,9 @@ fun main() {
             empty = "No matching settings",
             cancel = "Cancel",
             confirm = "OK",
+            back = "Back",
+            itemsCountFormat = "%d settings",
+            categories = "Categories",
         )
     application {
         Window(

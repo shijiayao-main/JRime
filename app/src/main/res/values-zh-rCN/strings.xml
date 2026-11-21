@@ -195,6 +195,15 @@
     <string name="removed_n_items">已移除 %1$d 个项目</string>
     <string name="candidates_layout">候选词列表布局</string>
     <string name="data_section">数据</string>
+    <string name="group_input_summary">方案规则：简繁、标点、表情、联想、码区提示等</string>
+    <string name="group_keyboard_summary">高度、声音、振动、按键气泡、Hook 键、长按空格语音</string>
+    <string name="group_candidates_summary">单页数量、字号、注解、提示、强调色文字</string>
+    <string name="group_appearance_summary">深浅模式、强调色、键面提示、候选注解</string>
+    <string name="group_clipboard_summary">剪贴板监听、提示、过滤规则、粘贴后返回</string>
+    <string name="group_system_summary">用户词典、备份恢复、诊断信息、字体导入</string>
+    <string name="settings_categories">分类</string>
+    <string name="settings_back">返回</string>
+    <string name="settings_items_count">%1$d 项设置</string>
     <string name="group_input">输入</string>
     <string name="group_keyboard">键盘</string>
     <string name="group_candidates">候选</string>

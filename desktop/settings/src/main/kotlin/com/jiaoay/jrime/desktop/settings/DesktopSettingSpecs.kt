@@ -87,6 +87,14 @@ object DesktopSettingSpecs {
                     SettingControl.Toggle(true),
                 ),
             )
-        return listOf(SettingGroup(id = GROUP_ID, title = GROUP_TITLE, order = 0, specs = specs))
+        return listOf(
+            SettingGroup(
+                id = GROUP_ID,
+                title = GROUP_TITLE,
+                order = 0,
+                specs = specs,
+                summary = "Light/dark, accent color, candidate text size and hints",
+            ),
+        )
     }
 }

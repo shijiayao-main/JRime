@@ -233,4 +233,14 @@
     <string name="word_segment">分词</string>
     <string name="star_success">收藏成功</string>
     <string name="ignore_system_gesture_insets">忽略系統手勢插邊</string>
+
+    <string name="group_input_summary">方案規則：簡繁、標點、表情、聯想、碼區提示等</string>
+    <string name="group_keyboard_summary">高度、聲音、振動、按鍵氣泡、Hook 鍵、長按空格語音</string>
+    <string name="group_candidates_summary">單頁數量、字號、註解、提示、強調色文字</string>
+    <string name="group_appearance_summary">深淺模式、強調色、鍵面提示、候選註解</string>
+    <string name="group_clipboard_summary">剪貼簿監聽、提示、過濾規則、貼上後返回</string>
+    <string name="group_system_summary">使用者詞典、備份還原、診斷資訊、字體匯入</string>
+    <string name="settings_categories">分類</string>
+    <string name="settings_back">返回</string>
+    <string name="settings_items_count">%1$d 項設定</string>
 </resources>
