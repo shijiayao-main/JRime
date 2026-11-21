@@ -213,8 +213,9 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     private fun handleRimeMessage(it: RimeMessage<*>) {
         when (it) {
             is RimeMessage.CommitTextMessage -> {
-                if (!it.data.text.isNullOrEmpty()) {
-                    commitText(it.data.text)
+                val text = it.data.text
+                if (!text.isNullOrEmpty()) {
+                    commitText(text)
                 }
             }
 

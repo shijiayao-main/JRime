@@ -130,6 +130,10 @@ ksp {
 }
 
 dependencies {
+    implementation(project(":core:model"))
+    implementation(project(":core:engine"))
+    implementation(project(":ui:design"))
+    implementation(project(":ui:ime"))
     ksp(project(":codegen"))
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.runtime)

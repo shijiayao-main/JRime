@@ -27,7 +27,7 @@ data class CompositionProto(
     val preedit: String? = null,
     val commitTextPreview: String? = null,
 ) {
-    internal constructor(text: String) : this(
+    constructor(text: String) : this(
         text.length,
         text.length,
         text.length,

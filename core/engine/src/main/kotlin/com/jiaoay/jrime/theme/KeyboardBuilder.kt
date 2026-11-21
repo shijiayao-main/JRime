@@ -131,7 +131,7 @@ class KeyboardBuilder internal constructor(private val name: String) {
         keys += TextKey.DEFAULTS.copy(width = width)
     }
 
-    internal fun build(defaults: TextKeyboard): TextKeyboard = defaults.copy(
+    fun build(defaults: TextKeyboard): TextKeyboard = defaults.copy(
         name = name,
         author = author,
         width = width,
