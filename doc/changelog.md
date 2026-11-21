@@ -31,6 +31,12 @@
 - macOS 公开 IMK API 不提供插入点坐标，自绘候选窗需辅助功能权限 → 默认用系统 `IMKCandidates`；CMP 候选窗用于 Linux X11/Windows。
 - Linux IBus 壳需 Linux 会话实测；Windows TSF 需 Windows 工具链/CI 批次。
 
+## 基线与证据
+
+- `doc/perf-baseline.md`：debug 77MB / release 57MB（每 ABI，未签名）；`am start -W` 冷启动 1232ms，
+  librime 加载 +0.90s，首帧 +1.23s（模拟器 debug）。
+- `doc/screenshots/README.md`：键盘/面板/设置/词典截图索引，验收对照用。
+
 ## 复现命令
 
 ```sh

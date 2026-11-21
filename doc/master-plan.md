@@ -375,7 +375,7 @@ interface ImePanel {
 > | M1 表面层 | 🟢 基本完成 | 共享 CMP-clean 表面接管；两套深浅模式已合并；旧 Keyboard/Key/BoardWindow 与旧剪贴板/符号面板仍待 Compose 迁移 |
 > | M2 手机 P0 | ✅ | 候选分页/长按菜单、键面韵母提示、简繁全角与 10 条输入规则、外观（深浅/强调色）、Compose 设置中心六组+搜索+无孤儿断言、死设置清理 |
 > | M3 输入规则/词库 | ✅ | 输入规则、常用语面板、词库备份/恢复、用户词典浏览/编辑、中英切换方式偏好已完成 |
-> | M4 稳定发布 | 🟢 基本完成 | 启动失败降级、整机备份恢复、诊断复制、一键安装脚本、设置/滑块崩溃修复完成；真机矩阵/签名 secrets/7 天观察待主人 |
+> | M4 稳定发布 | 🟢 基本完成 | 启动失败降级、整机备份恢复、诊断复制、一键安装脚本、设置/滑块崩溃修复、体积/启动基线完成；真机矩阵/签名 secrets/7 天观察待主人 |
 > | D1 桌面内核 | ✅ | `:desktop:engine`/`:desktop:protocol` Gradle 化；协议依赖倒置；macOS Shift 切中英、安装脚本 |
 > | D2 共享桌面 UI | 🟡 | 五模块 KMP 化；`:desktop:app`（引擎+协议+CMP 候选窗）与 `:desktop:settings` 跑通；Linux IBus 薄壳（单测）与 Windows 契约就绪；Shell 集成/Windows 实机待办 |
 > | D3 桌面日常 | 🟡 | macOS 可安装（系统候选窗）；`:desktop:app` 候选窗空闲隐藏 + 设置热重载；Linux/Windows 需对应平台实测；验收手册已出 |

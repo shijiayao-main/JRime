@@ -20,6 +20,8 @@
 | [pathb-syllabifier-spec.md](pathb-syllabifier-spec.md) | Path B 音节切分器语义规格（41 facts） |
 | [architecture-review.md](architecture-review.md) | 2026-11-18 全仓架构评审（历史证据，P1/P2 清单仍可引用） |
 | [changelog.md](changelog.md) | 交付记录：各批次做了什么/怎么验证/遗留项，验收对照用 |
+| [perf-baseline.md](perf-baseline.md) | 基线与体积/启动数字（M4），含复现命令 |
+| [screenshots/README.md](screenshots/README.md) | 界面证据截图索引（键盘/面板/设置/词典） |
 | [verification-guide.md](verification-guide.md) | **最终验收手册**：手机/三平台逐项操作与期望、已知限制、回滚与反馈清单 |
 | [Keyboard.md](Keyboard.md) | Liquid Keyboard 历史参数笔记（trime 遗产） |
 | [trime-schema.json](trime-schema.json) | 方案配置 schema（引擎输入参考） |
