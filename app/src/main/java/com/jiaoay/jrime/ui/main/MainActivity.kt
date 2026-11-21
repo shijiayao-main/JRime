@@ -41,7 +41,6 @@ import com.jiaoay.jrime.R
 import com.jiaoay.jrime.core.data.DataManager
 import com.jiaoay.jrime.daemon.RimeDaemon
 import com.jiaoay.jrime.data.prefs.AppPrefs
-import com.jiaoay.jrime.data.soundeffect.SoundEffectManager
 import com.jiaoay.jrime.databinding.ActivityMainBinding
 import com.jiaoay.jrime.ime.core.TrimeInputMethodService
 import com.jiaoay.jrime.util.item
@@ -275,7 +274,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        SoundEffectManager.init()
         updateSetupBanner()
         showSetupDialogIfNeeded()
         updateDeployBanner()

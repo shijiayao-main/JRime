@@ -65,7 +65,6 @@
     <string name="system_default">System default</string>
     <string name="key_swipe_travel">Min travel for gesture</string>
     <string name="trime_app_slogan">JRime · a focused Rime input method</string>
-    <string name="custom_sound_effect_name">Custom key Sound Effect</string>
     <string name="setup_banner_text">Enable and select <b>JRime</b> as your input method to start typing — tap to open settings</string>
     <string name="setup_dialog_enable_title">Enable JRime</string>
     <string name="setup_dialog_enable_message">JRime is installed but not enabled, so typing does nothing yet. Open the system\'s input-method list and turn JRime on — coming back here closes this guide automatically.</string>
@@ -142,7 +141,6 @@
     <string name="delete_all">Delete all</string>
     <string name="disable">Disable</string>
     <string name="a_regular_expression_per_line">A regular expression per line</string>
-    <string name="custom_sound_effect_enabled">Use custom key sound</string>
     <string name="enable_landscape_mode">Enable Landscape Mode</string>
     <string name="split_space_percent">Auto Split Keyboard Space Ratio</string>
     <string name="keyboard_row_height">Keyboard Row Height</string>

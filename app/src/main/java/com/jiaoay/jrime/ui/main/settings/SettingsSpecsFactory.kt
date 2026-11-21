@@ -168,12 +168,7 @@ class SettingsSpecsFactory(
                     ),
                 )
 
-            is PreferenceDelegateUi.StringLike ->
-                if (ui.key == AppPrefs.Keyboard.CUSTOM_SOUND_EFFECT) {
-                    spec(SettingControl.Action(ACTION_PICK_SOUND))
-                } else {
-                    spec(SettingControl.TextField(""), hidden = true)
-                }
+            is PreferenceDelegateUi.StringLike -> spec(SettingControl.TextField(""), hidden = true)
 
             else -> spec(SettingControl.TextField(""), hidden = true)
         }
@@ -209,7 +204,6 @@ class SettingsSpecsFactory(
 
     companion object {
         const val ACTION_IMPORT_FONT = "__action_import_font"
-        const val ACTION_PICK_SOUND = "__action_pick_sound"
         const val ACTION_EXPORT_BACKUP = "__action_export_backup"
         const val ACTION_IMPORT_BACKUP = "__action_import_backup"
         const val ACTION_COPY_DIAGNOSTICS = "__action_copy_diagnostics"

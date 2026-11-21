@@ -124,13 +124,6 @@ class SettingsFragment : Fragment() {
             SettingsSpecsFactory.ACTION_IMPORT_FONT ->
                 importFont.launch(arrayOf("font/*", "application/octet-stream"))
 
-            SettingsSpecsFactory.ACTION_PICK_SOUND -> {
-                val ctx = context ?: return
-                lifecycleScope.launch {
-                    SoundEffectPickerDialog.build(lifecycleScope, ctx).show()
-                }
-            }
-
             SettingsSpecsFactory.ACTION_EXPORT_BACKUP ->
                 exportBackup.launch("jrime-backup-${backupStamp()}.zip")
 

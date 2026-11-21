@@ -61,7 +61,6 @@
     <string name="system_default">系统默认</string>
     <string name="key_swipe_travel">触发按键滑动手势的距离</string>
     <string name="trime_app_slogan">JRime · 专注好用的 Rime 输入法</string>
-    <string name="custom_sound_effect_name">自定义按键音效</string>
     <string name="setup_banner_text">启用并选择 <b>JRime</b> 作为输入法即可开始打字——点此打开系统设置</string>
     <string name="setup_dialog_enable_title">启用 JRime</string>
     <string name="setup_dialog_enable_message">JRime 已安装但尚未启用，现在打字不会有任何反应。请打开系统的输入法列表开启 JRime——开启后回到这里，引导会自动消失。</string>
@@ -141,7 +140,6 @@
     <string name="delete_all">删除全部</string>
     <string name="disable">禁用</string>
     <string name="a_regular_expression_per_line">一行一条正则表达式</string>
-    <string name="custom_sound_effect_enabled">使用自定义按键音效</string>
     <string name="enable_landscape_mode">启用横屏模式</string>
     <string name="split_space_percent">自动分割键盘比例</string>
     <string name="keyboard_row_height">键盘行高</string>

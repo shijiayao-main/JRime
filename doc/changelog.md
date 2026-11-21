@@ -82,6 +82,13 @@
 - 模拟器验证：字母组合/候选上屏/双空格句号/剪贴板面板/长按空格切语音输入（截图见
   `openspec/changes/model-first-action-model/screenshots/`）。
 
+## 功能精简 P4（第一批，2026-11-21）
+
+- 移除自定义按键音效（YAML 音效包）特性：应用层最后一个 YAML 解析器删除；仅保留系统按键音/音量/振动；
+  设置中心不再有音效选择入口。
+- 候选长按菜单加入语义图标（置顶/删词/复制/查编码）。
+- 变更记录：`openspec/changes/feature-simplify/`；下一步 P3 面板去 BoardWindow 化后再清主题/死偏好。
+
 ## 复现命令
 
 ```sh

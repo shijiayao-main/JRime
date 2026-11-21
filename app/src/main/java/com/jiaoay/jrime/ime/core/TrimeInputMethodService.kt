@@ -538,7 +538,6 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         // (for example right after a reboot); this is the point where trying again is
         // both cheap and most likely to succeed.
         RimeDaemon.ensureRimeStarted()
-        InputFeedbackManager.startInput()
         postRimeJob {
             updateRimeOption(this)
         }

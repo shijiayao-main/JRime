@@ -28,7 +28,6 @@ import com.jiaoay.jrime.ime.core.TrimeInputMethodService
 import com.jiaoay.jrime.ime.dialog.EnabledSchemaPickerDialog
 import com.jiaoay.jrime.ime.symbol.LiquidWindow
 import com.jiaoay.jrime.ime.window.BoardWindowManager
-import com.jiaoay.jrime.ui.main.settings.SoundEffectPickerDialog
 import com.jiaoay.jrime.util.AppUtils
 import com.jiaoay.jrime.util.InputMethodUtils
 import com.jiaoay.jrime.util.buildIntentFromAction
@@ -73,12 +72,6 @@ class CommonKeyboardActionListener(override val di: DI) : DIAware {
             service.lifecycleScope.launch {
                 service.showDialog(dialog(api))
             }
-        }
-    }
-
-    private fun showSoundEffectPicker() {
-        showDialog {
-            SoundEffectPickerDialog.build(service.lifecycleScope, context)
         }
     }
 
@@ -280,10 +273,7 @@ class CommonKeyboardActionListener(override val di: DI) : DIAware {
             }
 
             private fun handleSettings(action: KeyAction) {
-                when (action.option) {
-                    "sound" -> showSoundEffectPicker()
-                    else -> AppUtils.launchMainActivity(service)
-                }
+                AppUtils.launchMainActivity(service)
             }
 
             private fun switchToVoiceInputMethod() {

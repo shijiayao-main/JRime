@@ -185,11 +185,11 @@ private fun CandidateMenu(
             .background(palette.popupBackground)
             .padding(vertical = ImeDimens.KeyGap),
     ) {
-        MenuItem("置顶", palette.popupText) { onAction(CandidateActionKind.Pin) }
-        MenuItem("删词", palette.danger) { onAction(CandidateActionKind.Delete) }
-        MenuItem("复制", palette.popupText) { onAction(CandidateActionKind.Copy) }
+        MenuItem("置顶", ImeIcon.Pin, palette.popupText) { onAction(CandidateActionKind.Pin) }
+        MenuItem("删词", ImeIcon.Delete, palette.danger) { onAction(CandidateActionKind.Delete) }
+        MenuItem("复制", ImeIcon.Copy, palette.popupText) { onAction(CandidateActionKind.Copy) }
         if (candidate.comment.isNotEmpty()) {
-            MenuItem("查编码", palette.popupText) { onAction(CandidateActionKind.QueryCode) }
+            MenuItem("查编码", ImeIcon.Code, palette.popupText) { onAction(CandidateActionKind.QueryCode) }
         }
     }
 }
@@ -198,19 +198,31 @@ private fun CandidateMenu(
 @Composable
 private fun MenuItem(
     label: String,
+    icon: ImeIcon,
     color: Color,
     onClick: () -> Unit,
 ) {
-    BasicText(
-        text = label,
-        style = ImeTypography.keySymbolStyle(color),
-        maxLines = 1,
+    Row(
         modifier =
         Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(horizontal = ImeDimens.PanelPadding, vertical = ImeDimens.KeyGap),
-    )
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = icon.vector,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(ImeDimens.IconSmall),
+        )
+        BasicText(
+            text = label,
+            style = ImeTypography.keySymbolStyle(color),
+            maxLines = 1,
+            modifier = Modifier.padding(start = ImeDimens.CandidateGap),
+        )
+    }
 }
 
 /** A previous/next page control. */

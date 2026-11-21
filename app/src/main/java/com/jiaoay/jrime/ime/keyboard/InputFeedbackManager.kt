@@ -6,25 +6,19 @@
 package com.jiaoay.jrime.ime.keyboard
 
 import android.content.Context
-import android.media.AudioAttributes
 import android.media.AudioManager
-import android.media.SoundPool
 import android.os.Handler
 import android.os.Looper
 import android.os.VibrationEffect
 import android.speech.tts.TextToSpeech
-import android.util.SparseIntArray
 import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
 import android.view.View
 import androidx.annotation.MainThread
-import androidx.core.util.containsValue
 import com.jiaoay.jrime.data.prefs.AppPrefs
-import com.jiaoay.jrime.data.soundeffect.SoundEffectManager
 import splitties.systemservices.audioManager
 import splitties.systemservices.vibrator
 import timber.log.Timber
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Manage the key press effects, such as vibration, sound, speaking and so on.
@@ -39,23 +33,14 @@ object InputFeedbackManager {
         postToOwner = { request -> callbackHandler.post { request() } },
     )
     private val speech = FeedbackResource<TextToSpeech> { it.shutdown() }
-    private val sounds = FeedbackResource<SoundPool> { it.release() }
     private data class PendingSpeech(val text: String, val onCommit: Boolean)
     private var pendingSpeech: PendingSpeech? = null
-
-    private var effectPlayProgress = 0
-    private val cachedSoundIds = SparseIntArray()
-
-    private val loadedSounds = ConcurrentHashMap<String, Int>()
-    private val readySounds = mutableSetOf<Int>()
-    private var effectHash: Int? = null
 
     @MainThread
     fun init(context: Context) {
         resetSpeechRequests()
         applicationContext = context.applicationContext
         speech.init()
-        sounds.init()
     }
 
     @MainThread
@@ -100,75 +85,6 @@ object InputFeedbackManager {
         }
     }
 
-    @MainThread
-    private fun prepareSoundPool(): SoundPool? = try {
-        sounds.acquire(
-            enabled = applicationContext != null && soundOnKeyPress && soundEffectEnabled && soundVolume > 0,
-            create = { complete ->
-                SoundPool.Builder()
-                    .setMaxStreams(3)
-                    .setAudioAttributes(
-                        AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                            .build(),
-                    ).build().also { pool ->
-                        pool.setOnLoadCompleteListener { loadedPool, soundId, status ->
-                            callbackHandler.post {
-                                if (sounds.current === loadedPool && status == 0) readySounds.add(soundId)
-                            }
-                        }
-                        complete(true)
-                    }
-            },
-        )
-    } catch (e: Exception) {
-        Timber.e(e, "Error on initializing sound feedback")
-        null
-    }
-
-    @MainThread
-    private fun cacheSoundId() {
-        if (!sounds.canAcquire || applicationContext == null || !soundOnKeyPress || !soundEffectEnabled || soundVolume <= 0) return
-
-        if (SoundEffectManager.activeSoundEffect == null) {
-            SoundEffectManager.init()
-        }
-
-        val paths = SoundEffectManager.activeAudioPaths
-        val hash = paths.hashCode()
-
-        if (hash == effectHash) return
-
-        cachedSoundIds.clear()
-        if (paths.isEmpty()) {
-            effectHash = hash
-            return
-        }
-        val pool = prepareSoundPool() ?: return
-
-        paths.forEachIndexed { i, path ->
-            val soundId = loadedSounds.getOrPut(path) { pool.load(path, 1) }
-            if (soundId != 0 && !cachedSoundIds.containsValue(soundId)) {
-                cachedSoundIds.put(i, soundId)
-            }
-        }
-
-        effectHash = hash
-    }
-
-    @MainThread
-    fun startInput() {
-        resetSpeechRequests()
-        cacheSoundId()
-    }
-
-    @MainThread
-    fun reloadSoundEffects() {
-        effectHash = null
-        cacheSoundId()
-    }
-
     private val hasAmplitudeControl = vibrator.hasAmplitudeControl()
 
     private val vibrateOnKeyPress by keyboardPrefs.vibrateOnKeyPress
@@ -206,30 +122,7 @@ object InputFeedbackManager {
         }
     }
 
-    private fun querySoundIndex(keyCode: Int): Int {
-        val effect = SoundEffectManager.activeSoundEffect ?: return 0
-        val sounds = effect.sound
-        if (sounds.isEmpty()) return 0
-        val melody = effect.melody
-        return if (melody.isNotEmpty()) {
-            val index = sounds.indexOf(melody[effectPlayProgress])
-            effectPlayProgress = (effectPlayProgress + 1) % melody.size
-            index
-        } else {
-            var index = 0
-            for (key in effect.keyset) {
-                val i = key.querySoundIndex(keyCode)
-                if (i >= 0) {
-                    index = i
-                    break
-                }
-            }
-            index
-        }
-    }
-
     private val soundOnKeyPress by keyboardPrefs.soundOnKeyPress
-    private val soundEffectEnabled by keyboardPrefs.useCustomSoundEffect
     private val soundVolume by keyboardPrefs.soundVolume
 
     /**
@@ -238,32 +131,20 @@ object InputFeedbackManager {
     @MainThread
     fun keyPressSound(keyCode: Int = 0) {
         if (!soundOnKeyPress) return
-        if (soundEffectEnabled) {
-            if (soundVolume <= 0) return
-            if (effectHash == null) cacheSoundId()
-            val volume = soundVolume / 100f
-            val index = querySoundIndex(keyCode)
-            val soundId = cachedSoundIds[index]
-            if (soundId in readySounds) sounds.ready?.play(soundId, volume, volume, 0, 0, 1f)
-        } else {
-            val effect =
-                when (keyCode) {
-                    KeyEvent.KEYCODE_SPACE -> AudioManager.FX_KEYPRESS_SPACEBAR
-                    KeyEvent.KEYCODE_DEL -> AudioManager.FX_KEYPRESS_DELETE
-                    KeyEvent.KEYCODE_ENTER -> AudioManager.FX_KEYPRESS_RETURN
-                    else -> AudioManager.FX_KEYPRESS_STANDARD
-                }
-            val volume =
-                if (soundVolume == 0) {
-                    -1f
-                } else {
-                    soundVolume / 100f
-                }
-            audioManager.playSoundEffect(
-                effect,
-                volume,
-            )
-        }
+        val effect =
+            when (keyCode) {
+                KeyEvent.KEYCODE_SPACE -> AudioManager.FX_KEYPRESS_SPACEBAR
+                KeyEvent.KEYCODE_DEL -> AudioManager.FX_KEYPRESS_DELETE
+                KeyEvent.KEYCODE_ENTER -> AudioManager.FX_KEYPRESS_RETURN
+                else -> AudioManager.FX_KEYPRESS_STANDARD
+            }
+        val volume =
+            if (soundVolume == 0) {
+                -1f
+            } else {
+                soundVolume / 100f
+            }
+        audioManager.playSoundEffect(effect, volume)
     }
 
     private val speakOnKeyPress by keyboardPrefs.speakOnKeyPress
@@ -306,7 +187,6 @@ object InputFeedbackManager {
     @MainThread
     fun finishInput() {
         resetSpeechRequests()
-        effectPlayProgress = 0
     }
 
     @MainThread
@@ -314,11 +194,5 @@ object InputFeedbackManager {
         resetSpeechRequests()
         applicationContext = null
         speech.destroy()
-        sounds.destroy()
-
-        loadedSounds.clear()
-        readySounds.clear()
-        cachedSoundIds.clear()
-        effectHash = null
     }
 }

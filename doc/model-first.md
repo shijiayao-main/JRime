@@ -96,8 +96,8 @@ YAML/主题时代类；面板内容迁移为 Compose state holder + `PanelSlot`�
   模拟器验证按键/上屏/双空格/剪贴板面板/长按空格语音。
 - **P3**：面板去 BoardWindow 化（Clipboard/Symbols/Phrase → Compose state holder + `PanelSlot`），
   删除 `BoardWindow*`、`KeyboardWindow`、`Keyboard`、`Key`、`InputView` 等视图层。
-- **P4**：颜色/主题去 legacy（`ColorManager/ColorTable/Theme/NativeTheme/ThemePrefs/GboardColors`），
-  统一 design token；删除自定义音效 YAML；清理死偏好与 `SettingsSpecsFactory` 派生冗余。
+- **P4（进行中）**：已删除自定义音效 YAML（应用层零 YAML）；颜色/主题去 legacy、死偏好与设置派生收敛
+  待 P3 面板迁移后一并清理。
 - **P5**：扩展模块示例 + 文档 + 注册入口（ServiceLoader 或显式 registry）；README/开发说明改为
   「写 Kotlin model 扩展」而不是「改 YAML」。
 - 每批：单测 + assembleDebug + spotless 全绿；真机验收留最后。
