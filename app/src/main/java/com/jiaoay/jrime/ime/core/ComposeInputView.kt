@@ -45,6 +45,8 @@ import com.jiaoay.jrime.ime.compose.ImeCommandExecutor
 import com.jiaoay.jrime.ime.compose.ImeSurfaceController
 import com.jiaoay.jrime.ime.compose.LiquidPanel
 import com.jiaoay.jrime.ime.compose.LocalImeColors
+import com.jiaoay.jrime.ime.compose.toEngineAccent
+import com.jiaoay.jrime.ime.compose.toEnginePaletteMode
 import com.jiaoay.jrime.ime.keyboard.CommonKeyboardActionListener
 import com.jiaoay.jrime.ime.keyboard.InputFeedbackManager
 import com.jiaoay.jrime.ime.keyboard.KeyAction
@@ -95,8 +97,11 @@ class ComposeInputView(
         )
 
     private val keyboardPrefs = AppPrefs.defaultInstance().keyboard
+    private val appearancePrefs = AppPrefs.defaultInstance().appearance
     private var rowHeightDp by mutableIntStateOf(keyboardPrefs.rowHeight.getValue())
     private var popupOnKeyPress by mutableStateOf(keyboardPrefs.popupOnKeyPress.getValue())
+    private var candidateTextSize by mutableIntStateOf(appearancePrefs.candidateTextSize.getValue())
+    private var showKeyHints by mutableStateOf(appearancePrefs.showKeyHints.getValue())
     private var colorsRevision by mutableIntStateOf(0)
     private var bandTop = Int.MIN_VALUE
 
@@ -144,7 +149,34 @@ class ComposeInputView(
         SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             when (key) {
                 AppPrefs.Keyboard.KEYBOARD_HEIGHT -> rowHeightDp = keyboardPrefs.rowHeight.getValue()
+
                 AppPrefs.Keyboard.POPUP_ON_KEY_PRESS -> popupOnKeyPress = keyboardPrefs.popupOnKeyPress.getValue()
+
+                AppPrefs.Appearance.CANDIDATE_TEXT_SIZE ->
+                    candidateTextSize = appearancePrefs.candidateTextSize.getValue()
+
+                AppPrefs.Appearance.SHOW_KEY_HINTS -> showKeyHints = appearancePrefs.showKeyHints.getValue()
+
+                AppPrefs.Appearance.CANDIDATE_PAGE_SIZE ->
+                    controller.onCommand(
+                        com.jiaoay.jrime.engine.ImeCommand.SetCandidatePageSize(
+                            appearancePrefs.candidatePageSize.getValue(),
+                        ),
+                    )
+
+                AppPrefs.Appearance.PALETTE_MODE ->
+                    controller.onCommand(
+                        com.jiaoay.jrime.engine.ImeCommand.SetPaletteMode(
+                            appearancePrefs.paletteMode.getValue().toEnginePaletteMode(),
+                        ),
+                    )
+
+                AppPrefs.Appearance.ACCENT ->
+                    controller.onCommand(
+                        com.jiaoay.jrime.engine.ImeCommand.SetAccent(
+                            appearancePrefs.accent.getValue().toEngineAccent(),
+                        ),
+                    )
             }
         }
 

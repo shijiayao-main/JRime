@@ -66,10 +66,13 @@ class ImeSurfaceController(
             // Seed the option/status truth so the first frame renders the
             // current schema and input mode instead of defaults.
             val status = api.statusCached
-            val pageSize = AppPrefs.defaultInstance().keyboard.candidatePageSize.getValue()
+            val appearance = AppPrefs.defaultInstance().appearance
+            val pageSize = appearance.candidatePageSize.getValue()
+            val paletteMode = appearance.paletteMode.getValue().toEnginePaletteMode()
+            val accent = appearance.accent.getValue().toEngineAccent()
             _state.update {
                 ImeStateReducer.onEvent(
-                    it.copy(candidatePageSize = pageSize),
+                    it.copy(candidatePageSize = pageSize, paletteMode = paletteMode, accent = accent),
                     EngineEvent.Status(
                         asciiMode = status.isAsciiMode,
                         asciiPunctuation = status.isAsciiPunct,

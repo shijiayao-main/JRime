@@ -192,6 +192,12 @@
     <string name="added_n_items">已添加 %1$d 个项目</string>
     <string name="removed_n_items">已移除 %1$d 个项目</string>
     <string name="candidates_layout">候选词列表布局</string>
+    <string name="appearance">外观</string>
+    <string name="palette_mode">深浅模式</string>
+    <string name="accent_color">强调色</string>
+    <string name="accent_blue">蓝色</string>
+    <string name="accent_green">绿色</string>
+    <string name="accent_purple">紫色</string>
     <string name="automatic">自动</string>
     <string name="horizontal">横向</string>
     <string name="vertical">纵向</string>

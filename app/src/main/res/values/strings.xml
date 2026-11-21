@@ -193,6 +193,12 @@
     <string name="added_n_items">Added %1$d item(s)</string>
     <string name="removed_n_items">Removed %1$d item(s)</string>
     <string name="candidates_layout">Candidate list layout</string>
+    <string name="appearance">Appearance</string>
+    <string name="palette_mode">Light / Dark mode</string>
+    <string name="accent_color">Accent color</string>
+    <string name="accent_blue">Blue</string>
+    <string name="accent_green">Green</string>
+    <string name="accent_purple">Purple</string>
     <string name="automatic">Automatic</string>
     <string name="horizontal">Horizontal</string>
     <string name="vertical">Vertical</string>

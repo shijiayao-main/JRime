@@ -42,6 +42,7 @@ class AppPrefs(
     val keyboard = Keyboard(shared).register()
     val clipboard = Clipboard(shared).register()
     val advanced = Advanced(shared).register()
+    val appearance = Appearance(shared).register()
 
     @Keep
     private val onSharedPreferenceChangeListener =
@@ -221,18 +222,6 @@ class AppPrefs(
         ) { soundOnKeyPress.getValue() && useCustomSoundEffect.getValue() }
 
         val vibrateOnKeyPress = switch(R.string.vibrate_on_key_press, VIBRATE_ON_KEY_PRESS, false)
-        val vibrateOnKeyRelease = switch(
-            R.string.vibrate_on_key_release,
-            VIBRATE_ON_KEY_RELEASE,
-            false,
-        ) { vibrateOnKeyPress.getValue() }
-
-        val vibrateOnKeyRepeat = switch(
-            R.string.vibrate_on_key_repeat,
-            VIBRATE_ON_KEY_REPEAT,
-            false,
-        ) { vibrateOnKeyPress.getValue() }
-
         val vibrationDuration = int(
             R.string.vibration_duration,
             VIBRATION_DURATION,
@@ -255,26 +244,6 @@ class AppPrefs(
         val speakOnKeyPress = switch(R.string.speak_on_keypress, SPEAK_ON_KEYPRESS, false)
         val speakOnCommit = switch(R.string.speak_on_commit, SPEAK_ON_COMMIT, false)
         val popupOnKeyPress = switch(R.string.popup_on_key_press, POPUP_ON_KEY_PRESS, true)
-
-        // The M2 surface knobs: hints on the key faces, candidate page size
-        // and candidate text size. Values only for now; the settings page
-        // lands in settings-v2.
-        val showKeyHints = switch(R.string.show_key_hints, SHOW_KEY_HINTS, true)
-        val candidatePageSize = int(
-            R.string.candidate_page_size,
-            CANDIDATE_PAGE_SIZE,
-            7,
-            5,
-            9,
-        )
-        val candidateTextSize = int(
-            R.string.candidate_text_size,
-            CANDIDATE_TEXT_SIZE,
-            18,
-            15,
-            22,
-            "sp",
-        )
         val expandKeypressArea = switch(R.string.expand_keypress_area_to_edge, EXPAND_KEYPRESS_AREA, false)
 
         // The displacement (dp) past which a touch counts as a swipe; 0
@@ -289,17 +258,6 @@ class AppPrefs(
             10,
             R.string.disable,
             useMinAsDefault = true,
-        )
-
-        val swipeVelocity = int(
-            R.string.key_swipe_velocity,
-            SWIPE_VELOCITY,
-            0,
-            0,
-            10000,
-            "dp/s",
-            100,
-            R.string.disable,
         )
 
         // The long-press trigger delay; 0 (the default, shown as "System
@@ -328,25 +286,6 @@ class AppPrefs(
             10,
         )
 
-        val doubleTapTimeout = int(
-            R.string.key_double_tap_timeout,
-            DOUBLE_TAP_TIMEOUT,
-            300,
-            100,
-            1000,
-            "ms",
-            10,
-        )
-
-        val slideStepSize = int(
-            R.string.key_slide_step_size,
-            SLIDE_STEP_SIZE,
-            24,
-            1,
-            100,
-            "dp",
-        )
-
         val hookCtrlA = switch(R.string.hook_ctrl_a, HOOK_CTRL_A, false)
         val hookCtrlCV = switch(R.string.hook_ctrl_cv, HOOK_CTRL_CV, false)
         val hookCtrlLR = switch(R.string.hook_ctrl_lr, HOOK_CTRL_LR, false)
@@ -354,7 +293,6 @@ class AppPrefs(
         val hookShiftSpace = switch(R.string.hook_shift_space, HOOK_SHIFT_SPACE, false)
         val hookShiftNum = switch(R.string.hook_shift_num, HOOK_SHIFT_NUM, false)
         val hookShiftSymbol = switch(R.string.hook_shift_symbol, HOOK_SHIFT_SYMBOL, false)
-        val hookShiftArrow = switch(R.string.hook_shift_arrow, HOOK_SHIFT_ARROW, true)
     }
 
     /**
@@ -413,11 +351,6 @@ class AppPrefs(
             CLIPBOARD_RETURN_AFTER_PASTE,
             true,
         ) { clipboardListening.getValue() }
-        val clipboardMaskSensitive = switch(
-            R.string.clipboard_mask_sensitive,
-            CLIPBOARD_MASK_SENSITIVE,
-            true,
-        ) { clipboardListening.getValue() }
     }
 
     class Advanced(
@@ -449,6 +382,54 @@ class AppPrefs(
         )
     }
 
+    enum class PaletteModePref(override val stringRes: Int) : PreferenceDelegateEnum {
+        FOLLOW_SYSTEM(R.string.automatic),
+        LIGHT(R.string.light),
+        DARK(R.string.dark),
+    }
+
+    enum class AccentPref(override val stringRes: Int) : PreferenceDelegateEnum {
+        BLUE(R.string.accent_blue),
+        GREEN(R.string.accent_green),
+        PURPLE(R.string.accent_purple),
+    }
+
+    /**
+     * The appearance page: palette mode, accent preset, key hints and the two
+     * candidate typography knobs. The first slice of the settings-v2 IA; the
+     * Compose rewrite replaces the Preference machinery in phase 2.
+     */
+    class Appearance(
+        shared: SharedPreferences,
+    ) : PreferenceDelegateOwner(shared, R.string.appearance) {
+        companion object {
+            const val PALETTE_MODE = "theme_palette_mode"
+            const val ACCENT = "theme_accent"
+            const val SHOW_KEY_HINTS = "show_key_hints"
+            const val CANDIDATE_PAGE_SIZE = "candidate_page_size"
+            const val CANDIDATE_TEXT_SIZE = "candidate_text_size"
+        }
+
+        val paletteMode = enum(R.string.palette_mode, PALETTE_MODE, PaletteModePref.FOLLOW_SYSTEM)
+        val accent = enum(R.string.accent_color, ACCENT, AccentPref.BLUE)
+        val showKeyHints = switch(R.string.show_key_hints, SHOW_KEY_HINTS, true)
+        val candidatePageSize = int(
+            R.string.candidate_page_size,
+            CANDIDATE_PAGE_SIZE,
+            7,
+            5,
+            9,
+        )
+        val candidateTextSize = int(
+            R.string.candidate_text_size,
+            CANDIDATE_TEXT_SIZE,
+            18,
+            15,
+            22,
+            "sp",
+        )
+    }
+
     fun syncToDeviceEncryptedStorage() {
         val ctx = appContext.createDeviceProtectedStorageContext()
         val sp = PreferenceManager.getDefaultSharedPreferences(ctx)
@@ -456,6 +437,7 @@ class AppPrefs(
             listOf(
                 keyboard,
                 clipboard,
+                appearance,
             ).forEach { category ->
                 category.preferenceDelegates.forEach {
                     it.value.putValueTo(this@edit)

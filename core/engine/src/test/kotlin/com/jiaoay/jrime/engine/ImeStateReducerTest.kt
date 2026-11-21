@@ -133,6 +133,13 @@ class ImeStateReducerTest :
             ImeStateReducer.onCommand(ImeSessionState(), ImeCommand.SetRowHeight(56)).rowHeightDp shouldBe 56
         }
 
+        "the accent preset is stored" {
+            ImeStateReducer.onCommand(
+                ImeSessionState(),
+                ImeCommand.SetAccent(AccentPreset.Purple),
+            ).accent shouldBe AccentPreset.Purple
+        }
+
         "palette mode is stored" {
             ImeStateReducer.onCommand(
                 ImeSessionState(),

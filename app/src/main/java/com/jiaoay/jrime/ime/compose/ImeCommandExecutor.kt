@@ -42,7 +42,10 @@ class ImeCommandExecutor(
         when (command) {
             is ImeCommand.Key -> executeAction(KeyAction(command.token, presetKeys))
 
-            is ImeCommand.ChangeCandidatePage, is ImeCommand.SetCandidatePageSize -> Unit
+            is ImeCommand.ChangeCandidatePage,
+            is ImeCommand.SetCandidatePageSize,
+            is ImeCommand.SetAccent,
+            -> Unit
 
             is ImeCommand.CandidateAction -> handleCandidateAction(command)
 

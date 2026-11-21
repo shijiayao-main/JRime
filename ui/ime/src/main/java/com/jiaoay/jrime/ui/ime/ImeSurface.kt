@@ -21,11 +21,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
+import com.jiaoay.jrime.engine.AccentPreset
 import com.jiaoay.jrime.engine.ImeSessionState
 import com.jiaoay.jrime.engine.KeyAppearance
 import com.jiaoay.jrime.engine.KeyboardCatalog
 import com.jiaoay.jrime.engine.KeyboardLayoutOps
 import com.jiaoay.jrime.engine.PaletteMode
+import com.jiaoay.jrime.ui.design.ImeAccent
 import com.jiaoay.jrime.ui.design.ImeDimens
 import com.jiaoay.jrime.ui.design.ImePalette
 import com.jiaoay.jrime.ui.design.LocalImePalette
@@ -54,7 +56,16 @@ fun ImeSurface(
             PaletteMode.ForceLight -> false
             PaletteMode.ForceDark -> true
         }
-    val palette = remember(dark) { ImePalette.of(dark) }
+    val accent =
+        when (state.accent) {
+            AccentPreset.Blue -> ImeAccent.Blue
+            AccentPreset.Green -> ImeAccent.Green
+            AccentPreset.Purple -> ImeAccent.Purple
+        }
+    val palette =
+        remember(dark, accent) {
+            ImePalette.of(dark).withAccent(accent.color(dark), accent.onColor(dark))
+        }
     val board = catalog.board(state.keyboardId)
     val qwerty =
         remember(board, catalog.presetKeys) {

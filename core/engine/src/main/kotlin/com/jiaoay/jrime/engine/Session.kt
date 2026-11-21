@@ -15,6 +15,13 @@ enum class PaletteMode {
     ForceDark,
 }
 
+/** The accent colour preset the surface uses for keys/candidates. */
+enum class AccentPreset {
+    Blue,
+    Green,
+    Purple,
+}
+
 /** Numeric metrics the platform converts to dp/sp; single source of bounds. */
 object ImeMetrics {
     const val ROW_HEIGHT_MIN_DP: Int = 36
@@ -64,6 +71,7 @@ data class ImeSessionState(
     val keyboardId: KeyboardId = KeyboardId.Qwerty26,
     val rowHeightDp: Int = 50,
     val paletteMode: PaletteMode = PaletteMode.FollowSystem,
+    val accent: AccentPreset = AccentPreset.Blue,
 )
 
 /** Engine pushes. The app adapter translates Rime messages into these. */
@@ -140,6 +148,8 @@ sealed interface ImeCommand {
 
     data class SetPaletteMode(val mode: PaletteMode) : ImeCommand
 
+    data class SetAccent(val accent: AccentPreset) : ImeCommand
+
     data object HideKeyboard : ImeCommand
 }
 
@@ -214,6 +224,8 @@ object ImeStateReducer {
             )
 
         is ImeCommand.SetPaletteMode -> state.copy(paletteMode = command.mode)
+
+        is ImeCommand.SetAccent -> state.copy(accent = command.accent)
 
         is ImeCommand.ChangeCandidatePage -> {
             val target =

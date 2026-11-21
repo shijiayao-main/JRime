@@ -41,6 +41,34 @@ class ImePalette(
     val danger: Color,
     val hintText: Color,
 ) {
+    /** A copy with the accent roles overridden (the user's accent preset). */
+    fun withAccent(
+        accentColor: Color,
+        onAccent: Color,
+    ): ImePalette = ImePalette(
+        surface = surface,
+        key = key,
+        keyPressed = keyPressed,
+        functionKey = functionKey,
+        keyText = keyText,
+        keySymbol = keySymbol,
+        enter = accentColor,
+        enterText = onAccent,
+        divider = divider,
+        candidateText = candidateText,
+        candidateComment = candidateComment,
+        candidateHighlighted = accentColor,
+        candidateHighlightBg = candidateHighlightBg,
+        preeditText = preeditText,
+        popupBackground = popupBackground,
+        popupText = popupText,
+        liquidBackground = liquidBackground,
+        accent = accentColor,
+        accentText = onAccent,
+        danger = danger,
+        hintText = hintText,
+    )
+
     companion object {
         val Light: ImePalette =
             ImePalette(
