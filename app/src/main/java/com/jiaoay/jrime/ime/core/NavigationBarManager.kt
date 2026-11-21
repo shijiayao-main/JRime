@@ -1,45 +1,29 @@
 /*
  * SPDX-FileCopyrightText: 2015 - 2025 Rime community
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 package com.jiaoay.jrime.ime.core
 
-import android.graphics.Color
 import android.os.Build
 import android.view.Window
-import androidx.annotation.ColorInt
 import androidx.core.view.WindowCompat
-import com.jiaoay.jrime.data.theme.ThemeColors
-import com.jiaoay.jrime.data.theme.ThemeManager
-import com.jiaoay.jrime.data.theme.ThemePrefs
-import com.jiaoay.jrime.util.ColorUtils
-import com.jiaoay.jrime.util.DeviceUtils
+import com.jiaoay.jrime.ui.design.ImePalette
 
+/**
+ * The navigation bar the IME draws behind: edge-to-edge with a transparent bar
+ * over the keyboard band, and light/dark system icons matching the palette.
+ * The old theme-keyed navbar preference is gone with the theme engine.
+ */
 class NavigationBarManager {
-    private val navbarBackground by ThemeManager.prefs.navbarBackground
+    private var shouldUpdateForeground = false
+    private var shouldUpdateBackground = false
 
-    private var shouldUpdateNavbarForeground = false
-    private var shouldUpdateNavbarBackground = false
-
-    private fun Window.useSystemNavbarBackground(enabled: Boolean) {
-        // 35+ enforces edge to edge and we must draw behind navbar
+    private fun Window.edgeToEdge(enabled: Boolean) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             WindowCompat.setDecorFitsSystemWindows(this, enabled)
         }
-    }
-
-    /**
-     * Why on earth does it deprecated? It says
-     * https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-15.0.0_r3/core/java/android/view/Window.java#2720
-     * "If the app targets VANILLA_ICE_CREAM or above, the color will be transparent and cannot be changed"
-     * but it only takes effect on API 35+ devices. Older devices still needs this.
-     */
-    private fun Window.setNavbarBackgroundColor(
-        @ColorInt color: Int,
-    ) {
-        @Suppress("DEPRECATION")
-        navigationBarColor = color
     }
 
     private fun Window.enforceNavbarContrast(enforced: Boolean) {
@@ -48,67 +32,38 @@ class NavigationBarManager {
         }
     }
 
-    private fun evaluateWithVirtualKeyboard(window: Window) {
-        when (navbarBackground) {
-            ThemePrefs.NavbarBackground.NONE -> {
-                shouldUpdateNavbarForeground = false
-                shouldUpdateNavbarBackground = false
-                window.useSystemNavbarBackground(true)
-                window.enforceNavbarContrast(true)
-            }
-
-            ThemePrefs.NavbarBackground.COLOR_ONLY -> {
-                shouldUpdateNavbarForeground = true
-                shouldUpdateNavbarBackground = true
-                window.useSystemNavbarBackground(true)
-                window.enforceNavbarContrast(false)
-            }
-
-            ThemePrefs.NavbarBackground.FULL -> {
-                shouldUpdateNavbarForeground = true
-                shouldUpdateNavbarBackground = false
-                window.useSystemNavbarBackground(false)
-                window.setNavbarBackgroundColor(Color.TRANSPARENT)
-                window.enforceNavbarContrast(false)
-                // it seems One UI 7.0 (Android 15) does not allow drawing behind navbar
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM && DeviceUtils.isSamsungOneUI) {
-                    shouldUpdateNavbarBackground = true
-                }
-            }
-        }
-    }
-
     fun evaluate(
         window: Window,
         useVirtualKeyboard: Boolean,
-        colors: ThemeColors,
+        dark: Boolean,
     ) {
         if (useVirtualKeyboard) {
-            evaluateWithVirtualKeyboard(window)
+            // Draw the keyboard behind the navbar: transparent bar, no scrim.
+            shouldUpdateForeground = true
+            shouldUpdateBackground = false
+            window.edgeToEdge(false)
+            window.enforceNavbarContrast(false)
         } else {
-            shouldUpdateNavbarForeground = true
-            shouldUpdateNavbarBackground = true
-            window.useSystemNavbarBackground(true)
+            shouldUpdateForeground = true
+            shouldUpdateBackground = true
+            window.edgeToEdge(true)
             window.enforceNavbarContrast(false)
         }
-        update(window, colors)
+        update(window, dark)
     }
 
     private fun update(
         window: Window,
-        colors: ThemeColors,
+        dark: Boolean,
     ) {
-        val backColor =
-            runCatching {
-                colors.backColor
-            }.getOrDefault(Color.BLACK)
-        if (shouldUpdateNavbarForeground) {
+        if (shouldUpdateForeground) {
             WindowCompat
                 .getInsetsController(window, window.decorView)
-                .isAppearanceLightNavigationBars = !ColorUtils.isContrastedDark(backColor)
+                .isAppearanceLightNavigationBars = !dark
         }
-        if (shouldUpdateNavbarBackground) {
-            window.setNavbarBackgroundColor(backColor)
+        if (shouldUpdateBackground) {
+            @Suppress("DEPRECATION")
+            window.navigationBarColor = if (dark) ImePalette.Dark.surface.value.toInt() else ImePalette.Light.surface.value.toInt()
         }
     }
 }

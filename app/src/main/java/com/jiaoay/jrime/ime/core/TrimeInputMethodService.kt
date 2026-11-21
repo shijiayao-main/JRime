@@ -42,9 +42,6 @@ import com.jiaoay.jrime.daemon.RimeSession
 import com.jiaoay.jrime.data.prefs.AppPrefs
 import com.jiaoay.jrime.data.prefs.PreferenceDelegate
 import com.jiaoay.jrime.data.prefs.PreferenceDelegateProvider
-import com.jiaoay.jrime.data.theme.ColorManager
-import com.jiaoay.jrime.data.theme.ThemeManager
-import com.jiaoay.jrime.data.theme.ThemeScope
 import com.jiaoay.jrime.ime.keyboard.InputFeedbackManager
 import com.jiaoay.jrime.receiver.RimeIntentReceiver
 import com.jiaoay.jrime.util.any
@@ -76,23 +73,10 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     private lateinit var lastKnownConfig: Configuration
     private var inputView: ComposeInputView? = null
 
-    /**
-     * Set when the framework asked for the input view before the theme was ready.
-     * [onCreateInputView] returned null then, and the window can stay up for the whole
-     * session without asking again, which is exactly how the IME comes up after a reboot.
-     */
-    private var inputViewDeferred = false
-
-    /**
-     * Editor state that [onStartInputView] could not hand to [InputView.startInput]
-     * because the view did not exist yet. Replayed once the deferred view is built.
-     */
-    private var pendingEditorInfo: EditorInfo? = null
     private val navBarManager = NavigationBarManager()
     private val inputDeviceManager = InputDeviceManager { useVirtualKeyboard ->
-        val scope = themeScope ?: return@InputDeviceManager
         window.window?.let {
-            navBarManager.evaluate(it, useVirtualKeyboard, scope.colors)
+            navBarManager.evaluate(it, useVirtualKeyboard, isDarkPalette())
         }
     }
     private val rimeIntentReceiver = RimeIntentReceiver()
@@ -107,21 +91,6 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         prefs.advanced.ignoreSystemGestureInsets,
     )
 
-    private val themeScope: ThemeScope?
-        get() = ColorManager.currentScope()
-
-    private val onColorChangeListener =
-        ColorManager.OnColorChangeListener {
-            ContextCompat.getMainExecutor(this).execute {
-                // A scheme-only change restyles the tree in place.
-                val scope = themeScope ?: return@execute
-                inputView?.refreshColors()
-                window.window?.let {
-                    navBarManager.evaluate(it, inputDeviceManager.useVirtualKeyboard, scope.colors)
-                }
-            }
-        }
-
     private fun postJob(
         scope: CoroutineScope,
         block: suspend () -> Unit,
@@ -134,7 +103,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     @Keep
     private val recreateInputViewListener =
         PreferenceDelegate.OnChangeListener<Any> { _, _ ->
-            themeScope?.let { replaceInputView(it) }
+            replaceInputView()
         }
 
     /**
@@ -185,17 +154,6 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         }
         recreateInputViewPrefs.forEach {
             it.registerOnChangeListener(recreateInputViewListener)
-        }
-        // ensure theme and color managers are initialized after rime is ready
-        lifecycleScope.launch {
-            rime.runOnReady {
-                ThemeManager.init(resources.configuration)
-                ColorManager.addOnChangedListener(onColorChangeListener)
-                // Views must be created on the main thread; whenReady runs on the Rime scope.
-                withContext(Dispatchers.Main.immediate) {
-                    createDeferredInputViewIfNeeded()
-                }
-            }
         }
         InputFeedbackManager.init(this)
         registerReceiver()
@@ -295,48 +253,30 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         }
     }
 
-    private fun replaceInputView(scope: ThemeScope): ComposeInputView {
-        val newInputView = ComposeInputView(this, rime, scope)
+    private fun isDarkPalette(): Boolean {
+        val mode = prefs.appearance.paletteMode.getValue()
+        return when (mode) {
+            AppPrefs.PaletteModePref.LIGHT -> false
+
+            AppPrefs.PaletteModePref.DARK -> true
+
+            AppPrefs.PaletteModePref.FOLLOW_SYSTEM ->
+                resources.configuration.uiMode and
+                    Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        }
+    }
+
+    private fun replaceInputView(): ComposeInputView {
+        val newInputView = ComposeInputView(this, rime)
         setInputView(newInputView)
         inputDeviceManager.setInputView(newInputView)
         inputView = newInputView
         return newInputView
     }
 
-    private fun replaceInputViews(scope: ThemeScope) {
-        navBarManager.evaluate(window.window!!, inputDeviceManager.useVirtualKeyboard, scope.colors)
-        replaceInputView(scope)
-    }
-
-    /**
-     * Builds the input view that [onCreateInputView] had to skip because the theme was
-     * still loading. The framework already believes the input view is shown, so it will
-     * not ask again while the window stays up — without this the window stays empty.
-     */
-    private fun createDeferredInputViewIfNeeded() {
-        if (!inputViewDeferred) return
-        val scope = themeScope ?: return
-        inputViewDeferred = false
-        Timber.d("Theme is ready, creating the deferred input view")
-        replaceInputViews(scope)
-        // An editor was already focused while the view was missing, so its state never
-        // reached the view: without replaying it the keyboard would keep the default
-        // layout instead of the one the editor asks for.
-        pendingEditorInfo?.let { info ->
-            pendingEditorInfo = null
-            Timber.d("Replaying the editor state skipped while the view was missing")
-            inputView?.startInput(info, restarting = false)
-        }
-        // The framework may have already laid the window out while the view was
-        // missing, so ask it to re-evaluate instead of waiting for the next focus change.
-        updateInputViewShown()
-        // The show request that arrived while the view was missing left the framework
-        // believing the IME is already shown, so it will never ask again on its own:
-        // the freshly built window stays invisible until we re-request the show.
-        if (!isInputViewShown && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            Timber.d("Re-requesting the show skipped while the view was missing")
-            requestShowSelf(0)
-        }
+    private fun replaceInputViews() {
+        navBarManager.evaluate(window.window!!, inputDeviceManager.useVirtualKeyboard, isDarkPalette())
+        replaceInputView()
     }
 
     override fun onTrimMemory(level: Int) {
@@ -349,11 +289,9 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     override fun onDestroy() {
         InputFeedbackManager.destroy()
         inputView = null
-        pendingEditorInfo = null
         recreateInputViewPrefs.forEach {
             it.unregisterOnChangeListener(recreateInputViewListener)
         }
-        ColorManager.removeOnChangedListener(onColorChangeListener)
         super.onDestroy()
         unregisterReceiver(rimeIntentReceiver)
         RimeDaemon.destroySession(javaClass.name)
@@ -473,13 +411,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
 
     override fun onCreateInputView(): View? {
         Timber.d("onCreateInputView")
-        val scope = themeScope
-        if (scope == null) {
-            Timber.w("ThemeScope is not ready yet; deferring input view creation")
-            inputViewDeferred = true
-            return null
-        }
-        replaceInputViews(scope)
+        replaceInputViews()
         // We will call `setInputView` by ourselves. This is fine.
         return null
     }
@@ -539,14 +471,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         }
         val useVirtualKeyboard = inputDeviceManager.evaluateOnStartInputView(attribute, this)
         if (useVirtualKeyboard) {
-            val view = inputView
-            if (view != null) {
-                view.startInput(attribute, restarting)
-            } else {
-                // The deferred view is still missing; keep the state so it can be
-                // replayed (including the layout the editor asks for) once it exists.
-                pendingEditorInfo = attribute
-            }
+            inputView?.startInput(attribute, restarting)
         }
         // The framework sometimes cancels the pending show at
         // PHASE_SERVER_ALREADY_VISIBLE (it believes the IME window is up when

@@ -13,7 +13,6 @@ import androidx.core.content.ContextCompat
 import com.jiaoay.jrime.daemon.RimeSession
 import com.jiaoay.jrime.daemon.launchOnReady
 import com.jiaoay.jrime.data.SymbolHistory
-import com.jiaoay.jrime.data.theme.ThemeScope
 import com.jiaoay.jrime.data.theme.model.LiquidKeyboard
 import com.jiaoay.jrime.ime.core.TrimeInputMethodService
 
@@ -25,7 +24,7 @@ import com.jiaoay.jrime.ime.core.TrimeInputMethodService
 class SymbolsPanelState(
     private val service: TrimeInputMethodService,
     private val rime: RimeSession,
-    private val scope: ThemeScope,
+    private val liquidKeyboard: LiquidKeyboard,
     private val onClosePanel: () -> Unit,
 ) {
     private val symbolHistory = SymbolHistory(180)
@@ -39,7 +38,7 @@ class SymbolsPanelState(
         private set
 
     val tabs: List<LiquidKeyboard.Tag>
-        get() = scope.theme.liquidKeyboard.getTagList()
+        get() = liquidKeyboard.getTagList()
 
     fun setDataByIndex(i: Int) {
         val tag = tabs[i]
@@ -51,7 +50,7 @@ class SymbolsPanelState(
                 currentKeys = symbolHistory.toOrderedList().map { LiquidKeyboard.KeyItem(it) }
             }
 
-            else -> currentKeys = scope.theme.liquidKeyboard.getDataByIndex(i)
+            else -> currentKeys = liquidKeyboard.getDataByIndex(i)
         }
     }
 

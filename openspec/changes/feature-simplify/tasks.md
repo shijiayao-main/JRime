@@ -8,5 +8,4 @@
 - [x] 1.6 死偏好清理（P3b 后无消费者的 keyboard/advanced 项）：landscape/split/hide*/expand/swipe*/
       long_press/repeat/hook_shift*/show_app_icon 等 19 个偏好与常量删除；设置中心行数收敛
       （键盘 14→9、输入 24→21 等）
-- [ ] 1.7 下一批：主题/颜色 YAML 时代类清理（Theme/ThemeManager/ColorManager/NativeTheme/ImeColors 等），
-      面板配色改用 :ui:design token
+- [x] 1.7 主题/颜色 YAML 时代类清理（见 `openspec/changes/theme-engine-removal/`）：面板改用 design token

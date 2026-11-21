@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.jiaoay.jrime.data.clip.ClipboardHelper
 import com.jiaoay.jrime.data.prefs.AppPrefs
 import com.jiaoay.jrime.ime.keyboard.InputFeedbackManager
+import com.jiaoay.jrime.ui.design.LocalImePalette
 import kotlinx.coroutines.delay
 
 /** How many characters of the clip the chip previews before the ellipsis. */
@@ -143,7 +144,7 @@ internal fun ClipboardChip(
                 elapsedMillis = entity?.let { nowMillis - it.timestamp } ?: 0L,
             )
     if (!visible) return
-    val colors = LocalImeColors.current
+    val colors = LocalImePalette.current
     Box(
         modifier = modifier
             .padding(horizontal = 3.dp)

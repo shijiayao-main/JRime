@@ -35,10 +35,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
-import com.jiaoay.jrime.ime.compose.ImeColors
-import com.jiaoay.jrime.ime.compose.LocalImeColors
 import com.jiaoay.jrime.ime.compose.panels.ClipboardPanelState
 import com.jiaoay.jrime.ime.compose.rememberKeyboardRowHeightDp
+import com.jiaoay.jrime.ui.design.ImePalette
+import com.jiaoay.jrime.ui.design.LocalImePalette
 
 /**
  * The Compose clipboard panel: a tab strip (history / favorites) above a
@@ -53,7 +53,7 @@ fun ClipboardPanel(
     state: ClipboardPanelState,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalImeColors.current
+    val colors = LocalImePalette.current
     // The clipboard band renders the same content height as the keyboard
     // (KEYBOARD_CONTENT_ROWS x the row-height preference) so switching
     // surfaces never jumps the band.
@@ -62,7 +62,7 @@ fun ClipboardPanel(
         modifier = modifier
             .fillMaxWidth()
             .height((com.jiaoay.jrime.engine.ImeMetrics.CONTENT_ROWS * rowHeightDp).dp)
-            .background(colors.keyboardBackground),
+            .background(colors.surface),
     ) {
         ClipboardTabStrip(state, colors)
         val items = if (state.currentTab == 0) state.clippings else state.favorites
@@ -89,7 +89,7 @@ fun ClipboardPanel(
 @Composable
 private fun ClipboardTabStrip(
     state: ClipboardPanelState,
-    colors: ImeColors,
+    colors: ImePalette,
 ) {
     Row(
         modifier = Modifier
@@ -110,13 +110,13 @@ private fun ClipboardTabStrip(
 private fun TabChip(
     label: String,
     selected: Boolean,
-    colors: ImeColors,
+    colors: ImePalette,
     onClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier
             .background(
-                if (selected) colors.activeToggle else colors.functionKey,
+                if (selected) colors.accent else colors.functionKey,
                 RoundedCornerShape(6.dp),
             )
             .clickable(onClick = onClick)
@@ -128,7 +128,7 @@ private fun TabChip(
             TextStyle(
                 fontSize = 14.sp,
                 fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
-                color = if (selected) colors.activeToggleLabel else colors.keyText,
+                color = if (selected) colors.accentText else colors.keyText,
             ),
         )
     }
@@ -138,7 +138,7 @@ private fun TabChip(
 @Composable
 private fun MenuChip(
     label: String,
-    colors: ImeColors,
+    colors: ImePalette,
     onClick: () -> Unit,
 ) {
     Box(
@@ -156,7 +156,7 @@ private fun MenuChip(
 @Composable
 private fun ClipboardList(
     state: ClipboardPanelState,
-    colors: ImeColors,
+    colors: ImePalette,
     items: List<ClipboardItem>,
 ) {
     var menuFor by remember { mutableStateOf<ClipboardItem?>(null) }
@@ -190,7 +190,7 @@ private fun ClipboardList(
 @Composable
 private fun ClipCard(
     item: ClipboardItem,
-    colors: ImeColors,
+    colors: ImePalette,
     onClick: () -> Unit,
     onLongPress: () -> Unit,
 ) {
@@ -198,7 +198,7 @@ private fun ClipCard(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(onClick = onClick, onLongClick = onLongPress)
-            .background(colors.keyBackground, RoundedCornerShape(8.dp))
+            .background(colors.key, RoundedCornerShape(8.dp))
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
         Column {
@@ -226,7 +226,7 @@ private fun ClipCard(
 private fun ClipItemMenu(
     item: ClipboardItem,
     state: ClipboardPanelState,
-    colors: ImeColors,
+    colors: ImePalette,
     onDismiss: () -> Unit,
 ) {
     val entries =
@@ -257,7 +257,7 @@ private fun ClipItemMenu(
     ) {
         Column(
             modifier = Modifier
-                .background(colors.keyBackground, RoundedCornerShape(10.dp))
+                .background(colors.key, RoundedCornerShape(10.dp))
                 .padding(vertical = 4.dp),
         ) {
             entries.forEachIndexed { index, (label, action) ->
@@ -274,7 +274,7 @@ private fun ClipItemMenu(
                         style =
                         TextStyle(
                             fontSize = 15.sp,
-                            color = if (label == "删除") Color(0xFFD93025) else colors.keyText,
+                            color = if (label == "删除") colors.danger else colors.keyText,
                         ),
                     )
                 }

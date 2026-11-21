@@ -20,8 +20,6 @@ import com.jiaoay.jrime.daemon.RimeDaemon
 import com.jiaoay.jrime.data.clip.ClipboardHelper
 import com.jiaoay.jrime.data.clip.FavoriteHelper
 import com.jiaoay.jrime.data.prefs.AppPrefs
-import com.jiaoay.jrime.data.theme.ColorManager
-import com.jiaoay.jrime.data.theme.ThemeManager
 import com.jiaoay.jrime.receiver.RimeIntentReceiver
 import com.jiaoay.jrime.ui.main.LogActivity
 import com.jiaoay.jrime.util.isNightMode
@@ -181,21 +179,11 @@ class TrimeApplication : Application() {
             FavoriteHelper.init(ctx)
             if (!isDirectBootMode) {
                 AppPrefs.defaultInstance().syncToDeviceEncryptedStorage()
-                ThemeManager.syncToDeviceEncryptedStorage()
             }
             registerBroadcastReceiver()
         } catch (e: Exception) {
             e.fillInStackTrace()
             return
-        }
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        try {
-            ColorManager.onSystemNightModeChange(newConfig.isNightMode())
-        } catch (e: Exception) {
-            Timber.w(e, "Something wrong on configuration changed")
         }
     }
 

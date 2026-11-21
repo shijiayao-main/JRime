@@ -9,7 +9,6 @@ package com.jiaoay.jrime.ime.core
 import android.content.SharedPreferences
 import android.view.inputmethod.EditorInfo
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -33,8 +32,6 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.jiaoay.jrime.core.RimeMessage
 import com.jiaoay.jrime.daemon.RimeSession
 import com.jiaoay.jrime.data.prefs.AppPrefs
-import com.jiaoay.jrime.data.theme.ColorManager
-import com.jiaoay.jrime.data.theme.ThemeScope
 import com.jiaoay.jrime.engine.ImeCommand
 import com.jiaoay.jrime.engine.ImeSessionState
 import com.jiaoay.jrime.engine.KeyBinding
@@ -44,11 +41,9 @@ import com.jiaoay.jrime.engine.PanelId
 import com.jiaoay.jrime.ime.broadcast.InputBroadcaster
 import com.jiaoay.jrime.ime.clipboard.ClipboardPanel
 import com.jiaoay.jrime.ime.compose.ClipboardChip
-import com.jiaoay.jrime.ime.compose.ImeColors
 import com.jiaoay.jrime.ime.compose.ImeCommandExecutor
 import com.jiaoay.jrime.ime.compose.ImeSurfaceController
 import com.jiaoay.jrime.ime.compose.LiquidPanel
-import com.jiaoay.jrime.ime.compose.LocalImeColors
 import com.jiaoay.jrime.ime.compose.panels.ClipboardPanelState
 import com.jiaoay.jrime.ime.compose.panels.SymbolsPanelState
 import com.jiaoay.jrime.ime.compose.toEngineAccent
@@ -56,6 +51,7 @@ import com.jiaoay.jrime.ime.compose.toEnginePaletteMode
 import com.jiaoay.jrime.ime.keyboard.InputFeedbackManager
 import com.jiaoay.jrime.ime.phrase.CustomPhraseStore
 import com.jiaoay.jrime.ime.phrase.PhrasePanel
+import com.jiaoay.jrime.theme.LiquidAssets
 import com.jiaoay.jrime.ui.design.ImeIcon
 import com.jiaoay.jrime.ui.ime.ImeSurface
 import com.jiaoay.jrime.ui.ime.ImeSurfaceConfig
@@ -74,7 +70,6 @@ import timber.log.Timber
 class ComposeInputView(
     private val service: TrimeInputMethodService,
     private val rime: RimeSession,
-    private val scope: ThemeScope,
 ) : ConstraintLayout(service) {
     private val broadcaster = InputBroadcaster()
     private val catalog = KeyboardCatalog.shipped()
@@ -237,12 +232,10 @@ class ComposeInputView(
         toolbarActions = toolbarActions(state),
         panelSlots = panelSlots(),
         clipboardChip = {
-            legacyImeColors {
-                ClipboardChip(
-                    onCommit = { text -> executor.execute(ImeCommand.CommitText(text)) },
-                    panelOpen = state.activePanel != null,
-                )
-            }
+            ClipboardChip(
+                onCommit = { text -> executor.execute(ImeCommand.CommitText(text)) },
+                panelOpen = state.activePanel != null,
+            )
         },
     )
 
@@ -303,7 +296,7 @@ class ComposeInputView(
                 state.start()
                 onDispose { state.stop() }
             }
-            legacyImeColors { ClipboardPanel(state, modifier) }
+            ClipboardPanel(state, modifier)
         },
         PanelSlot(PanelId.Phrase, "常用语", ImeIcon.Phrase) { modifier ->
             PhrasePanel(modifier = modifier) { text ->
@@ -329,7 +322,7 @@ class ComposeInputView(
                 SymbolsPanelState(
                     service = service,
                     rime = rime,
-                    scope = scope,
+                    liquidKeyboard = LiquidAssets.liquidKeyboard,
                     onClosePanel = ::closePanel,
                 )
             }
@@ -341,19 +334,7 @@ class ComposeInputView(
                 }
             state.setDataByIndex(index.coerceAtLeast(0))
         }
-        legacyImeColors { LiquidPanel(state, modifier) }
-    }
-
-    /**
-     * The panel surfaces still read the legacy [LocalImeColors]; this provider
-     * keeps them rendering from the same palette until P4 removes the palette.
-     */
-    @Composable
-    private fun legacyImeColors(content: @Composable () -> Unit) {
-        val colors = ColorManager.currentScope()?.let { ImeColors(it.colors) }
-        if (colors != null) {
-            CompositionLocalProvider(LocalImeColors provides colors, content = content)
-        }
+        LiquidPanel(state, modifier)
     }
 
     // -- rime message pump -------------------------------------------------
@@ -374,6 +355,8 @@ class ComposeInputView(
             is RimeMessage.CompositionMessage -> broadcaster.onCompositionUpdate(message.data)
 
             is RimeMessage.BulkCandidatesMessage -> broadcaster.onCandidateListUpdate(message.data)
+
+            is RimeMessage.StatusMessage -> broadcaster.onInputStatusUpdate(message.data)
 
             else -> Unit
         }

@@ -14,11 +14,13 @@ import kotlinx.serialization.json.Json
  * Loads the liquid keyboard content (symbol and emoji pages) from the
  * standalone `shared/liquid.json` asset. The content is data, not theme
  * configuration: it outlives the theme YAML engine (task 1.4) as a plain
- * JSON asset, and [NativeTheme] reads it straight -- no YAML machinery on
- * the path.
+ * JSON asset consumed directly -- no YAML or theme machinery on the path.
  */
-internal object LiquidAssets {
+object LiquidAssets {
     private const val ASSET_PATH = "shared/liquid.json"
+
+    /** The app's one liquid-keyboard content, loaded once. */
+    val liquidKeyboard: LiquidKeyboard by lazy { load() }
 
     private val json = Json { ignoreUnknownKeys = true }
 

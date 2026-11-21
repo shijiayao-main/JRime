@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jiaoay.jrime.ime.compose.panels.SymbolsPanelState
 import com.jiaoay.jrime.ime.compose.rememberKeyboardRowHeightDp
+import com.jiaoay.jrime.ui.design.ImePalette
+import com.jiaoay.jrime.ui.design.LocalImePalette
 
 /**
  * The liquid symbol pages: a horizontally scrolling tab strip above the key
@@ -43,7 +45,7 @@ fun LiquidPanel(
     state: SymbolsPanelState,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalImeColors.current
+    val colors = LocalImePalette.current
     // The liquid band renders the same content height as the keyboard
     // (KEYBOARD_CONTENT_ROWS x the row-height preference) so switching
     // surfaces never jumps the band.
@@ -84,7 +86,7 @@ fun LiquidPanel(
                 Box(
                     modifier = Modifier
                         .height(44.dp)
-                        .background(colors.keyBackground, RoundedCornerShape(6.dp))
+                        .background(colors.key, RoundedCornerShape(6.dp))
                         .clickable { state.tap(item) },
                     contentAlignment = Alignment.Center,
                 ) {
@@ -101,13 +103,13 @@ fun LiquidPanel(
 private fun LiquidTabChip(
     label: String,
     selected: Boolean,
-    colors: ImeColors,
+    colors: ImePalette,
     onClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier
             .background(
-                if (selected) colors.activeToggle else colors.functionKey,
+                if (selected) colors.accent else colors.functionKey,
                 RoundedCornerShape(6.dp),
             )
             .clickable(onClick = onClick)
@@ -118,7 +120,7 @@ private fun LiquidTabChip(
             style =
             TextStyle(
                 fontSize = 12.sp,
-                color = if (selected) colors.activeToggleLabel else colors.keyText,
+                color = if (selected) colors.accentText else colors.keyText,
             ),
         )
     }
