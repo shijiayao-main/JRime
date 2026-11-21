@@ -33,7 +33,9 @@
 | [keyboard group](../openspec/changes/settings-v2/screenshots/emulator-2026-11-21-six-groups-keyboard.png) | 键盘组 |
 | [appearance page](../openspec/changes/settings-v2/screenshots/emulator-2026-11-21-appearance-page.png) | 外观（深浅/强调色/候选字号等） |
 | [green accent keyboard](../openspec/changes/settings-v2/screenshots/emulator-2026-11-21-green-accent-keyboard.png) | 强调色生效示例 |
-| [input rules](../openspec/changes/input-rules/screenshots/emulator-2026-11-21-input-rules.png) | 输入规则切换 |
+| [input rules](../openspec/changes/input-rules/screenshots/emulator-2026-11-21-input-rules.png) | 输入规则切换（旧默认） |
+| [rule defaults 1](../openspec/changes/rule-defaults/screenshots/2026-11-21-input-rules-default-1.png) | 新默认：英文标点关/通用字集等（上） |
+| [rule defaults 2](../openspec/changes/rule-defaults/screenshots/2026-11-21-input-rules-default-2.png) | 新默认（下：增广字集关） |
 | [switch mode row](../openspec/changes/input-switch-mode/screenshots/2026-11-21-switch-mode-persisted.png) | 中英切换方式（行值显示持久化的「仅顶栏按钮」） |
 | [switch mode dialog](../openspec/changes/input-switch-mode/screenshots/2026-11-21-switch-mode-dialog.png) | 中英切换方式弹窗三选项 |
 | [system and data group](../openspec/changes/userdict-browser/screenshots/settings-system-group.png) | 系统与数据：管理用户词典/导出/恢复/诊断 |

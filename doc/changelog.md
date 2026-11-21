@@ -50,6 +50,13 @@
   首页搜索仍跨分类；Android 与桌面设置窗口共用同一 Compose 屏幕。模拟器截图见
   `openspec/changes/settings-categories/screenshots/`。
 
+## 默认规则调优（2026-11-21）
+
+- 默认标点改中文（`ascii_punct reset: 0`）、默认字集改通用（`charset`/`extended_charset reset: 0`）、
+  flypy 候选单页统一为 7；shared 源与预编译 build 同步，资产 release 链保证旧安装升级生效。
+- 清数据首装实测：使用英文标点=关、增广字集=关、表情候选=开、联想=关（截图见
+  `openspec/changes/rule-defaults/screenshots/`）。详见 `doc/schema-rules-notes.md`。
+
 ## 复现命令
 
 ```sh
