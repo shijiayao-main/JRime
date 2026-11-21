@@ -74,6 +74,14 @@
 - 测试：`ImeIconSetTest`（唯一/方案中立）、分类图标断言、SurfaceGuard；模拟器截图见
   `openspec/changes/ui-icon-system/screenshots/`。
 
+## 模型化扩展 P2：Compose 执行器 typed 化（2026-11-21）
+
+- 新增 `RimeActionDispatcher`：Compose 表面的按键/命令直接执行 typed `ImeAction`（键处理、上屏、
+  双击空格、选项切换、文本编辑、面板/键盘切换、语音、维护命令），删除字符串命令解释器在 Compose 路径上的使用。
+- `ImeCommandExecutor` 用 `ActionResolver` 解析槽位；`ClipboardChip` 改为直接提交文本；面板打开显式化。
+- 模拟器验证：字母组合/候选上屏/双空格句号/剪贴板面板/长按空格切语音输入（截图见
+  `openspec/changes/model-first-action-model/screenshots/`）。
+
 ## 复现命令
 
 ```sh

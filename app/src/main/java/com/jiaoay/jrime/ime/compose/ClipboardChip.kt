@@ -31,10 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jiaoay.jrime.data.clip.ClipboardHelper
 import com.jiaoay.jrime.data.prefs.AppPrefs
-import com.jiaoay.jrime.data.theme.model.KeyActionToken
 import com.jiaoay.jrime.ime.keyboard.InputFeedbackManager
-import com.jiaoay.jrime.ime.keyboard.KeyAction
-import com.jiaoay.jrime.theme.NativeTheme
 import kotlinx.coroutines.delay
 
 /** How many characters of the clip the chip previews before the ellipsis. */
@@ -89,7 +86,7 @@ internal fun clipboardChipVisible(
 @Suppress("FunctionName")
 @Composable
 internal fun ClipboardChip(
-    onDispatch: (KeyAction) -> Unit,
+    onCommit: (String) -> Unit,
     modifier: Modifier = Modifier,
     panelOpen: Boolean = false,
 ) {
@@ -160,7 +157,7 @@ internal fun ClipboardChip(
                 // (textCommitSpeak) -- keyPressSpeak(0) would say "unknown".
                 InputFeedbackManager.run { keyPressSound() }
                 consumed = true
-                onDispatch(KeyAction(KeyActionToken.Inline(commit = clip.text), NativeTheme.theme.presetKeys))
+                onCommit(clip.text)
             },
         contentAlignment = Alignment.Center,
     ) {

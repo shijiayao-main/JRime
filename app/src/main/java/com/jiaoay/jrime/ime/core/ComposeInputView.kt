@@ -47,7 +47,6 @@ import com.jiaoay.jrime.ime.compose.LiquidPanel
 import com.jiaoay.jrime.ime.compose.LocalImeColors
 import com.jiaoay.jrime.ime.compose.toEngineAccent
 import com.jiaoay.jrime.ime.compose.toEnginePaletteMode
-import com.jiaoay.jrime.ime.keyboard.CommonKeyboardActionListener
 import com.jiaoay.jrime.ime.keyboard.InputFeedbackManager
 import com.jiaoay.jrime.ime.keyboard.KeyAction
 import com.jiaoay.jrime.ime.keyboard.KeyboardWindow
@@ -82,7 +81,6 @@ class ComposeInputView(
     scope: ThemeScope,
 ) : InputView(service, rime, scope) {
     private val broadcaster: InputBroadcaster by instance()
-    private val actionListener: CommonKeyboardActionListener by instance()
     private val keyboardWindow: KeyboardWindow by instance()
     private val windowManager: BoardWindowManager by instance()
     private val liquidWindow: LiquidWindow by instance()
@@ -94,7 +92,8 @@ class ComposeInputView(
         ImeCommandExecutor(
             service = service,
             rime = rime,
-            actionListener = actionListener,
+            di = di,
+            theme = theme,
             windowManager = windowManager,
             keyboardWindow = keyboardWindow,
             liquidWindow = liquidWindow,
@@ -262,7 +261,7 @@ class ComposeInputView(
         clipboardChip = {
             legacyImeColors {
                 ClipboardChip(
-                    onDispatch = { action -> executor.executeAction(action) },
+                    onCommit = { text -> executor.execute(ImeCommand.CommitText(text)) },
                     panelOpen = window != null,
                 )
             }

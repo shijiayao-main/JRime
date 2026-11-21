@@ -91,8 +91,9 @@ YAML/主题时代类；面板内容迁移为 Compose state holder + `PanelSlot`�
 
 - **P1（本批，已完成）**：typed `ImeAction` + `ActionResolver` + extension 契约/registry + 覆盖测试；
   全随包布局槽位类型化（Unsupported 空）。
-- **P2**：应用执行器改用 typed action 执行（Rime key / commit / panel / keyboard / text edit /
-  maintenance），去掉 `CommonKeyboardActionListener` 的字符串命令分支；保留 legacy 输入路径直到面板迁移。
+- **P2（已完成）**：应用执行器改用 typed action 执行（`RimeActionDispatcher`：Rime key / commit /
+  panel / keyboard / text edit / maintenance），Compose 路径去掉 `CommonKeyboardActionListener` 字符串命令分支；
+  模拟器验证按键/上屏/双空格/剪贴板面板/长按空格语音。
 - **P3**：面板去 BoardWindow 化（Clipboard/Symbols/Phrase → Compose state holder + `PanelSlot`），
   删除 `BoardWindow*`、`KeyboardWindow`、`Keyboard`、`Key`、`InputView` 等视图层。
 - **P4**：颜色/主题去 legacy（`ColorManager/ColorTable/Theme/NativeTheme/ThemePrefs/GboardColors`），

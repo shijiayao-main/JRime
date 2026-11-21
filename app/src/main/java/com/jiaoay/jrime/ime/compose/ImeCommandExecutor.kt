@@ -6,22 +6,25 @@
 
 package com.jiaoay.jrime.ime.compose
 
+import com.jiaoay.jrime.action.ActionResolver
+import com.jiaoay.jrime.action.ImeAction
 import com.jiaoay.jrime.daemon.RimeSession
 import com.jiaoay.jrime.daemon.launchOnReady
 import com.jiaoay.jrime.data.prefs.AppPrefs
+import com.jiaoay.jrime.data.theme.Theme
 import com.jiaoay.jrime.data.theme.model.KeyActionToken
 import com.jiaoay.jrime.data.theme.model.PresetKey
 import com.jiaoay.jrime.engine.CandidateActionKind
 import com.jiaoay.jrime.engine.ImeCommand
 import com.jiaoay.jrime.engine.KeyboardId
 import com.jiaoay.jrime.engine.PanelId
+import com.jiaoay.jrime.ime.clipboard.ClipboardWindow
 import com.jiaoay.jrime.ime.core.TrimeInputMethodService
-import com.jiaoay.jrime.ime.keyboard.CommonKeyboardActionListener
-import com.jiaoay.jrime.ime.keyboard.KeyAction
 import com.jiaoay.jrime.ime.keyboard.KeyboardWindow
 import com.jiaoay.jrime.ime.phrase.PhraseWindow
 import com.jiaoay.jrime.ime.symbol.LiquidWindow
 import com.jiaoay.jrime.ime.window.BoardWindowManager
+import org.kodein.di.DI
 import timber.log.Timber
 
 /**
@@ -33,7 +36,8 @@ import timber.log.Timber
 class ImeCommandExecutor(
     private val service: TrimeInputMethodService,
     private val rime: RimeSession,
-    private val actionListener: CommonKeyboardActionListener,
+    private val di: DI,
+    private val theme: Theme,
     private val windowManager: BoardWindowManager,
     private val keyboardWindow: KeyboardWindow,
     private val liquidWindow: LiquidWindow,
@@ -42,13 +46,23 @@ class ImeCommandExecutor(
     /** Whether a Shift tap is allowed to toggle Chinese/English. */
     private val shiftTogglesLanguage: () -> Boolean = { true },
 ) {
+    private val resolver = ActionResolver(presetKeys)
+
+    private val dispatcher =
+        RimeActionDispatcher(
+            service = service,
+            rime = rime,
+            onOpenPanel = ::openPanel,
+            onClosePanel = { windowManager.attachWindow(KeyboardWindow) },
+            onSwitchKeyboard = { keyboardWindow.switchKeyboard(it.value) },
+        )
     fun execute(command: ImeCommand) {
         when (command) {
             is ImeCommand.Key -> {
                 val shiftBlocked =
                     !shiftTogglesLanguage() &&
                         command.token == KeyActionToken.Plain("Shift_L")
-                if (!shiftBlocked) executeAction(KeyAction(command.token, presetKeys))
+                if (!shiftBlocked) dispatcher.dispatch(resolver.resolve(command.token))
             }
 
             is ImeCommand.ChangeCandidatePage,
@@ -66,9 +80,9 @@ class ImeCommandExecutor(
 
             is ImeCommand.CommitText -> service.commitText(command.text)
 
-            ImeCommand.Backspace -> dispatchToken(KeyActionToken.Plain("BackSpace"))
+            ImeCommand.Backspace -> dispatcher.dispatch(ImeAction.Key("BackSpace"))
 
-            ImeCommand.ToggleAscii -> dispatchToken(KeyActionToken.Plain("ascii_switch"))
+            ImeCommand.ToggleAscii -> dispatcher.dispatch(ImeAction.ToggleOption("ascii_mode"))
 
             is ImeCommand.SetOption ->
                 rime.launchOnReady { it.setRuntimeOption(command.option, command.value) }
@@ -102,7 +116,7 @@ class ImeCommandExecutor(
 
     private fun handleCandidateAction(command: ImeCommand.CandidateAction) {
         when (command.action) {
-            CandidateActionKind.Pin -> dispatchToken(KeyActionToken.Plain("PinCandFunc"))
+            CandidateActionKind.Pin -> dispatcher.dispatch(resolver.resolve(KeyActionToken.Plain("PinCandFunc")))
 
             CandidateActionKind.Delete ->
                 rime.launchOnReady { it.deleteCandidate(command.index, global = true) }
@@ -117,15 +131,6 @@ class ImeCommandExecutor(
         }
     }
 
-    /** Runs a pre-built legacy action (e.g. the top bar's clipboard chip). */
-    fun executeAction(action: KeyAction) {
-        actionListener.listener.onAction(action)
-    }
-
-    private fun dispatchToken(token: KeyActionToken) {
-        executeAction(KeyAction(token, presetKeys))
-    }
-
     private fun openPanel(id: PanelId) {
         when (id) {
             PanelId.Symbols -> {
@@ -133,11 +138,19 @@ class ImeCommandExecutor(
                 liquidWindow.setDataByIndex(0)
             }
 
-            PanelId.Clipboard -> dispatchToken(KeyActionToken.Plain("clipboard_window"))
+            PanelId.Clipboard -> windowManager.attachWindow(ClipboardWindow(di))
 
-            PanelId.Emoji -> dispatchToken(KeyActionToken.Plain("liquid_keyboard_emoji"))
+            PanelId.Emoji -> {
+                val tags = theme.liquidKeyboard.getTagList()
+                val index =
+                    tags.indexOfFirst {
+                        it.label == "😀" || it.type.name.equals("EMOJI", ignoreCase = true)
+                    }.coerceAtLeast(0)
+                windowManager.attachWindow(liquidWindow)
+                liquidWindow.setDataByIndex(index)
+            }
 
-            PanelId.Editor -> dispatchToken(KeyActionToken.Plain("Keyboard_editor"))
+            PanelId.Editor -> keyboardWindow.switchKeyboard("editor")
 
             PanelId.Phrase -> windowManager.attachWindow(phraseWindow)
         }
@@ -148,10 +161,10 @@ class ImeCommandExecutor(
         lines: Int,
     ) {
         repeat(kotlin.math.abs(chars)) {
-            dispatchToken(KeyActionToken.Plain(if (chars > 0) "Right" else "Left"))
+            dispatcher.dispatch(ImeAction.Key(if (chars > 0) "Right" else "Left"))
         }
         repeat(kotlin.math.abs(lines)) {
-            dispatchToken(KeyActionToken.Plain(if (lines > 0) "Down" else "Up"))
+            dispatcher.dispatch(ImeAction.Key(if (lines > 0) "Down" else "Up"))
         }
     }
 
