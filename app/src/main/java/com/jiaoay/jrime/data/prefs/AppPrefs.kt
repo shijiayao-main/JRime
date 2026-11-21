@@ -141,6 +141,7 @@ class AppPrefs(
             const val SPEAK_ON_COMMIT = "speak_on_commit"
             const val POPUP_ON_KEY_PRESS = "show_key_popup"
             const val SHOW_KEY_HINTS = "show_key_hints"
+            const val SHOW_CANDIDATE_COMMENT = "show_candidate_comment"
             const val CANDIDATE_PAGE_SIZE = "candidate_page_size"
             const val CANDIDATE_TEXT_SIZE = "candidate_text_size"
             const val EXPAND_KEYPRESS_AREA = "expand_keypress_area"
@@ -406,6 +407,7 @@ class AppPrefs(
             const val PALETTE_MODE = "theme_palette_mode"
             const val ACCENT = "theme_accent"
             const val SHOW_KEY_HINTS = "show_key_hints"
+            const val SHOW_CANDIDATE_COMMENT = "show_candidate_comment"
             const val CANDIDATE_PAGE_SIZE = "candidate_page_size"
             const val CANDIDATE_TEXT_SIZE = "candidate_text_size"
         }
@@ -413,6 +415,7 @@ class AppPrefs(
         val paletteMode = enum(R.string.palette_mode, PALETTE_MODE, PaletteModePref.FOLLOW_SYSTEM)
         val accent = enum(R.string.accent_color, ACCENT, AccentPref.BLUE)
         val showKeyHints = switch(R.string.show_key_hints, SHOW_KEY_HINTS, true)
+        val showCandidateComment = switch(R.string.show_candidate_comment, SHOW_CANDIDATE_COMMENT, true)
         val candidatePageSize = int(
             R.string.candidate_page_size,
             CANDIDATE_PAGE_SIZE,

@@ -26,16 +26,19 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 /** User-facing strings the shared screen needs from the host. */
@@ -61,6 +64,7 @@ fun SettingsScreen(
     strings: SettingsStrings,
     onAction: (String) -> Unit,
     modifier: Modifier = Modifier,
+    options: RuntimeOptionSource? = null,
 ) {
     // Reading the revision re-renders the rows with the freshly stored values.
     val revision by store.revision.collectAsState()
@@ -118,6 +122,8 @@ fun SettingsScreen(
                         SettingRow(
                             spec = spec,
                             store = store,
+                            strings = strings,
+                            options = options,
                             onAction = onAction,
                             onEditChoice = { editingChoice = spec },
                             onEditText = { editingText = spec },
@@ -152,6 +158,8 @@ fun SettingsScreen(
 private fun SettingRow(
     spec: SettingSpec,
     store: SettingsStore,
+    strings: SettingsStrings,
+    options: RuntimeOptionSource?,
     onAction: (String) -> Unit,
     onEditChoice: () -> Unit,
     onEditText: () -> Unit,
@@ -221,6 +229,19 @@ private fun SettingRow(
 
             is SettingControl.Action -> {
                 Text(text = "›", style = MaterialTheme.typography.titleMedium)
+            }
+
+            is SettingControl.ToggleOption -> {
+                OptionToggle(options = options, control = control)
+            }
+
+            is SettingControl.OptionChoice -> {
+                OptionChoiceRow(
+                    options = options,
+                    control = control,
+                    title = spec.title,
+                    cancelLabel = strings.cancel,
+                )
             }
         }
     }
@@ -305,4 +326,97 @@ private fun TextDialog(
             TextButton(onClick = onDismiss) { Text(strings.cancel) }
         },
     )
+}
+
+@Suppress("FunctionName")
+@Composable
+private fun OptionToggle(
+    options: RuntimeOptionSource?,
+    control: SettingControl.ToggleOption,
+) {
+    val scope = rememberCoroutineScope()
+    var value by remember(control.option) { mutableStateOf<Boolean?>(null) }
+    LaunchedEffect(control.option) {
+        value = options?.let { runCatching { it.get(control.option) }.getOrNull() }
+    }
+    val available = options != null && value != null
+    Switch(
+        checked = value == true,
+        enabled = available,
+        onCheckedChange = { next ->
+            if (options == null) return@Switch
+            scope.launch {
+                runCatching { options.set(control.option, next) }
+                value = next
+            }
+        },
+    )
+}
+
+@Suppress("FunctionName")
+@Composable
+private fun OptionChoiceRow(
+    options: RuntimeOptionSource?,
+    control: SettingControl.OptionChoice,
+    title: String,
+    cancelLabel: String,
+) {
+    val scope = rememberCoroutineScope()
+    var selected by remember(control.optionNames) { mutableStateOf<Int?>(null) }
+    var expanded by remember { mutableStateOf(false) }
+    LaunchedEffect(control.optionNames) {
+        val hits =
+            options?.let { source ->
+                runCatching {
+                    control.optionNames.mapIndexedNotNull { index, option ->
+                        if (source.get(option) == true) index else null
+                    }
+                }.getOrNull()
+            }
+        // A switch group with no member enabled still means "the first
+        // state"; only an absent session leaves the row unavailable.
+        selected = hits?.let { it.firstOrNull() ?: 0 }
+    }
+    TextButton(onClick = { expanded = true }, enabled = options != null) {
+        Text(
+            selected?.let { control.optionLabels.getOrNull(it) } ?: "—",
+            maxLines = 1,
+        )
+    }
+    if (expanded) {
+        val current = selected
+        AlertDialog(
+            onDismissRequest = { expanded = false },
+            title = { Text(title) },
+            text = {
+                Column {
+                    control.optionLabels.forEachIndexed { index, label ->
+                        Row(
+                            modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    if (options != null) {
+                                        scope.launch {
+                                            control.optionNames.forEachIndexed { nameIndex, name ->
+                                                runCatching { options.set(name, nameIndex == index) }
+                                            }
+                                            selected = index
+                                        }
+                                    }
+                                    expanded = false
+                                }
+                                .padding(vertical = 10.dp),
+                        ) {
+                            Text(
+                                text = if (index == current) "◉ $label" else "○ $label",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { expanded = false }) { Text(cancelLabel) } },
+        )
+    }
 }

@@ -102,6 +102,7 @@ class ComposeInputView(
     private var popupOnKeyPress by mutableStateOf(keyboardPrefs.popupOnKeyPress.getValue())
     private var candidateTextSize by mutableIntStateOf(appearancePrefs.candidateTextSize.getValue())
     private var showKeyHints by mutableStateOf(appearancePrefs.showKeyHints.getValue())
+    private var showCandidateComment by mutableStateOf(appearancePrefs.showCandidateComment.getValue())
     private var colorsRevision by mutableIntStateOf(0)
     private var bandTop = Int.MIN_VALUE
 
@@ -156,6 +157,9 @@ class ComposeInputView(
                     candidateTextSize = appearancePrefs.candidateTextSize.getValue()
 
                 AppPrefs.Appearance.SHOW_KEY_HINTS -> showKeyHints = appearancePrefs.showKeyHints.getValue()
+
+                AppPrefs.Appearance.SHOW_CANDIDATE_COMMENT ->
+                    showCandidateComment = appearancePrefs.showCandidateComment.getValue()
 
                 AppPrefs.Appearance.CANDIDATE_PAGE_SIZE ->
                     controller.onCommand(

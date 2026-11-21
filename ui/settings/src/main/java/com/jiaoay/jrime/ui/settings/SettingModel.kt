@@ -38,6 +38,15 @@ sealed interface SettingControl {
 
     /** A row that performs an app action instead of editing a value. */
     data class Action(val id: String) : SettingControl
+
+    /** A boolean engine option (Rime switches), not a stored preference. */
+    data class ToggleOption(val option: String) : SettingControl
+
+    /** A one-of-N engine option set (Rime switch groups). */
+    data class OptionChoice(
+        val optionNames: List<String>,
+        val optionLabels: List<String>,
+    ) : SettingControl
 }
 
 /**
@@ -95,6 +104,20 @@ interface SettingsStore {
     fun setString(
         key: String,
         value: String,
+    )
+}
+
+/**
+ * The runtime-option seam: Rime switches live in the engine session, not in
+ * SharedPreferences, so option rows load/set them asynchronously. Absent
+ * source (no session) renders the rows as unavailable.
+ */
+interface RuntimeOptionSource {
+    suspend fun get(option: String): Boolean?
+
+    suspend fun set(
+        option: String,
+        value: Boolean,
     )
 }
 

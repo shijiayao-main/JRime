@@ -49,7 +49,17 @@ class SettingsFragment : Fragment() {
     ): View {
         val appStore = AppSettingsStore(PreferenceManager.getDefaultSharedPreferences(requireContext()))
         store = appStore
-        val groups = SettingsSpecsFactory.forContext(requireContext()).build()
+        val baseGroups = SettingsSpecsFactory.forContext(requireContext()).build()
+        val inputTitle = baseGroups.firstOrNull { it.id == "input" }?.title.orEmpty()
+        val ruleRows = InputRuleSpecs.build(labeler = { getString(it) }, groupTitle = inputTitle)
+        val groups =
+            baseGroups.map { group ->
+                if (group.id == "input") {
+                    group.copy(specs = ruleRows + group.specs)
+                } else {
+                    group
+                }
+            }
         val strings =
             SettingsStrings(
                 title = getString(R.string.settings),
@@ -76,6 +86,7 @@ class SettingsFragment : Fragment() {
                         store = appStore,
                         strings = strings,
                         onAction = ::handleAction,
+                        options = RimeRuntimeOptionSource(),
                     )
                 }
             }

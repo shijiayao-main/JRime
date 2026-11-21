@@ -237,6 +237,7 @@ class SettingsSpecsFactory(
                 AppPrefs.Appearance.PALETTE_MODE,
                 AppPrefs.Appearance.ACCENT,
                 AppPrefs.Appearance.SHOW_KEY_HINTS,
+                AppPrefs.Appearance.SHOW_CANDIDATE_COMMENT,
                 AppPrefs.Advanced.UI_MODE,
                 AppPrefs.Advanced.SHOW_APP_ICON,
             )
