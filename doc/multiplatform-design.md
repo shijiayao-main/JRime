@@ -1,5 +1,8 @@
 # JRime 多平台适配方案设计
 
+> **已被 [`doc/master-plan.md`](../master-plan.md) 取代**（2026-11-21）。本文保留为历史证据，不再作为执行依据。
+
+
 > 2026-11-20 · 期二 T4(coder)产出 · **状态:草案,待用户批准后作为期三执行的基线**。
 > 本文自包含:读者不需要依赖本期对话上下文。代码事实引用均带 file:line(2026-11-20 工作树实测;T3 在飞文件 desktop/protocol-common/、DesktopServer.kt、test_server.py、Replay.kt 的行号按当日工作树,T3 合入后如有漂移以合入态为准);来自 T0 调查报告(48 facts)与既有文档的结论在引用处注明来源。
 > 输入资产:①`doc/architecture-review.md`(规则底座,下称「评审」——本文引用其结论执行点而非抄写);②`doc/refactor/roadmap.md` 期 3/4 KMP 纪律(下称「roadmap」)与 `doc/harness-design.md`(下称「harness 设计」);③researcher T0 调查报告(Path B 数据面/YAML 实证/config 消费面/工具链形态/KMP 抽取面/平台壳约束/机器闸门,Q1-Q7);④战略指令(期一台账 §6 原话「我期望还是能舍弃掉rime的yaml这种低效且低性能的实现方式」;期二用户指令「1可以」= 批准评审 P1×6 整改立项、桥两缺陷按 Path B 时间表裁决);⑤本期已落地事实:T1(e7d8a29,P1-5 core 层解依赖)与 T2(19d91fe,工具链单源)已入库,T3(P1-3 三段抽共享源集 `desktop/protocol-common/`)在飞——本文按其落点收编为 KMP Step 1 的事实。

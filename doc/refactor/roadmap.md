@@ -1,5 +1,8 @@
 # Trime 专精化改造 · 分期路线图
 
+> **已被 [`doc/master-plan.md`](../master-plan.md) 取代**（2026-11-21）。本文保留为历史证据，不再作为执行依据。
+
+
 > 版本：2026-11-14 r6（规划期产物，本期不改任何工程代码）。
 > 依据：`.zcode/workflow-inputs/trime-refactor-survey.md`（调查事实包 **v2**，下称「事实包」）+ 对其引用源码的抽查核实 + 第 2、3 轮评审与独立终审核实。
 > r6 相对 r5 的变化（独立终审 1 条，逐条处理）：补充决策 11 的基座判据举例修正——r5 所举 page_size 9、switcher 热键与折叠三项**恰被 default.custom.yaml patch 覆盖**（`default.custom.yaml:17,18,23-25` patch 为 7、[F4, Alt+grave]、false），基座取值不影响最终生效值、无判别力；改用真正未被 patch 覆盖的定制项（menu/alternative_select_labels、switcher/caption、ascii_composer、navigator/editor/punctuator 等）作举例与期 1 基座回归用例，并注明 page_size=7、fold_options=false 是 custom patch 值不能作基座判据（补充决策 11、期 1 验收与风险）。
