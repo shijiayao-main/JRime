@@ -92,6 +92,7 @@ class AppPrefs(
             const val ASCII_SWITCH_TIPS = "ascii_switch_tips"
             const val INLINE_SUGGESTIONS = "inline_suggestions"
             const val PREFERRED_VOICE_INPUT = "preferred_voice_input"
+            const val ASCII_SWITCH_MODE = "ascii_switch_mode"
         }
 
         // The composing text rides inline in the app's field by default (the
@@ -99,6 +100,8 @@ class AppPrefs(
         // would leave the typed code visible nowhere.
         val inlinePreeditMode = enum(R.string.inline_preedit_mode, INLINE_PREEDIT_MODE, InlinePreeditMode.COMPOSING_TEXT)
         val asciiSwitchTips = switch(R.string.ascii_switch_tips, ASCII_SWITCH_TIPS, true)
+
+        val asciiSwitchMode = enum(R.string.ascii_switch_mode, ASCII_SWITCH_MODE, AsciiSwitchMode.BOTH)
 
         val preferredVoiceInput = list(
             R.string.preferred_voice_input,
@@ -381,6 +384,12 @@ class AppPrefs(
             IGNORE_SYSTEM_GESTURE_INSETS,
             false,
         )
+    }
+
+    enum class AsciiSwitchMode(override val stringRes: Int) : PreferenceDelegateEnum {
+        BOTH(R.string.ascii_switch_both),
+        BUTTON_ONLY(R.string.ascii_switch_button),
+        SHIFT_ONLY(R.string.ascii_switch_shift),
     }
 
     enum class PaletteModePref(override val stringRes: Int) : PreferenceDelegateEnum {

@@ -62,6 +62,10 @@ data class ImeSurfaceConfig(
     val candidateTextSizeSp: Float = 18f,
     val showCandidateComment: Boolean = true,
     val showKeyHints: Boolean = true,
+    /** Whether the top bar's 中/EN toggle is shown. */
+    val showLanguageToggle: Boolean = true,
+    /** Whether a Shift tap toggles Chinese/English (engine ascii_composer). */
+    val shiftTogglesLanguage: Boolean = true,
     val enterLabel: String = "",
     val toolbarActions: List<ToolbarAction> = emptyList(),
     val panelSlots: List<PanelSlot> = emptyList(),

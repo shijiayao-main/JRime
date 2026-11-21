@@ -247,6 +247,10 @@
     <string name="search_settings">Search settings</string>
     <string name="no_matching_settings">No matching settings</string>
     <string name="appearance">Appearance</string>
+    <string name="ascii_switch_mode">Chinese/English switch</string>
+    <string name="ascii_switch_both">Shift or toolbar button</string>
+    <string name="ascii_switch_button">Toolbar button only</string>
+    <string name="ascii_switch_shift">Shift only</string>
     <string name="palette_mode">Light / Dark mode</string>
     <string name="accent_color">Accent color</string>
     <string name="accent_blue">Blue</string>

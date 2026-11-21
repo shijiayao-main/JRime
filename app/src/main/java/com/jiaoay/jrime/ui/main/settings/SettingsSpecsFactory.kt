@@ -223,6 +223,7 @@ class SettingsSpecsFactory(
                 AppPrefs.General.INLINE_PREEDIT_MODE,
                 AppPrefs.General.ASCII_SWITCH_TIPS,
                 AppPrefs.General.PREFERRED_VOICE_INPUT,
+                AppPrefs.General.ASCII_SWITCH_MODE,
                 AppPrefs.Keyboard.DOUBLE_SPACE_PERIOD,
                 AppPrefs.Keyboard.USE_SOFT_CURSOR,
                 AppPrefs.Keyboard.SPEAK_ON_COMMIT,

@@ -246,6 +246,10 @@
     <string name="search_settings">搜索设置</string>
     <string name="no_matching_settings">没有匹配的设置项</string>
     <string name="appearance">外观</string>
+    <string name="ascii_switch_mode">中英切换方式</string>
+    <string name="ascii_switch_both">Shift 或顶栏按钮</string>
+    <string name="ascii_switch_button">仅顶栏按钮</string>
+    <string name="ascii_switch_shift">仅 Shift</string>
     <string name="palette_mode">深浅模式</string>
     <string name="accent_color">强调色</string>
     <string name="accent_blue">蓝色</string>

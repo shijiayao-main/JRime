@@ -90,7 +90,7 @@ fun SurfaceTopBar(
     ) {
         when {
             state.activePanel != null ->
-                PanelTopBar(state = state, host = host)
+                PanelTopBar(state = state, host = host, showLanguageToggle = config.showLanguageToggle)
 
             state.composing ->
                 ComposingTopBar(
@@ -98,10 +98,16 @@ fun SurfaceTopBar(
                     config = config,
                     host = host,
                     candidatesInKeyboardRow = candidatesInKeyboardRow,
+                    showLanguageToggle = config.showLanguageToggle,
                 )
 
             else ->
-                IdleTopBar(state = state, config = config, host = host)
+                IdleTopBar(
+                    state = state,
+                    config = config,
+                    host = host,
+                    showLanguageToggle = config.showLanguageToggle,
+                )
         }
     }
 }
@@ -117,6 +123,7 @@ private fun RowScope.IdleTopBar(
     state: ImeSessionState,
     config: ImeSurfaceConfig,
     host: ImeSurfaceHost,
+    showLanguageToggle: Boolean,
 ) {
     // The action row scrolls horizontally: the action set grows over time
     // (input-mode toggles, phrase panel, ...) and a fixed row would push the
@@ -146,7 +153,7 @@ private fun RowScope.IdleTopBar(
             }
         }
     }
-    TopBarLanguageAndHide(state = state, host = host)
+    TopBarLanguageAndHide(state = state, host = host, showToggle = showLanguageToggle)
 }
 
 /** The composing face: code echo, hairline, then the strip or blank space. */
@@ -157,6 +164,7 @@ private fun RowScope.ComposingTopBar(
     config: ImeSurfaceConfig,
     host: ImeSurfaceHost,
     candidatesInKeyboardRow: Boolean,
+    showLanguageToggle: Boolean,
 ) {
     val palette = LocalImePalette.current
     // The host may override the echo (vendor ROMs); fall back to the preedit.
@@ -189,7 +197,7 @@ private fun RowScope.ComposingTopBar(
             emptyHint = true,
         )
     }
-    TopBarLanguageAndHide(state = state, host = host)
+    TopBarLanguageAndHide(state = state, host = host, showToggle = showLanguageToggle)
 }
 
 /** The panel-open face: a way back to the keyboard plus the persistent pair. */
@@ -198,13 +206,14 @@ private fun RowScope.ComposingTopBar(
 private fun RowScope.PanelTopBar(
     state: ImeSessionState,
     host: ImeSurfaceHost,
+    showLanguageToggle: Boolean,
 ) {
     TopBarChip(
         label = BACK_TO_KEYBOARD_GLYPH,
         onClick = { host.dispatch(ImeCommand.ClosePanel) },
     )
     Spacer(modifier = Modifier.weight(1f))
-    TopBarLanguageAndHide(state = state, host = host)
+    TopBarLanguageAndHide(state = state, host = host, showToggle = showLanguageToggle)
 }
 
 /** The language toggle (accent while ASCII/EN is on) and the hide key. */
@@ -213,12 +222,15 @@ private fun RowScope.PanelTopBar(
 private fun TopBarLanguageAndHide(
     state: ImeSessionState,
     host: ImeSurfaceHost,
+    showToggle: Boolean,
 ) {
-    TopBarChip(
-        label = if (state.asciiMode) EN_LABEL else CJK_LABEL,
-        highlighted = state.asciiMode,
-        onClick = { host.dispatch(ImeCommand.Key(KeyActionToken.Plain(ASCII_SWITCH_TOKEN))) },
-    )
+    if (showToggle) {
+        TopBarChip(
+            label = if (state.asciiMode) EN_LABEL else CJK_LABEL,
+            highlighted = state.asciiMode,
+            onClick = { host.dispatch(ImeCommand.Key(KeyActionToken.Plain(ASCII_SWITCH_TOKEN))) },
+        )
+    }
     TopBarChip(
         label = HIDE_GLYPH,
         onClick = { host.dispatch(ImeCommand.HideKeyboard) },

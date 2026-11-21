@@ -99,8 +99,10 @@ class ComposeInputView(
             liquidWindow = liquidWindow,
             phraseWindow = phraseWindow,
             presetKeys = catalog.presetKeys,
+            shiftTogglesLanguage = { asciiSwitchMode != AppPrefs.AsciiSwitchMode.BUTTON_ONLY },
         )
 
+    private val generalPrefs = AppPrefs.defaultInstance().general
     private val keyboardPrefs = AppPrefs.defaultInstance().keyboard
     private val appearancePrefs = AppPrefs.defaultInstance().appearance
     private var rowHeightDp by mutableIntStateOf(keyboardPrefs.rowHeight.getValue())
@@ -108,6 +110,7 @@ class ComposeInputView(
     private var candidateTextSize by mutableIntStateOf(appearancePrefs.candidateTextSize.getValue())
     private var showKeyHints by mutableStateOf(appearancePrefs.showKeyHints.getValue())
     private var showCandidateComment by mutableStateOf(appearancePrefs.showCandidateComment.getValue())
+    private var asciiSwitchMode by mutableStateOf(generalPrefs.asciiSwitchMode.getValue())
     private var colorsRevision by mutableIntStateOf(0)
     private var bandTop = Int.MIN_VALUE
 
@@ -165,6 +168,9 @@ class ComposeInputView(
 
                 AppPrefs.Appearance.SHOW_CANDIDATE_COMMENT ->
                     showCandidateComment = appearancePrefs.showCandidateComment.getValue()
+
+                AppPrefs.General.ASCII_SWITCH_MODE ->
+                    asciiSwitchMode = generalPrefs.asciiSwitchMode.getValue()
 
                 AppPrefs.Appearance.CANDIDATE_PAGE_SIZE ->
                     controller.onCommand(
@@ -239,7 +245,11 @@ class ComposeInputView(
     ): ImeSurfaceConfig = ImeSurfaceConfig(
         rowHeightDp = rowHeightDp,
         popupOnKeyPress = popupOnKeyPress,
-        candidateTextSizeSp = 18f,
+        candidateTextSizeSp = candidateTextSize.toFloat(),
+        showKeyHints = showKeyHints,
+        showCandidateComment = showCandidateComment,
+        showLanguageToggle = asciiSwitchMode != AppPrefs.AsciiSwitchMode.SHIFT_ONLY,
+        shiftTogglesLanguage = asciiSwitchMode != AppPrefs.AsciiSwitchMode.BUTTON_ONLY,
         enterLabel = "↵",
         toolbarActions = toolbarActions(state),
         panelSlots = panelSlots(window),

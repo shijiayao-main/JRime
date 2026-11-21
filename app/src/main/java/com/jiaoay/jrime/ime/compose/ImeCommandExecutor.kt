@@ -39,10 +39,17 @@ class ImeCommandExecutor(
     private val liquidWindow: LiquidWindow,
     private val phraseWindow: PhraseWindow,
     private val presetKeys: Map<String, PresetKey>,
+    /** Whether a Shift tap is allowed to toggle Chinese/English. */
+    private val shiftTogglesLanguage: () -> Boolean = { true },
 ) {
     fun execute(command: ImeCommand) {
         when (command) {
-            is ImeCommand.Key -> executeAction(KeyAction(command.token, presetKeys))
+            is ImeCommand.Key -> {
+                val shiftBlocked =
+                    !shiftTogglesLanguage() &&
+                        command.token == KeyActionToken.Plain("Shift_L")
+                if (!shiftBlocked) executeAction(KeyAction(command.token, presetKeys))
+            }
 
             is ImeCommand.ChangeCandidatePage,
             is ImeCommand.SetCandidatePageSize,
