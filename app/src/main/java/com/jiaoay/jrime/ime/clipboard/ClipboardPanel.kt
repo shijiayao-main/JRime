@@ -35,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
-import com.jiaoay.jrime.ime.compose.GboardKeyboard
 import com.jiaoay.jrime.ime.compose.ImeColors
 import com.jiaoay.jrime.ime.compose.LocalImeColors
 import com.jiaoay.jrime.ime.compose.panels.ClipboardPanelState
@@ -62,7 +61,7 @@ fun ClipboardPanel(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .height((GboardKeyboard.KEYBOARD_CONTENT_ROWS * rowHeightDp).dp)
+            .height((com.jiaoay.jrime.engine.ImeMetrics.CONTENT_ROWS * rowHeightDp).dp)
             .background(colors.keyboardBackground),
     ) {
         ClipboardTabStrip(state, colors)

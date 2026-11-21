@@ -29,6 +29,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jiaoay.jrime.ime.compose.panels.SymbolsPanelState
+import com.jiaoay.jrime.ime.compose.rememberKeyboardRowHeightDp
 
 /**
  * The liquid symbol pages: a horizontally scrolling tab strip above the key
@@ -53,7 +54,7 @@ fun LiquidPanel(
             // Bounded to the keyboard's height: the wrap column must stay the
             // keyboard's size (an unbounded fillMaxSize stretches it to the
             // full window and pushes the action bar off the top of the band).
-            .height((GboardKeyboard.KEYBOARD_CONTENT_ROWS * rowHeightDp).dp)
+            .height((com.jiaoay.jrime.engine.ImeMetrics.CONTENT_ROWS * rowHeightDp).dp)
             .background(colors.liquidBackground),
     ) {
         LazyRow(

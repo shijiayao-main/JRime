@@ -96,6 +96,14 @@
 - 模拟器验证两面板正常；截图见 `openspec/changes/panel-compose/screenshots/`。下一步 P3b 删除
   BoardWindow/KeyboardWindow/Keyboard/Key/CommonKeyboardActionListener 与 InputView legacy 层。
 
+## legacy 视图层删除 P3b（2026-11-21）
+
+- 删除 BoardWindow/BoardWindowManager/KeyboardWindow/Keyboard/Key/CommonKeyboardActionListener/KeyAction/
+  ClipboardWindow/LiquidWindow/PhraseWindow/InputView/BaseInputView/GboardKeyboard/KeyboardPanel 等 ~5k 行；
+  ComposeInputView 自成输入视图（自有 Rime 消息泵与生命周期），去掉 DI 绑定；面板/键盘切换纯状态驱动。
+- 模拟器验证：键盘/中英切换/输入、数字键盘、剪贴板/表情/符号面板均正常（截图见
+  `openspec/changes/panel-compose/screenshots/`）。下一步 P4：dead prefs 与颜色/主题 legacy 清理。
+
 ## 复现命令
 
 ```sh

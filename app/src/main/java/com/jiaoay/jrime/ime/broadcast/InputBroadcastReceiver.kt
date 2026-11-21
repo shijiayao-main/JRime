@@ -11,7 +11,6 @@ import com.jiaoay.jrime.core.CompositionProto
 import com.jiaoay.jrime.core.RimeMessage
 import com.jiaoay.jrime.core.SchemaItem
 import com.jiaoay.jrime.core.StatusProto
-import com.jiaoay.jrime.ime.window.BoardWindow
 
 interface InputBroadcastReceiver {
     fun onStartInput(info: EditorInfo) {}
@@ -29,10 +28,6 @@ interface InputBroadcastReceiver {
     fun onKeyAppearanceUpdate(composing: Boolean, menu: Boolean, paging: Boolean) {}
 
     fun onInputStatusUpdate(value: StatusProto) {}
-
-    fun onWindowAttached(window: BoardWindow) {}
-
-    fun onWindowDetached(window: BoardWindow) {}
 
     fun onEnterKeyLabelUpdate(label: String) {}
 }

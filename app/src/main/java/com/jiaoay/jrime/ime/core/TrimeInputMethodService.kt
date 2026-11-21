@@ -74,7 +74,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     private lateinit var decorView: View
     private lateinit var contentView: FrameLayout
     private lateinit var lastKnownConfig: Configuration
-    private var inputView: InputView? = null
+    private var inputView: ComposeInputView? = null
 
     /**
      * Set when the framework asked for the input view before the theme was ready.
@@ -299,7 +299,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         }
     }
 
-    private fun replaceInputView(scope: ThemeScope): InputView {
+    private fun replaceInputView(scope: ThemeScope): ComposeInputView {
         val newInputView = ComposeInputView(this, rime, scope)
         setInputView(newInputView)
         inputDeviceManager.setInputView(newInputView)

@@ -6,14 +6,12 @@
 package com.jiaoay.jrime.data.theme
 
 import com.jiaoay.jrime.data.theme.model.GeneralStyle
-import com.jiaoay.jrime.data.theme.model.KeyActionToken
 import com.jiaoay.jrime.data.theme.model.LiquidKeyboard
 import com.jiaoay.jrime.data.theme.model.Preedit
 import com.jiaoay.jrime.data.theme.model.PresetKey
 import com.jiaoay.jrime.data.theme.model.TextKeyboard
 import com.jiaoay.jrime.data.theme.model.ToolBar
 import com.jiaoay.jrime.data.theme.model.Window
-import com.jiaoay.jrime.ime.keyboard.KeyAction
 
 /** 主题和样式配置  */
 data class Theme(
@@ -29,17 +27,6 @@ data class Theme(
     val toolBar: ToolBar = ToolBar(),
 ) {
     val fonts by lazy { ThemeFonts(this) }
-
-    @Transient
-    private val actionCache = lazy {
-        mutableMapOf<KeyActionToken, KeyAction>()
-    }
-
-    fun resolveAction(token: KeyActionToken) = actionCache.value.getOrPut(token) {
-        KeyAction(token, presetKeys)
-    }
-
-    fun resolveAction(tokenString: String) = resolveAction(KeyActionToken.Plain(tokenString))
 
     companion object {
         /**

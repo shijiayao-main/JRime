@@ -11,20 +11,13 @@ import com.jiaoay.jrime.action.ImeAction
 import com.jiaoay.jrime.daemon.RimeSession
 import com.jiaoay.jrime.daemon.launchOnReady
 import com.jiaoay.jrime.data.prefs.AppPrefs
-import com.jiaoay.jrime.data.theme.Theme
 import com.jiaoay.jrime.data.theme.model.KeyActionToken
 import com.jiaoay.jrime.data.theme.model.PresetKey
 import com.jiaoay.jrime.engine.CandidateActionKind
 import com.jiaoay.jrime.engine.ImeCommand
 import com.jiaoay.jrime.engine.KeyboardId
 import com.jiaoay.jrime.engine.PanelId
-import com.jiaoay.jrime.ime.clipboard.ClipboardWindow
 import com.jiaoay.jrime.ime.core.TrimeInputMethodService
-import com.jiaoay.jrime.ime.keyboard.KeyboardWindow
-import com.jiaoay.jrime.ime.phrase.PhraseWindow
-import com.jiaoay.jrime.ime.symbol.LiquidWindow
-import com.jiaoay.jrime.ime.window.BoardWindowManager
-import org.kodein.di.DI
 import timber.log.Timber
 
 /**
@@ -36,26 +29,13 @@ import timber.log.Timber
 class ImeCommandExecutor(
     private val service: TrimeInputMethodService,
     private val rime: RimeSession,
-    private val di: DI,
-    private val theme: Theme,
-    private val windowManager: BoardWindowManager,
-    private val keyboardWindow: KeyboardWindow,
-    private val liquidWindow: LiquidWindow,
-    private val phraseWindow: PhraseWindow,
     private val presetKeys: Map<String, PresetKey>,
     /** Whether a Shift tap is allowed to toggle Chinese/English. */
     private val shiftTogglesLanguage: () -> Boolean = { true },
 ) {
     private val resolver = ActionResolver(presetKeys)
 
-    private val dispatcher =
-        RimeActionDispatcher(
-            service = service,
-            rime = rime,
-            onOpenPanel = ::openPanel,
-            onClosePanel = { windowManager.attachWindow(KeyboardWindow) },
-            onSwitchKeyboard = { keyboardWindow.switchKeyboard(it.value) },
-        )
+    private val dispatcher = RimeActionDispatcher(service = service, rime = rime)
     fun execute(command: ImeCommand) {
         when (command) {
             is ImeCommand.Key -> {
@@ -93,11 +73,8 @@ class ImeCommandExecutor(
                     api.setRuntimeOption("zh_trad", !command.simplified)
                 }
 
-            is ImeCommand.OpenPanel -> openPanel(command.id)
-
-            ImeCommand.ClosePanel -> windowManager.attachWindow(KeyboardWindow)
-
-            is ImeCommand.SwitchKeyboard -> keyboardWindow.switchKeyboard(command.id.value)
+            // Surface-only state: the controller already reduced the command.
+            is ImeCommand.OpenPanel, ImeCommand.ClosePanel, is ImeCommand.SwitchKeyboard -> Unit
 
             is ImeCommand.MoveCursor -> moveCursor(command.chars, command.lines)
 
@@ -128,31 +105,6 @@ class ImeCommandExecutor(
 
             // The encoding lookup lands with the M3 hint batch.
             CandidateActionKind.QueryCode -> Unit
-        }
-    }
-
-    private fun openPanel(id: PanelId) {
-        when (id) {
-            PanelId.Symbols -> {
-                windowManager.attachWindow(liquidWindow)
-                liquidWindow.setDataByIndex(0)
-            }
-
-            PanelId.Clipboard -> windowManager.attachWindow(ClipboardWindow(di))
-
-            PanelId.Emoji -> {
-                val tags = theme.liquidKeyboard.getTagList()
-                val index =
-                    tags.indexOfFirst {
-                        it.label == "😀" || it.type.name.equals("EMOJI", ignoreCase = true)
-                    }.coerceAtLeast(0)
-                windowManager.attachWindow(liquidWindow)
-                liquidWindow.setDataByIndex(index)
-            }
-
-            PanelId.Editor -> keyboardWindow.switchKeyboard("editor")
-
-            PanelId.Phrase -> windowManager.attachWindow(phraseWindow)
         }
     }
 

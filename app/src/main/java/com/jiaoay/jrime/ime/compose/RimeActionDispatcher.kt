@@ -21,12 +21,8 @@ import com.jiaoay.jrime.core.KeyModifiers
 import com.jiaoay.jrime.daemon.RimeSession
 import com.jiaoay.jrime.daemon.launchOnReady
 import com.jiaoay.jrime.data.prefs.AppPrefs
-import com.jiaoay.jrime.engine.KeyboardId
-import com.jiaoay.jrime.engine.PanelId
 import com.jiaoay.jrime.ime.core.TrimeInputMethodService
 import com.jiaoay.jrime.ime.keyboard.KeyCode
-import com.jiaoay.jrime.ime.keyboard.KeyboardWindow
-import com.jiaoay.jrime.ime.keyboard.isDoubleSpaceTap
 import com.jiaoay.jrime.util.AppUtils
 import com.jiaoay.jrime.util.InputMethodUtils
 import com.jiaoay.jrime.util.toast
@@ -46,9 +42,6 @@ import timber.log.Timber
 class RimeActionDispatcher(
     private val service: TrimeInputMethodService,
     private val rime: RimeSession,
-    private val onOpenPanel: (PanelId) -> Unit,
-    private val onClosePanel: () -> Unit,
-    private val onSwitchKeyboard: (KeyboardId) -> Unit,
 ) {
     private val prefs = AppPrefs.defaultInstance()
     private var lastIdleSpaceAt = 0L
@@ -61,11 +54,9 @@ class RimeActionDispatcher(
 
             is ImeAction.Sequence -> action.steps.forEach(::dispatch)
 
-            is ImeAction.SwitchKeyboard -> onSwitchKeyboard(action.keyboard)
-
-            is ImeAction.OpenPanel -> onOpenPanel(action.panel)
-
-            ImeAction.ClosePanel -> onClosePanel()
+            // Panel and keyboard switches are surface state only; the
+            // controller reduces those commands before the dispatcher runs.
+            is ImeAction.SwitchKeyboard, is ImeAction.OpenPanel, ImeAction.ClosePanel -> Unit
 
             ImeAction.HideKeyboard -> service.requestHideSelf(0)
 
@@ -123,7 +114,7 @@ class RimeActionDispatcher(
             val now = SystemClock.uptimeMillis()
             val gap = now - lastIdleSpaceAt
             lastIdleSpaceAt = now
-            if (isDoubleSpaceTap(gap)) {
+            if (isDoubleSpaceWindow(gap)) {
                 service.currentInputConnection?.let { ic ->
                     if (ic.getTextBeforeCursor(1, 0) == " ") {
                         ic.deleteSurroundingText(1, 0)
@@ -134,34 +125,11 @@ class RimeActionDispatcher(
             }
         }
 
-        val shouldHookShiftKey =
-            when {
-                prefs.keyboard.hookShiftSpace.getValue() && code == KeyEvent.KEYCODE_SPACE -> true
-
-                prefs.keyboard.hookShiftNum.getValue() && code in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9 -> true
-
-                prefs.keyboard.hookShiftSymbol.getValue() && code in KeyEvent.KEYCODE_GRAVE..KeyEvent.KEYCODE_SLASH -> true
-
-                prefs.keyboard.hookShiftSymbol.getValue() &&
-                    code in setOf(KeyEvent.KEYCODE_COMMA, KeyEvent.KEYCODE_PERIOD) -> true
-
-                else -> false
-            }
-        if (modifier == 0 && KeyboardWindow.currentKeyboard.isOnlyShiftOn && shouldHookShiftKey) {
-            forwardKey(code, 0)
-            return
-        }
-        val effective =
-            when {
-                modifier == 0 -> KeyboardWindow.currentKeyboard.modifier
-
-                modifier and KeyEvent.META_CTRL_ON != 0 && isNavigationKey(code) ->
-                    modifier or KeyboardWindow.currentKeyboard.modifier
-
-                else -> modifier
-            }
-        forwardKey(code, effective)
+        forwardKey(code, modifier)
     }
+
+    /** The idle double-space window (same cadence as the old input pipeline). */
+    private fun isDoubleSpaceWindow(gapMs: Long): Boolean = gapMs in 120L..350L
 
     private fun isNavigationKey(code: Int): Boolean = code in KeyEvent.KEYCODE_DPAD_UP..KeyEvent.KEYCODE_DPAD_RIGHT ||
         code == KeyEvent.KEYCODE_MOVE_HOME ||

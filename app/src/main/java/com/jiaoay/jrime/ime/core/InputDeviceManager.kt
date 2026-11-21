@@ -26,7 +26,7 @@ class InputDeviceManager(
             onChange(value)
         }
 
-    fun setInputView(inputView: InputView) {
+    fun setInputView(inputView: ComposeInputView) {
         inputView.handleMessages = useVirtualKeyboard
     }
 

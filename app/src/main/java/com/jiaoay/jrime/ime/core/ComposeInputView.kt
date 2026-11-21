@@ -7,8 +7,9 @@
 package com.jiaoay.jrime.ime.core
 
 import android.content.SharedPreferences
-import android.view.View
-import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,6 +30,7 @@ import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import com.jiaoay.jrime.core.RimeMessage
 import com.jiaoay.jrime.daemon.RimeSession
 import com.jiaoay.jrime.data.prefs.AppPrefs
 import com.jiaoay.jrime.data.theme.ColorManager
@@ -41,7 +43,6 @@ import com.jiaoay.jrime.engine.KeyboardCatalog
 import com.jiaoay.jrime.engine.PanelId
 import com.jiaoay.jrime.ime.broadcast.InputBroadcaster
 import com.jiaoay.jrime.ime.clipboard.ClipboardPanel
-import com.jiaoay.jrime.ime.clipboard.ClipboardWindow
 import com.jiaoay.jrime.ime.compose.ClipboardChip
 import com.jiaoay.jrime.ime.compose.ImeColors
 import com.jiaoay.jrime.ime.compose.ImeCommandExecutor
@@ -53,56 +54,35 @@ import com.jiaoay.jrime.ime.compose.panels.SymbolsPanelState
 import com.jiaoay.jrime.ime.compose.toEngineAccent
 import com.jiaoay.jrime.ime.compose.toEnginePaletteMode
 import com.jiaoay.jrime.ime.keyboard.InputFeedbackManager
-import com.jiaoay.jrime.ime.keyboard.KeyAction
-import com.jiaoay.jrime.ime.keyboard.KeyboardWindow
 import com.jiaoay.jrime.ime.phrase.CustomPhraseStore
 import com.jiaoay.jrime.ime.phrase.PhrasePanel
-import com.jiaoay.jrime.ime.phrase.PhraseWindow
-import com.jiaoay.jrime.ime.symbol.LiquidWindow
-import com.jiaoay.jrime.ime.window.BoardWindow
-import com.jiaoay.jrime.ime.window.BoardWindowManager
 import com.jiaoay.jrime.ui.design.ImeIcon
 import com.jiaoay.jrime.ui.ime.ImeSurface
 import com.jiaoay.jrime.ui.ime.ImeSurfaceConfig
 import com.jiaoay.jrime.ui.ime.ImeSurfaceHost
 import com.jiaoay.jrime.ui.ime.PanelSlot
 import com.jiaoay.jrime.ui.ime.ToolbarAction
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import org.kodein.di.instance
 import timber.log.Timber
 
 /**
- * The M1 Compose host: the same [InputView] machinery (DI, broadcaster, board
- * windows) feeds the new shared surface instead of the legacy [ImeRoot] tree.
- *
- * The surface itself lives in `:ui:ime` and knows nothing about Android; this
- * class supplies the platform seam: the command executor (the proven
- * [KeyAction] pipeline), the panel slots (clipboard/liquid still on the legacy
- * state machines during M1), the clipboard chip and the prefs-derived config.
+ * The Compose input view: the only input surface. It owns the Rime message
+ * pump, the shared-surface controller/executor and the panel slot wiring; the
+ * legacy `InputView`/`BoardWindow` tree is gone (P3b).
  */
 class ComposeInputView(
-    service: TrimeInputMethodService,
-    rime: RimeSession,
-    scope: ThemeScope,
-) : InputView(service, rime, scope) {
-    private val broadcaster: InputBroadcaster by instance()
-    private val keyboardWindow: KeyboardWindow by instance()
-    private val windowManager: BoardWindowManager by instance()
-    private val liquidWindow: LiquidWindow by instance()
-    private val phraseWindow: PhraseWindow by lazy { PhraseWindow(di) }
-
+    private val service: TrimeInputMethodService,
+    private val rime: RimeSession,
+    private val scope: ThemeScope,
+) : ConstraintLayout(service) {
+    private val broadcaster = InputBroadcaster()
     private val catalog = KeyboardCatalog.shipped()
-    private val controller = ImeSurfaceController(broadcaster, rime, service.lifecycleScope, keyboardWindow)
+    private val controller = ImeSurfaceController(broadcaster, rime, service.lifecycleScope, catalog.presetKeys)
     private val executor =
         ImeCommandExecutor(
             service = service,
             rime = rime,
-            di = di,
-            theme = theme,
-            windowManager = windowManager,
-            keyboardWindow = keyboardWindow,
-            liquidWindow = liquidWindow,
-            phraseWindow = phraseWindow,
             presetKeys = catalog.presetKeys,
             shiftTogglesLanguage = { asciiSwitchMode != AppPrefs.AsciiSwitchMode.BUTTON_ONLY },
         )
@@ -119,12 +99,26 @@ class ComposeInputView(
     private var asciiSwitchMode by mutableStateOf(generalPrefs.asciiSwitchMode.getValue())
     private var colorsRevision by mutableIntStateOf(0)
     private var bandTop = Int.MIN_VALUE
+    private var messageJob: Job? = null
+
+    /** Physical-keyboard visibility gate owned by [InputDeviceManager]. */
+    var handleMessages: Boolean = false
+        set(value) {
+            field = value
+            if (value && messageJob == null) {
+                messageJob =
+                    service.lifecycleScope.launch {
+                        rime.run { messageFlow }.collect(::handleRimeMessage)
+                    }
+            } else if (!value) {
+                messageJob?.cancel()
+                messageJob = null
+            }
+        }
 
     private val host =
         object : ImeSurfaceHost {
             override fun dispatch(command: ImeCommand) {
-                // UI-local state first (paging/panels swap instantly), then the
-                // engine/platform effect.
                 controller.onCommand(command)
                 executor.execute(command)
             }
@@ -132,8 +126,6 @@ class ComposeInputView(
             override fun reportBandTop(topPx: Int) {
                 if (topPx >= 0 && topPx != bandTop) {
                     bandTop = topPx
-                    // The band top is the truth the service's inset
-                    // computation rides on; re-apply insets per move.
                     post { requestApplyInsets() }
                 }
             }
@@ -142,13 +134,11 @@ class ComposeInputView(
                 binding: KeyBinding,
                 gesture: KeyGesture,
             ) {
-                val action = KeyAction(binding.token, catalog.presetKeys)
-                InputFeedbackManager.keyPressSound(action.code)
-                InputFeedbackManager.keyPressSpeak(action.code)
+                InputFeedbackManager.keyPressSound()
+                InputFeedbackManager.keyPressSpeak(0)
                 when (gesture) {
                     KeyGesture.Tap -> InputFeedbackManager.keyPressVibrate(this@ComposeInputView)
 
-                    // Haptic marks the long-press/cursor-slide mode entry.
                     KeyGesture.LongPress,
                     is KeyGesture.SlideCursor,
                     -> InputFeedbackManager.keyPressVibrate(this@ComposeInputView, longPress = true)
@@ -178,29 +168,20 @@ class ComposeInputView(
                 AppPrefs.Appearance.SHOW_CANDIDATE_COMMENT ->
                     showCandidateComment = appearancePrefs.showCandidateComment.getValue()
 
-                AppPrefs.General.ASCII_SWITCH_MODE ->
-                    asciiSwitchMode = generalPrefs.asciiSwitchMode.getValue()
+                AppPrefs.General.ASCII_SWITCH_MODE -> asciiSwitchMode = generalPrefs.asciiSwitchMode.getValue()
 
                 AppPrefs.Appearance.CANDIDATE_PAGE_SIZE ->
                     controller.onCommand(
-                        com.jiaoay.jrime.engine.ImeCommand.SetCandidatePageSize(
-                            appearancePrefs.candidatePageSize.getValue(),
-                        ),
+                        ImeCommand.SetCandidatePageSize(appearancePrefs.candidatePageSize.getValue()),
                     )
 
                 AppPrefs.Appearance.PALETTE_MODE ->
                     controller.onCommand(
-                        com.jiaoay.jrime.engine.ImeCommand.SetPaletteMode(
-                            appearancePrefs.paletteMode.getValue().toEnginePaletteMode(),
-                        ),
+                        ImeCommand.SetPaletteMode(appearancePrefs.paletteMode.getValue().toEnginePaletteMode()),
                     )
 
                 AppPrefs.Appearance.ACCENT ->
-                    controller.onCommand(
-                        com.jiaoay.jrime.engine.ImeCommand.SetAccent(
-                            appearancePrefs.accent.getValue().toEngineAccent(),
-                        ),
-                    )
+                    controller.onCommand(ImeCommand.SetAccent(appearancePrefs.accent.getValue().toEngineAccent()))
             }
         }
 
@@ -213,9 +194,6 @@ class ComposeInputView(
         keyboardPrefs.rowHeight.sharedPreferences.registerOnSharedPreferenceChangeListener(prefListener)
         compose =
             ComposeView(service).apply {
-                // ComposeView requires lifecycle and saved-state owners in the
-                // view tree; LifecycleInputMethodService provides the former,
-                // and this stateless composition gets a never-restored registry.
                 val owner = ComposeLifecycleOwner()
                 owner.performRestore()
                 setViewTreeLifecycleOwner(owner)
@@ -223,13 +201,10 @@ class ComposeInputView(
                 setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
                 setContent {
                     val state by controller.state.collectAsState()
-                    val window by controller.window.collectAsState()
-                    // Reading the revision re-creates the band after a scheme
-                    // flip, which re-reads the system night mode inside.
                     key(colorsRevision) {
                         ImeSurface(
                             state = state,
-                            config = surfaceConfig(state, window),
+                            config = surfaceConfig(state),
                             catalog = catalog,
                             host = host,
                         )
@@ -248,10 +223,8 @@ class ComposeInputView(
         addView(compose, params)
     }
 
-    private fun surfaceConfig(
-        state: ImeSessionState,
-        window: BoardWindow?,
-    ): ImeSurfaceConfig = ImeSurfaceConfig(
+    // -- surface config ----------------------------------------------------
+    private fun surfaceConfig(state: ImeSessionState): ImeSurfaceConfig = ImeSurfaceConfig(
         rowHeightDp = rowHeightDp,
         popupOnKeyPress = popupOnKeyPress,
         candidateTextSizeSp = candidateTextSize.toFloat(),
@@ -262,12 +235,12 @@ class ComposeInputView(
         spaceLongPressVoice = spaceLongPressVoice,
         enterLabel = "↵",
         toolbarActions = toolbarActions(state),
-        panelSlots = panelSlots(window),
+        panelSlots = panelSlots(),
         clipboardChip = {
             legacyImeColors {
                 ClipboardChip(
                     onCommit = { text -> executor.execute(ImeCommand.CommitText(text)) },
-                    panelOpen = window != null,
+                    panelOpen = state.activePanel != null,
                 )
             }
         },
@@ -275,7 +248,6 @@ class ComposeInputView(
 
     private fun closePanel() {
         controller.onCommand(ImeCommand.ClosePanel)
-        executor.execute(ImeCommand.ClosePanel)
     }
 
     private fun toolbarActions(state: ImeSessionState): List<ToolbarAction> = listOf(
@@ -288,8 +260,6 @@ class ComposeInputView(
         toolbar("number", "123", "Keyboard_number", ImeIcon.NumberPad),
         toolbar("clipboard", "剪贴板", "clipboard_window", ImeIcon.Clipboard),
         toolbar("emoji", "表情", "liquid_keyboard_emoji", ImeIcon.Emoji),
-        // Engine-option toggles (the old surface only reached these through
-        // /so or a hardware shortcut).
         ToolbarAction(
             id = "simplified",
             label = if (state.simplified) "简" else "繁",
@@ -326,37 +296,36 @@ class ComposeInputView(
         )
     }
 
-    private fun panelSlots(window: BoardWindow?): List<PanelSlot> = listOf(
-        PanelSlot(
-            id = PanelId.Clipboard,
-            title = "剪贴板",
-            icon = ImeIcon.Clipboard,
-        ) { modifier ->
-            val state = remember {
-                ClipboardPanelState(service, onClosePanel = ::closePanel)
-            }
+    private fun panelSlots(): List<PanelSlot> = listOf(
+        PanelSlot(PanelId.Clipboard, "剪贴板", ImeIcon.Clipboard) { modifier ->
+            val state = remember { ClipboardPanelState(service, onClosePanel = ::closePanel) }
             DisposableEffect(state) {
                 state.start()
                 onDispose { state.stop() }
             }
             legacyImeColors { ClipboardPanel(state, modifier) }
         },
-        PanelSlot(
-            id = PanelId.Phrase,
-            title = "常用语",
-            icon = ImeIcon.Phrase,
-        ) { modifier ->
+        PanelSlot(PanelId.Phrase, "常用语", ImeIcon.Phrase) { modifier ->
             PhrasePanel(modifier = modifier) { text ->
                 controller.onCommand(ImeCommand.ClosePanel)
                 executor.execute(ImeCommand.CommitText(text))
             }
         },
-        PanelSlot(
-            id = PanelId.Symbols,
-            title = "符号",
-            icon = ImeIcon.Emoji,
-        ) { modifier ->
-            val state = remember {
+        PanelSlot(PanelId.Symbols, "符号", ImeIcon.Emoji) { modifier ->
+            symbolsSlot(modifier, initialTab = 0)
+        },
+        PanelSlot(PanelId.Emoji, "表情", ImeIcon.Emoji) { modifier ->
+            symbolsSlot(modifier, initialTab = null)
+        },
+    )
+
+    @Composable
+    private fun symbolsSlot(
+        modifier: androidx.compose.ui.Modifier,
+        initialTab: Int?,
+    ) {
+        val state =
+            remember {
                 SymbolsPanelState(
                     service = service,
                     rime = rime,
@@ -364,31 +333,79 @@ class ComposeInputView(
                     onClosePanel = ::closePanel,
                 )
             }
-            LaunchedEffect(Unit) {
-                if (state.currentTabIndex < 0) state.setDataByIndex(0)
-            }
-            legacyImeColors { LiquidPanel(state, modifier) }
-        },
-    )
-
-    /**
-     * The M1 panel surfaces still read the legacy [LocalImeColors]; this
-     * provider keeps them rendering from the same palette the old tree used.
-     */
-    @androidx.compose.runtime.Composable
-    private fun legacyImeColors(content: @androidx.compose.runtime.Composable () -> Unit) {
-        val colors = ColorManager.currentScope()?.let { ImeColors(it.colors) }
-        if (colors != null) {
-            androidx.compose.runtime.CompositionLocalProvider(LocalImeColors provides colors, content = content)
+        LaunchedEffect(Unit) {
+            if (state.currentTabIndex >= 0) return@LaunchedEffect
+            val index =
+                initialTab ?: state.tabs.indexOfFirst {
+                    it.label == "😀" || it.type.name.equals("EMOJI", ignoreCase = true)
+                }
+            state.setDataByIndex(index.coerceAtLeast(0))
         }
+        legacyImeColors { LiquidPanel(state, modifier) }
     }
 
     /**
-     * A scheme flip (day/night) restyles the legacy tree in place; here it
-     * re-creates the shared band so the palette is re-read.
+     * The panel surfaces still read the legacy [LocalImeColors]; this provider
+     * keeps them rendering from the same palette until P4 removes the palette.
      */
-    override fun refreshColors() {
-        super.refreshColors()
+    @Composable
+    private fun legacyImeColors(content: @Composable () -> Unit) {
+        val colors = ColorManager.currentScope()?.let { ImeColors(it.colors) }
+        if (colors != null) {
+            CompositionLocalProvider(LocalImeColors provides colors, content = content)
+        }
+    }
+
+    // -- rime message pump -------------------------------------------------
+    private fun handleRimeMessage(message: RimeMessage<*>) {
+        when (message) {
+            is RimeMessage.SchemaMessage -> {
+                broadcaster.onRimeSchemaUpdated(message.data)
+                controller.onCommand(ImeCommand.ClosePanel)
+            }
+
+            is RimeMessage.OptionMessage -> {
+                broadcaster.onRimeOptionUpdated(message.data)
+                if (message.data.option == "_liquid_keyboard") {
+                    controller.onCommand(ImeCommand.OpenPanel(PanelId.Symbols))
+                }
+            }
+
+            is RimeMessage.CompositionMessage -> broadcaster.onCompositionUpdate(message.data)
+
+            is RimeMessage.BulkCandidatesMessage -> broadcaster.onCandidateListUpdate(message.data)
+
+            else -> Unit
+        }
+        broadcastKeyAppearanceUpdate()
+    }
+
+    private fun broadcastKeyAppearanceUpdate() {
+        val composing = rime.run { statusCached.isComposing }
+        val hasMenu = rime.run { hasMenu }
+        val paging = rime.run { paging }
+        broadcaster.onKeyAppearanceUpdate(composing, hasMenu, paging)
+    }
+
+    // -- service lifecycle -------------------------------------------------
+    fun startInput(
+        info: EditorInfo,
+        restarting: Boolean = false,
+    ) {
+        broadcaster.onStartInput(info)
+        if (!restarting) controller.onCommand(ImeCommand.ClosePanel)
+    }
+
+    fun updateSelection(
+        start: Int,
+        end: Int,
+    ) {
+        broadcaster.onSelectionUpdate(start, end)
+    }
+
+    fun trimMemory() = Unit
+
+    fun refreshColors() {
         colorsRevision++
     }
 
@@ -396,8 +413,14 @@ class ComposeInputView(
     val bandTopY: Int
         get() = bandTop
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        requestApplyInsets()
+    }
+
     override fun onDetachedFromWindow() {
         keyboardPrefs.rowHeight.sharedPreferences.unregisterOnSharedPreferenceChangeListener(prefListener)
+        handleMessages = false
         controller.detach()
         super.onDetachedFromWindow()
     }

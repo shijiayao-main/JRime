@@ -6,6 +6,8 @@
 
 package com.jiaoay.jrime.ime.compose
 
+import com.jiaoay.jrime.action.ActionResolver
+import com.jiaoay.jrime.action.ImeAction
 import com.jiaoay.jrime.core.Candidates
 import com.jiaoay.jrime.core.CompositionProto
 import com.jiaoay.jrime.core.RimeMessage
@@ -24,13 +26,7 @@ import com.jiaoay.jrime.engine.KeyboardId
 import com.jiaoay.jrime.engine.PanelId
 import com.jiaoay.jrime.ime.broadcast.InputBroadcastReceiver
 import com.jiaoay.jrime.ime.broadcast.InputBroadcaster
-import com.jiaoay.jrime.ime.clipboard.ClipboardWindow
-import com.jiaoay.jrime.ime.keyboard.KeyboardWindow
-import com.jiaoay.jrime.ime.phrase.PhraseWindow
-import com.jiaoay.jrime.ime.symbol.LiquidWindow
-import com.jiaoay.jrime.ime.window.BoardWindow
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,8 +35,7 @@ import kotlinx.coroutines.launch
 
 /**
  * The M1 bridge between the engine's broadcast stream and the shared surface
- * state: the app-side adapter that turns Rime messages and board-window
- * attaches into [ImeSessionState] events. The surface itself only sees the
+ * state: the app-side adapter that turns Rime messages into [ImeSessionState] events. The surface itself only sees the
  * immutable state flow.
  *
  * The old [ImeUiState] stays in place until the surface switch is verified;
@@ -50,16 +45,12 @@ class ImeSurfaceController(
     private val broadcaster: InputBroadcaster,
     private val rime: RimeSession,
     private val scope: CoroutineScope,
-    private val keyboardWindow: KeyboardWindow,
+    presetKeys: Map<String, com.jiaoay.jrime.data.theme.model.PresetKey>,
 ) : InputBroadcastReceiver {
+    private val resolver = ActionResolver(presetKeys)
+
     private val _state = MutableStateFlow(ImeSessionState())
     val state: StateFlow<ImeSessionState> = _state.asStateFlow()
-
-    /** The board window last attached; the app builds panel slots from it. */
-    private val _window = MutableStateFlow<BoardWindow?>(null)
-    val window: StateFlow<BoardWindow?> = _window.asStateFlow()
-
-    private var keyboardJob: Job? = null
 
     fun attach() {
         broadcaster.addReceiver(this)
@@ -99,14 +90,6 @@ class ImeSurfaceController(
                 )
             }
         }
-        keyboardJob =
-            scope.launch {
-                keyboardWindow.currentKeyboardName.collect { name ->
-                    if (name.isNotEmpty()) {
-                        _state.update { it.copy(keyboardId = KeyboardId(name)) }
-                    }
-                }
-            }
     }
 
     /**
@@ -115,11 +98,23 @@ class ImeSurfaceController(
      * engine/platform effect.
      */
     fun onCommand(command: ImeCommand) {
-        _state.update { ImeStateReducer.onCommand(it, command) }
+        // A key slot may carry a surface-state command (switch keyboard, open
+        // panel); reduce those before the executor sees the key.
+        val translated =
+            if (command is ImeCommand.Key) {
+                when (val action = resolver.resolve(command.token)) {
+                    is ImeAction.SwitchKeyboard -> ImeCommand.SwitchKeyboard(action.keyboard)
+                    is ImeAction.OpenPanel -> ImeCommand.OpenPanel(action.panel)
+                    ImeAction.ClosePanel -> ImeCommand.ClosePanel
+                    else -> command
+                }
+            } else {
+                command
+            }
+        _state.update { ImeStateReducer.onCommand(it, translated) }
     }
 
     fun detach() {
-        keyboardJob?.cancel()
         broadcaster.removeReceiver(this)
     }
 
@@ -189,19 +184,6 @@ class ImeSurfaceController(
                 ),
             )
         }
-    }
-
-    override fun onWindowAttached(window: BoardWindow) {
-        _window.value = window
-        val panel =
-            when (window) {
-                is KeyboardWindow -> null
-                is ClipboardWindow -> PanelId.Clipboard
-                is LiquidWindow -> PanelId.Symbols
-                is PhraseWindow -> PanelId.Phrase
-                else -> null
-            }
-        _state.update { it.copy(activePanel = panel) }
     }
 
     override fun onRimeOptionUpdated(value: RimeMessage.OptionMessage.Data) {

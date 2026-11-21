@@ -11,7 +11,6 @@ import com.jiaoay.jrime.core.CompositionProto
 import com.jiaoay.jrime.core.RimeMessage
 import com.jiaoay.jrime.core.SchemaItem
 import com.jiaoay.jrime.core.StatusProto
-import com.jiaoay.jrime.ime.window.BoardWindow
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class InputBroadcaster : InputBroadcastReceiver {
@@ -68,14 +67,6 @@ class InputBroadcaster : InputBroadcastReceiver {
 
     override fun onInputStatusUpdate(value: StatusProto) {
         receivers.forEach { it.onInputStatusUpdate(value) }
-    }
-
-    override fun onWindowAttached(window: BoardWindow) {
-        receivers.forEach { it.onWindowAttached(window) }
-    }
-
-    override fun onWindowDetached(window: BoardWindow) {
-        receivers.forEach { it.onWindowDetached(window) }
     }
 
     override fun onEnterKeyLabelUpdate(label: String) {
