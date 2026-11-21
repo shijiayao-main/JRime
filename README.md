@@ -21,6 +21,12 @@ in any Rime app.
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Latest build](https://img.shields.io/github/last-commit/shijiayao-main/JRime.svg)](https://github.com/shijiayao-main/JRime/releases/tag/nightly)
 
+## 交付状态
+
+JRime 的目标是「一个好用、固定的输入法产品」：应用层没有 YAML/主题配置面，随包 YAML 只作引擎数据；
+新增能力按 Kotlin model 扩展接入。P1–P5（typed 动作、Compose 表面、legacy 清理、零配置引擎、示例扩展）
+已完成；真机验收清单见 [doc/final-acceptance.md](doc/final-acceptance.md)。
+
 ## 扩展开发
 
 JRime 采用 model-first 扩展：实现 `JrimeExtension`（动作/键盘/面板/工具栏/输入规则，纯 Kotlin），
