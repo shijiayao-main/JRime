@@ -58,29 +58,9 @@ class MainFragment : PaddingPreferenceFragment() {
             addCategory("") {
                 isIconSpaceReserved = false
                 addDestinationPreference(
-                    R.string.general,
+                    R.string.settings,
                     R.drawable.ic_baseline_tune_24,
-                    NavigationRoute.General,
-                )
-                addDestinationPreference(
-                    R.string.virtual_keyboard,
-                    R.drawable.ic_baseline_keyboard_24,
-                    NavigationRoute.VirtualKeyboard,
-                )
-                addDestinationPreference(
-                    R.string.appearance,
-                    R.drawable.ic_baseline_color_lens_24,
-                    NavigationRoute.Appearance,
-                )
-                addDestinationPreference(
-                    R.string.clipboard,
-                    R.drawable.ic_clipboard_24,
-                    NavigationRoute.Clipboard,
-                )
-                addDestinationPreference(
-                    R.string.advanced,
-                    R.drawable.ic_baseline_more_horiz_24,
-                    NavigationRoute.Advanced,
+                    NavigationRoute.Settings,
                 )
             }
         }

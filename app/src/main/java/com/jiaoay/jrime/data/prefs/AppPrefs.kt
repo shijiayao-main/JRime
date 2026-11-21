@@ -430,6 +430,9 @@ class AppPrefs(
         )
     }
 
+    /** The preference groups the settings hub renders, in page order. */
+    fun settingProviders(): List<PreferenceDelegateOwner> = listOf(general, keyboard, appearance, clipboard, advanced)
+
     fun syncToDeviceEncryptedStorage() {
         val ctx = appContext.createDeviceProtectedStorageContext()
         val sp = PreferenceManager.getDefaultSharedPreferences(ctx)

@@ -192,6 +192,10 @@
     <string name="added_n_items">已添加 %1$d 个项目</string>
     <string name="removed_n_items">已移除 %1$d 个项目</string>
     <string name="candidates_layout">候选词列表布局</string>
+    <string name="data_section">数据</string>
+    <string name="settings">设置</string>
+    <string name="search_settings">搜索设置</string>
+    <string name="no_matching_settings">没有匹配的设置项</string>
     <string name="appearance">外观</string>
     <string name="palette_mode">深浅模式</string>
     <string name="accent_color">强调色</string>

@@ -16,6 +16,7 @@ import com.jiaoay.jrime.ui.main.settings.ClipboardSettingsFragment
 import com.jiaoay.jrime.ui.main.settings.GeneralSettingsFragment
 import com.jiaoay.jrime.ui.main.settings.KeyboardSettingsFragment
 import com.jiaoay.jrime.ui.main.settings.ProfileSettingsFragment
+import com.jiaoay.jrime.ui.main.settings.SettingsFragment
 import com.jiaoay.jrime.ui.main.settings.userdict.UserDictionaryFragment
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
@@ -31,6 +32,9 @@ sealed class NavigationRoute : Parcelable {
 
     @Serializable
     data object Profile : NavigationRoute()
+
+    @Serializable
+    data object Settings : NavigationRoute()
 
     @Serializable
     data object General : NavigationRoute()
@@ -71,6 +75,9 @@ sealed class NavigationRoute : Parcelable {
                 label = ctx.getString(R.string.profile)
             }
 
+            fragment<SettingsFragment, Settings> {
+                label = ctx.getString(R.string.settings)
+            }
             fragment<GeneralSettingsFragment, General> {
                 label = ctx.getString(R.string.general)
             }
