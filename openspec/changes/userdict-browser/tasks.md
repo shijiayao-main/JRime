@@ -15,4 +15,6 @@
 ## 3. 验证
 
 - [x] 3.1 app 单测/编译/spotless 全绿
-- [ ] 3.2 模拟器/真机点按验证（导出→加词→上屏→删除）
+- [x] 3.2 模拟器验证：设置中心滚到「系统与数据」不崩、四个数据动作行可见（screenshots/settings-system-group.png）；
+      「管理用户词典」页打开、词典 chip/搜索/加词 UI 正常（screenshots/userdict-browser.png）
+- [ ] 3.3 加词→上屏→删除 端到端（模拟器词典为空，留真机验收）

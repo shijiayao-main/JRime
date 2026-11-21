@@ -131,14 +131,10 @@ class SettingsSpecsFactory(
                 )
 
             is PreferenceDelegateUi.EditTextInt ->
-                spec(
-                    SettingControl.Slider(
-                        defaultValue = ui.defaultValue,
-                        min = ui.min,
-                        max = ui.max,
-                        unit = ui.unit,
-                    ),
-                )
+                // Large/unbounded ranges are edited as text, never as a slider:
+                // the see-saw between Int.MAX_VALUE bounds overflows Material3's
+                // tick computation (NegativeArraySizeException).
+                spec(SettingControl.TextField(ui.defaultValue.toString()))
 
             is PreferenceDelegateUi.EditText -> spec(SettingControl.TextField(ui.defaultValue))
 

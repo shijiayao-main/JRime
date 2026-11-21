@@ -119,7 +119,8 @@ class UserDictBrowserFragment : Fragment() {
             runCatching { withContext(Dispatchers.IO) { UserDictManager.getUserDictList().toList() } }
                 .onSuccess { list ->
                     dicts = list
-                    selected = list.firstOrNull()
+                    // Prefer the schema this build is specialized for.
+                    selected = list.firstOrNull { it == "flypy_xhfast" } ?: list.firstOrNull()
                 }.onFailure { error ->
                     requireContext().toast(
                         requireContext().getString(

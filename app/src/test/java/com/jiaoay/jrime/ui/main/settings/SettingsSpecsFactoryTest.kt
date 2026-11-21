@@ -78,6 +78,14 @@ class SettingsSpecsFactoryTest :
             specs.first { it.key == SettingsSpecsFactory.ACTION_IMPORT_FONT }.groupId shouldBe "system"
         }
 
+        "sliders always have a bounded tick range" {
+            val sliders = specs.mapNotNull { it.control as? com.jiaoay.jrime.ui.settings.SettingControl.Slider }
+            sliders.forEach { slider ->
+                val range = slider.max.toLong() - slider.min.toLong()
+                ((range / slider.step.coerceAtLeast(1)) <= 1000L) shouldBe true
+            }
+        }
+
         "the data actions are visible in the system group" {
             val systemKeys = specs.filter { it.groupId == "system" }.map { it.key }.toSet()
             systemKeys.shouldContainAll(

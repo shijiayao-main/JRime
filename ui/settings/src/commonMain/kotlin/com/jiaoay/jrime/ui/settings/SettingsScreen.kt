@@ -209,7 +209,12 @@ private fun SettingRow(
                         store.setInt(spec.key, stepped)
                     },
                     valueRange = control.min.toFloat()..control.max.toFloat(),
-                    steps = ((control.max - control.min) / control.step - 1).coerceAtLeast(0),
+                    steps =
+                    sliderSteps(
+                        min = control.min,
+                        max = control.max,
+                        step = control.step,
+                    ),
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -419,4 +424,21 @@ private fun OptionChoiceRow(
             confirmButton = { TextButton(onClick = { expanded = false }) { Text(cancelLabel) } },
         )
     }
+}
+
+/**
+ * Material3's Slider allocates its tick fractions from the step count: an
+ * unbounded range (Int.MIN..Int.MAX style) overflows that allocation. Small
+ * ranges keep their ticks; hostile ranges fall back to a continuous slider
+ * instead of crashing the settings screen.
+ */
+private fun sliderSteps(
+    min: Int,
+    max: Int,
+    step: Int,
+): Int {
+    val safeStep = step.coerceAtLeast(1)
+    val range = max.toLong() - min.toLong()
+    if (range <= 0L || range / safeStep > 1000L) return 0
+    return (range / safeStep - 1L).coerceAtLeast(0L).toInt()
 }
