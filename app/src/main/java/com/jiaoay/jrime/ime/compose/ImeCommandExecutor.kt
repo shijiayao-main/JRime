@@ -30,10 +30,11 @@ class ImeCommandExecutor(
     private val service: TrimeInputMethodService,
     private val rime: RimeSession,
     private val presetKeys: Map<String, PresetKey>,
+    private val extraActions: Map<String, ImeAction> = emptyMap(),
     /** Whether a Shift tap is allowed to toggle Chinese/English. */
     private val shiftTogglesLanguage: () -> Boolean = { true },
 ) {
-    private val resolver = ActionResolver(presetKeys)
+    private val resolver = ActionResolver(presetKeys, extraActions)
 
     private val dispatcher = RimeActionDispatcher(service = service, rime = rime)
     fun execute(command: ImeCommand) {
@@ -44,6 +45,8 @@ class ImeCommandExecutor(
                         command.token == KeyActionToken.Plain("Shift_L")
                 if (!shiftBlocked) dispatcher.dispatch(resolver.resolve(command.token))
             }
+
+            is ImeCommand.Typed -> dispatcher.dispatch(command.action)
 
             is ImeCommand.ChangeCandidatePage,
             is ImeCommand.SetCandidatePageSize,

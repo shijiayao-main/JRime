@@ -23,6 +23,7 @@ dependencyResolutionManagement {
 rootProject.name = "JRime"
 include(":app")
 include(":codegen")
+include(":extensions:sample")
 include(":core:model")
 include(":core:engine")
 include(":ui:design")

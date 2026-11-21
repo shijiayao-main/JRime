@@ -102,5 +102,16 @@ class KeyboardCatalog(
             keyboards = KeyLayouts.keyboards.mapKeys { KeyboardId(it.key) },
             presetKeys = KeyLayouts.presetKeys,
         )
+
+        /** Merges extension keyboard models into the shipped catalog. */
+        fun shipped(
+            extensions: com.jiaoay.jrime.extension.ExtensionRegistry,
+        ): KeyboardCatalog {
+            val boards = shipped().keyboards.toMutableMap()
+            extensions.keyboardBoards.forEach { (id, board) ->
+                require(boards.put(id, board) == null) { "keyboard '$id' collides with a shipped layout" }
+            }
+            return KeyboardCatalog(boards, KeyLayouts.presetKeys)
+        }
     }
 }

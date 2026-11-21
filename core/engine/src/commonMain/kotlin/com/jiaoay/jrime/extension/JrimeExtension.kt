@@ -36,7 +36,19 @@ interface JrimeExtension {
 
     /** Additional runtime input rules (Rime switches) exposed in settings. */
     fun inputRules(): List<InputRuleDescriptor> = emptyList()
+
+    /** Extra toolbar entries, merged after the shipped actions. */
+    fun toolbarActions(): List<ExtensionToolbarAction> = emptyList()
 }
+
+/** A toolbar button contributed by an extension (typed action, semantic icon name). */
+data class ExtensionToolbarAction(
+    val id: String,
+    val label: String,
+    val action: ImeAction,
+    /** A semantic icon name from the design system (`ImeIcon`); null = text only. */
+    val icon: String? = null,
+)
 
 /** A keyboard contribution in the typed model (geometry + typed slots). */
 data class KeyboardExtension(
@@ -45,7 +57,11 @@ data class KeyboardExtension(
     val columns: Int = 30,
 )
 
-/** One key slot: geometry plus typed actions per gesture. */
+/**
+ * One key slot: geometry plus typed actions per gesture. Width is measured in
+ * layout units (the board's [KeyboardExtension.columns] grid); 0 means one unit.
+ * The host adapts slots to the surface renderer, no legacy token is written.
+ */
 data class KeySlot(
     val label: String = "",
     val width: Float = 0f,

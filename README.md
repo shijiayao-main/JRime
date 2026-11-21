@@ -21,6 +21,11 @@ in any Rime app.
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Latest build](https://img.shields.io/github/last-commit/shijiayao-main/JRime.svg)](https://github.com/shijiayao-main/JRime/releases/tag/nightly)
 
+## 扩展开发
+
+JRime 采用 model-first 扩展：实现 `JrimeExtension`（动作/键盘/面板/工具栏/输入规则，纯 Kotlin），
+不写 YAML。示例见 `extensions/sample/`，指南见 [doc/extension-guide.md](doc/extension-guide.md)。
+
 ## Features
 
 - **Shared Compose surface**: keyboard, top bar, candidate strip, panels and settings are one

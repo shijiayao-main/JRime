@@ -110,6 +110,14 @@
   show_app_icon 等）及常量/枚举引用，设置中心行数收敛（键盘 14→9、输入 24→21 等）；模拟器验证应用
   与设置正常。下一步：Theme/ColorManager/NativeTheme/ImeColors 等颜色/主题 legacy 清理。
 
+## 示例扩展与开发说明 P5（2026-11-21）
+
+- 新增 `:extensions:sample` 示例扩展：纯 Kotlin 注册动作、符号键盘、工具栏入口与输入规则；
+  宿主真实消费扩展（键盘合并、扩展动作解析、`ImeCommand.Typed`、顶栏入口）。
+- 新增 `doc/extension-guide.md`（模型扩展开发指南）并更新 README；单测覆盖扩展→catalog→resolver。
+- 模拟器验证：顶栏「扩展示例」切到示例键盘、符号上屏、返回内置键盘；截图见
+  `openspec/changes/extension-sample/screenshots/`。
+
 ## 复现命令
 
 ```sh

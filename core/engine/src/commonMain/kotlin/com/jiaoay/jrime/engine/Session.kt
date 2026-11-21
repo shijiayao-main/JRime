@@ -6,6 +6,7 @@
 
 package com.jiaoay.jrime.engine
 
+import com.jiaoay.jrime.action.ImeAction
 import com.jiaoay.jrime.data.theme.model.KeyActionToken as LegacyKeyToken
 
 /** Which palette the surface should use. */
@@ -118,6 +119,9 @@ enum class CandidateActionKind {
 sealed interface ImeCommand {
     data class Key(val token: LegacyKeyToken, val gesture: KeyGesture = KeyGesture.Tap) : ImeCommand
 
+    /** A fully typed action (extension toolbar entries, model-first slots). */
+    data class Typed(val action: ImeAction) : ImeCommand
+
     data class SelectCandidate(val index: Int) : ImeCommand
 
     data class LongPressCandidate(val index: Int) : ImeCommand
@@ -210,6 +214,14 @@ object ImeStateReducer {
         state: ImeSessionState,
         command: ImeCommand,
     ): ImeSessionState = when (command) {
+        is ImeCommand.Typed ->
+            when (val action = command.action) {
+                is ImeAction.SwitchKeyboard -> state.copy(keyboardId = action.keyboard, activePanel = null)
+                is ImeAction.OpenPanel -> state.copy(activePanel = action.panel)
+                ImeAction.ClosePanel -> state.copy(activePanel = null)
+                else -> state
+            }
+
         is ImeCommand.OpenPanel -> state.copy(activePanel = command.id)
 
         is ImeCommand.ClosePanel -> state.copy(activePanel = null)

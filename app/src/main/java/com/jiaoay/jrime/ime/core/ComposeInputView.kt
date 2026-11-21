@@ -38,6 +38,8 @@ import com.jiaoay.jrime.engine.KeyBinding
 import com.jiaoay.jrime.engine.KeyGesture
 import com.jiaoay.jrime.engine.KeyboardCatalog
 import com.jiaoay.jrime.engine.PanelId
+import com.jiaoay.jrime.extension.ExtensionRegistry
+import com.jiaoay.jrime.extensions.sample.SampleExtension
 import com.jiaoay.jrime.ime.broadcast.InputBroadcaster
 import com.jiaoay.jrime.ime.clipboard.ClipboardPanel
 import com.jiaoay.jrime.ime.compose.ClipboardChip
@@ -72,13 +74,22 @@ class ComposeInputView(
     private val rime: RimeSession,
 ) : ConstraintLayout(service) {
     private val broadcaster = InputBroadcaster()
-    private val catalog = KeyboardCatalog.shipped()
-    private val controller = ImeSurfaceController(broadcaster, rime, service.lifecycleScope, catalog.presetKeys)
+    private val extensions = ExtensionRegistry(listOf(SampleExtension))
+    private val catalog = KeyboardCatalog.shipped(extensions)
+    private val controller =
+        ImeSurfaceController(
+            broadcaster,
+            rime,
+            service.lifecycleScope,
+            catalog.presetKeys,
+            extensions.resolvedActions,
+        )
     private val executor =
         ImeCommandExecutor(
             service = service,
             rime = rime,
             presetKeys = catalog.presetKeys,
+            extraActions = extensions.resolvedActions,
             shiftTogglesLanguage = { asciiSwitchMode != AppPrefs.AsciiSwitchMode.BUTTON_ONLY },
         )
 
@@ -271,7 +282,15 @@ class ComposeInputView(
             icon = ImeIcon.Phrase,
             command = ImeCommand.OpenPanel(PanelId.Phrase),
         ),
-    )
+    ) +
+        extensions.toolbarActions.map { entry ->
+            ToolbarAction(
+                id = "ext:${entry.id}",
+                label = entry.label,
+                icon = entry.icon?.let { runCatching { ImeIcon.valueOf(it) }.getOrNull() },
+                command = ImeCommand.Typed(entry.action),
+            )
+        }
 
     private fun toolbar(
         id: String,

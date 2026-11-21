@@ -130,6 +130,7 @@ ksp {
 }
 
 dependencies {
+    implementation(project(":extensions:sample"))
     implementation(project(":core:model"))
     implementation(project(":core:engine"))
     implementation(project(":ui:design"))

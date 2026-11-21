@@ -46,8 +46,9 @@ class ImeSurfaceController(
     private val rime: RimeSession,
     private val scope: CoroutineScope,
     presetKeys: Map<String, com.jiaoay.jrime.data.theme.model.PresetKey>,
+    extraActions: Map<String, ImeAction> = emptyMap(),
 ) : InputBroadcastReceiver {
-    private val resolver = ActionResolver(presetKeys)
+    private val resolver = ActionResolver(presetKeys, extraActions)
 
     private val _state = MutableStateFlow(ImeSessionState())
     val state: StateFlow<ImeSessionState> = _state.asStateFlow()
