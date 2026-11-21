@@ -155,6 +155,9 @@ object RimeDaemon {
      */
     fun getFirstSessionOrNull() = sessions.firstNotNullOfOrNull { it.value }
 
+    /** The last engine startup failure, or null when the engine is healthy. */
+    fun startupErrorOrNull(): Throwable? = runCatching { realRime.startupError }.getOrNull()
+
     private var restartId = 0
 
     init {

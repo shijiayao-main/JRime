@@ -30,6 +30,16 @@ class RimeLifecycleRegistry : RimeLifecycle {
 
     override val lifecycleScope = CoroutineScope(job + Dispatchers.Default)
 
+    /**
+     * A failed startup leaves the registry in STARTING, from which no legal
+     * event reaches STOPPED. This is the one escape hatch: the engine never
+     * became ready, so the state is forced back for a retry.
+     */
+    fun resetAfterFailedStartup() {
+        internalStateFlow.value = RimeLifecycle.State.STOPPED
+        job.cancelChildren()
+    }
+
     fun emitEvent(event: RimeLifecycle.Event) {
         val newState = internalStateFlow.updateAndGet {
             when (event) {

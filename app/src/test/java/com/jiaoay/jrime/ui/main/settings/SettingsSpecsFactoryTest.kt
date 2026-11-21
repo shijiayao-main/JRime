@@ -38,7 +38,7 @@ class SettingsSpecsFactoryTest :
             )
         val groups = factory.build()
         val specs = groups.flatMap { it.specs }
-        val specKeys = specs.map { it.key }.toSet() - SettingsSpecsFactory.ACTION_IMPORT_FONT
+        val specKeys = specs.map { it.key }.toSet().filterNot { it.startsWith("__action_") }.toSet()
         val declaredUiKeys = providers.flatMap { provider -> provider.preferenceDelegatesUi.map { it.key } }.toSet()
         val declaredKeys = providers.flatMap { provider -> provider.preferenceDelegates.keys }.toSet()
 

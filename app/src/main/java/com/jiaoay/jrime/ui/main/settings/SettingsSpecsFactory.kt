@@ -196,8 +196,11 @@ class SettingsSpecsFactory(
     )
 
     companion object {
-        const val ACTION_IMPORT_FONT = "import_font"
-        const val ACTION_PICK_SOUND = "pick_sound"
+        const val ACTION_IMPORT_FONT = "__action_import_font"
+        const val ACTION_PICK_SOUND = "__action_pick_sound"
+        const val ACTION_EXPORT_BACKUP = "__action_export_backup"
+        const val ACTION_IMPORT_BACKUP = "__action_import_backup"
+        const val ACTION_COPY_DIAGNOSTICS = "__action_copy_diagnostics"
 
         private val GROUP_INPUT = GroupDef("input", R.string.group_input, 0)
         private val GROUP_KEYBOARD = GroupDef("keyboard", R.string.group_keyboard, 1)

@@ -62,8 +62,18 @@ class Rime(
         RimeDispatcher(
             object : RimeDispatcher.RimeController {
                 override fun nativeStartup() {
-                    startRime()
-                    lifecycleRegistry.emitEvent(RimeLifecycle.Event.ON_READY)
+                    val result = runCatching { startRime() }
+                    if (result.isSuccess) {
+                        startupError = null
+                        lifecycleRegistry.emitEvent(RimeLifecycle.Event.ON_READY)
+                    } else {
+                        // Keep the engine from crashing the dispatcher thread:
+                        // record the failure, return the lifecycle to STOPPED
+                        // so a retry is legal, and let the UI surface it.
+                        startupError = result.exceptionOrNull()
+                        Timber.e(result.exceptionOrNull(), "Rime startup failed")
+                        lifecycleRegistry.resetAfterFailedStartup()
+                    }
                 }
 
                 override fun nativeFinalize() {
@@ -71,6 +81,11 @@ class Rime(
                 }
             },
         )
+
+    /** The last startup failure, cleared by the next successful start. */
+    @Volatile
+    var startupError: Throwable? = null
+        private set
 
     private val lock = Mutex()
 

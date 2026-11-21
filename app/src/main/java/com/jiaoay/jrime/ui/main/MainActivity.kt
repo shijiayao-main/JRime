@@ -38,6 +38,7 @@ import com.hjq.permissions.permission.PermissionLists
 import com.jiaoay.jrime.BuildConfig
 import com.jiaoay.jrime.R
 import com.jiaoay.jrime.core.data.DataManager
+import com.jiaoay.jrime.daemon.RimeDaemon
 import com.jiaoay.jrime.data.prefs.AppPrefs
 import com.jiaoay.jrime.data.soundeffect.SoundEffectManager
 import com.jiaoay.jrime.databinding.ActivityMainBinding
@@ -48,8 +49,11 @@ import com.jiaoay.jrime.util.startActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import splitties.views.topPadding
 import timber.log.Timber
+
+private const val STARTUP_WAIT_MS = 8_000L
 
 class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
@@ -186,11 +190,17 @@ class MainActivity : AppCompatActivity() {
         // The banner depends on the released staging tree, which the engine
         // start populates; refresh it once the first start has settled.
         lifecycleScope.launch {
-            viewModel.rime.runOnReady { }
+            // A failed startup never reaches ready; bound the wait so the
+            // banner does not stay pending forever and the user gets a retry.
+            val ready = withTimeoutOrNull(STARTUP_WAIT_MS) {
+                viewModel.rime.runOnReady { }
+                true
+            } ?: false
             withContext(Dispatchers.Main.immediate) {
                 if (!isFinishing) {
                     firstStartSettled = true
                     updateDeployBanner()
+                    if (!ready) showEngineStartupFailure()
                 }
             }
         }
@@ -333,6 +343,33 @@ class MainActivity : AppCompatActivity() {
     private fun updateDeployBanner() {
         if (!firstStartSettled) return
         binding.deployBanner.isVisible = !DataManager.hasStagingArtifacts()
+    }
+
+    /** Non-fatal startup failure: explains the dead keyboard and offers a retry. */
+    private fun showEngineStartupFailure() {
+        val detail = RimeDaemon.startupErrorOrNull()?.message
+        AlertDialog.Builder(this)
+            .setTitle(R.string.engine_startup_failed_title)
+            .setMessage(
+                buildString {
+                    append(getString(R.string.engine_startup_failed_message))
+                    if (!detail.isNullOrEmpty()) append("\n\n").append(detail)
+                },
+            )
+            .setPositiveButton(R.string.engine_startup_retry) { _, _ ->
+                RimeDaemon.restartRime(fullCheck = false)
+                lifecycleScope.launch {
+                    val ok = withTimeoutOrNull(STARTUP_WAIT_MS) {
+                        viewModel.rime.runOnReady { }
+                        true
+                    } ?: false
+                    withContext(Dispatchers.Main.immediate) {
+                        if (!isFinishing && !ok) showEngineStartupFailure()
+                    }
+                }
+            }
+            .setNegativeButton(R.string.engine_startup_later, null)
+            .show()
     }
 
     /**
