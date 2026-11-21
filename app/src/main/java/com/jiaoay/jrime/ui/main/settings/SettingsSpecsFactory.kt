@@ -56,6 +56,19 @@ class SettingsSpecsFactory(
                     )
                 }
             }.toMutableList()
+        fun actionSpec(
+            action: String,
+            titleRes: Int,
+            order: Int,
+        ) = SettingSpec(
+            key = action,
+            title = labeler(titleRes),
+            groupId = GROUP_SYSTEM.id,
+            groupTitle = labeler(GROUP_SYSTEM.titleRes),
+            groupOrder = GROUP_SYSTEM.order,
+            order = order,
+            control = SettingControl.Action(action),
+        )
         val dataGroup =
             SettingGroup(
                 id = GROUP_SYSTEM.id,
@@ -63,15 +76,11 @@ class SettingsSpecsFactory(
                 order = GROUP_SYSTEM.order,
                 specs =
                 listOf(
-                    SettingSpec(
-                        key = ACTION_IMPORT_FONT,
-                        title = labeler(R.string.import_font_title),
-                        groupId = GROUP_SYSTEM.id,
-                        groupTitle = labeler(GROUP_SYSTEM.titleRes),
-                        groupOrder = GROUP_SYSTEM.order,
-                        order = 0,
-                        control = SettingControl.Action(ACTION_IMPORT_FONT),
-                    ),
+                    actionSpec(ACTION_IMPORT_FONT, R.string.import_font_title, 0),
+                    actionSpec(ACTION_OPEN_USERDICT_BROWSER, R.string.user_dict_browser_title, 1),
+                    actionSpec(ACTION_EXPORT_BACKUP, R.string.backup_export_title, 2),
+                    actionSpec(ACTION_IMPORT_BACKUP, R.string.backup_import_title, 3),
+                    actionSpec(ACTION_COPY_DIAGNOSTICS, R.string.copy_diagnostics_title, 4),
                 ),
             )
         val systemIndex = groups.indexOfFirst { it.id == GROUP_SYSTEM.id }
@@ -201,6 +210,7 @@ class SettingsSpecsFactory(
         const val ACTION_EXPORT_BACKUP = "__action_export_backup"
         const val ACTION_IMPORT_BACKUP = "__action_import_backup"
         const val ACTION_COPY_DIAGNOSTICS = "__action_copy_diagnostics"
+        const val ACTION_OPEN_USERDICT_BROWSER = "__action_userdict_browser"
 
         private val GROUP_INPUT = GroupDef("input", R.string.group_input, 0)
         private val GROUP_KEYBOARD = GroupDef("keyboard", R.string.group_keyboard, 1)

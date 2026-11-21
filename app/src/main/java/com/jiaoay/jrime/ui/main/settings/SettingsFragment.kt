@@ -24,12 +24,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
 import com.jiaoay.jrime.BuildConfig
 import com.jiaoay.jrime.R
 import com.jiaoay.jrime.data.backup.UserDataBackup
 import com.jiaoay.jrime.data.prefs.AppPrefs
 import com.jiaoay.jrime.data.theme.ImeFonts
+import com.jiaoay.jrime.ui.main.NavigationRoute
 import com.jiaoay.jrime.ui.settings.SettingsScreen
 import com.jiaoay.jrime.ui.settings.SettingsStrings
 import com.jiaoay.jrime.util.toast
@@ -133,6 +135,9 @@ class SettingsFragment : Fragment() {
                 importBackup.launch(arrayOf("application/zip", "application/octet-stream"))
 
             SettingsSpecsFactory.ACTION_COPY_DIAGNOSTICS -> copyDiagnostics()
+
+            SettingsSpecsFactory.ACTION_OPEN_USERDICT_BROWSER ->
+                findNavController().navigate(NavigationRoute.UserDictBrowser)
         }
     }
 

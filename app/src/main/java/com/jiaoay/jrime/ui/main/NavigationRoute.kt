@@ -12,6 +12,7 @@ import androidx.navigation.fragment.fragment
 import com.jiaoay.jrime.R
 import com.jiaoay.jrime.ui.main.settings.ProfileSettingsFragment
 import com.jiaoay.jrime.ui.main.settings.SettingsFragment
+import com.jiaoay.jrime.ui.main.settings.userdict.UserDictBrowserFragment
 import com.jiaoay.jrime.ui.main.settings.userdict.UserDictionaryFragment
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
@@ -24,6 +25,9 @@ sealed class NavigationRoute : Parcelable {
 
     @Serializable
     data object UserDict : NavigationRoute()
+
+    @Serializable
+    data object UserDictBrowser : NavigationRoute()
 
     @Serializable
     data object Profile : NavigationRoute()
@@ -50,6 +54,9 @@ sealed class NavigationRoute : Parcelable {
 
             fragment<UserDictionaryFragment, UserDict> {
                 label = ctx.getString(R.string.user_dictionary)
+            }
+            fragment<UserDictBrowserFragment, UserDictBrowser> {
+                label = ctx.getString(R.string.user_dict_browser_title)
             }
             fragment<ProfileSettingsFragment, Profile> {
                 label = ctx.getString(R.string.profile)

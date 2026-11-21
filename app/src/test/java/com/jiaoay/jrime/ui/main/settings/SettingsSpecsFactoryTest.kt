@@ -77,6 +77,17 @@ class SettingsSpecsFactoryTest :
         "the import-font action lives in the system group" {
             specs.first { it.key == SettingsSpecsFactory.ACTION_IMPORT_FONT }.groupId shouldBe "system"
         }
+
+        "the data actions are visible in the system group" {
+            val systemKeys = specs.filter { it.groupId == "system" }.map { it.key }.toSet()
+            systemKeys.shouldContainAll(
+                SettingsSpecsFactory.ACTION_IMPORT_FONT,
+                SettingsSpecsFactory.ACTION_OPEN_USERDICT_BROWSER,
+                SettingsSpecsFactory.ACTION_EXPORT_BACKUP,
+                SettingsSpecsFactory.ACTION_IMPORT_BACKUP,
+                SettingsSpecsFactory.ACTION_COPY_DIAGNOSTICS,
+            )
+        }
     })
 
 /** The store seam writes and reports revisions (the hub re-reads on bumps). */
