@@ -24,3 +24,18 @@
 - 结构守护：`SurfaceGuardTest`（无平台 import、无 app import、无 dp/sp/Color 字面量）。
 - 修正：内容带高改为 qwerty 5 行 / fallback 折行数（消掉旧键盘 5 行、面板 6 行的潜在跳变）。
 - 行为口径：M1 行为仍由既有 `KeyAction` 管线执行；typed token 迁移推迟到 `surface-p0`。
+
+## 2026-11-21 · 模拟器冒烟（Android 16 arm64 模拟器，emulator-5554）
+
+- 安装 arm64 debug APK、启用并选中 JRime 后打开 App「测试输入」面板：
+  - 新共享表面正常渲染：顶栏（⚙ / 标点 / 123 / 📋 / ☻ / 中 / ▼）、数字行、QWERTY 三行、
+    辅助/⌫ 行、符号/空格/回车行；Compose 布局无裁切、无崩溃。
+  - 盲按键盘输入后进入组合态：顶栏编码回显、候选条占据数字行槽位、候选序号角标出现；
+    点击候选后组合态结束、键盘回到空闲态。
+  - `adb logcat` 无 FATAL/AndroidRuntime 异常。
+- 截图存 `screenshots/emulator-2026-11-21-*.png`（idle / composing / after-select）。
+- 已知未验证/差异（留给 M1 收尾与真机）：
+  - 空格标签仍是「空格」，旧表面显示 schema 名（controller 尚未消费 schema 消息）；
+  - ⌫ 图标回退成 ⇦（`TextKey.labelSymbol` 未进 `KeyBinding`）；
+  - 键间距/字号按 token（旧 22sp→19sp、padding 2dp→6dp），手感需真机校准；
+  - 剪贴板 chip / 剪贴板面板 / 符号面板仍走旧实现与旧配色。
